@@ -3,7 +3,7 @@
 Both roles update this file (roadmap §10.1). A capability counts as **REAL** only when
 `QualityIntelligence.capabilities()` reports it **and** this table says so.
 
-_Last updated: 2026-10-15 by Role 2 (R2-P2)._
+_Last updated: 2026-10-15 by Role 2 (R2-P2 + R2-P6 visual components)._
 
 ## Capability matrix
 

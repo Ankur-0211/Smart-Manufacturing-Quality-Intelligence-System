@@ -44,6 +44,12 @@ errors -> ApiError | RequestValidationError | HTTPException | Exception
 |---|---|
 | `src/api/client.ts` | Envelope unwrap, `ApiClientError` (stable codes), `X-Request-ID` per request |
 | `src/api/generated/schema.d.ts` | Generated from `docs/openapi.json`. Never hand-edited |
-| `src/app/*` | Shell with 7 screens (placeholders), router, TanStack Query client |
+| `src/app/*` | Shell with 7 screens, router, TanStack Query client. Process Control is live; the others are placeholders |
+| `src/features/process-control/model.ts` | **Provisional** view types transcribed from roadmap §7.9/§7.12/§7.17/§9.5. Replaced by generated OpenAPI types once the simulation API exists (R2-P4) |
+| `src/features/process-control/runReducer.ts` | Pure reducer: SSE events → view state. Ignores duplicates; a `seq` gap sets `needsResync` (no guessing); `hydrate` from a run snapshot |
+| `src/features/process-control/useRunEvents.ts` | EventSource subscription (`Last-Event-ID` replay by the browser), one-shot resync on gap or malformed frame, 300 ms polling after 2 consecutive SSE failures, closes on terminal status |
+| `src/features/process-control/controls.ts` | Allowed run controls per status/mode, mirroring the FSM table (roadmap §9.5.1) |
+| `src/components/pipeline/*` | SVG six-stage pipeline (colour + glyph + text per state, anomaly badge, BLOCKED, reduced-motion aware), event timeline, active-stage panel (indicators with provenance), run controls |
+| `src/components/result/ResultCard.tsx` | Three separate blocks (predicted probability / operational risk / anomaly status), NOT RELEASABLE banner, caveats, risk origin |
 | `src/components/common/Banners.tsx` | MOCK banner, API status, permanent simulation disclaimer |
 | `src/test/*` | Vitest setup + MSW server. **Test-only** (an ESLint rule blocks `msw` imports in app code) |
