@@ -1,0 +1,100 @@
+[project]
+name = "smart-mfg-quality"
+version = "0.1.0"
+description = "Smart Manufacturing Quality Intelligence System: PP injection-molding quality prediction, simulation, explanation and recommendation"
+readme = "README.md"
+requires-python = ">=3.12,<3.13"
+# Runtime dependencies (roadmap Section 4.1).
+# Web/DB/infra libraries: Role 2. ML runtime libraries (numpy..scipy): Role 1 (JOINT approval).
+dependencies = [
+    "fastapi",
+    "uvicorn[standard]",
+    "pydantic>=2,<3",
+    "pydantic-settings>=2",
+    "sqlalchemy>=2.0,<2.1",
+    "alembic",
+    "pyyaml",
+    "structlog",
+    "numpy",
+    "pandas",
+    "pyarrow",
+    "scikit-learn",
+    "xgboost",
+    "shap",
+    "joblib",
+    "scipy",
+]
+
+[dependency-groups]
+# Role 2 tooling. Installed by default with `uv sync`.
+dev = [
+    "pytest",
+    "pytest-asyncio",
+    "httpx",
+    "hypothesis",
+    "ruff",
+    "black",
+    "mypy",
+    "types-PyYAML",
+]
+# Role 1 offline training (install with `uv sync --group ml`).
+ml = [
+    "lightgbm",
+    "optuna",
+    "mlflow",
+    "matplotlib",
+    "imbalanced-learn",
+    "jupyter",
+]
+# Role 1 P2 deep-learning benchmark (install with `uv sync --group dl`).
+dl = [
+    "torch",
+]
+# Role 2 P2 PostgreSQL support.
+postgres = [
+    "psycopg[binary]",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+# `app` is importable from backend/app. Role 1 adds "ml_pipeline" here when the package is created (R1-P2).
+packages = ["backend/app"]
+
+[tool.uv]
+default-groups = ["dev"]
+
+[tool.pytest.ini_options]
+testpaths = ["backend/tests"]
+pythonpath = ["backend", "."]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+addopts = "-ra"
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+extend-exclude = ["frontend", "backend/alembic/versions"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "SIM", "RUF"]
+ignore = ["B008"]  # FastAPI Depends() in defaults
+
+[tool.ruff.lint.isort]
+known-first-party = ["app", "ml_pipeline", "tests"]
+
+[tool.black]
+line-length = 100
+target-version = ["py312"]
+extend-exclude = "frontend"
+
+[tool.mypy]
+python_version = "3.12"
+plugins = ["pydantic.mypy"]
+ignore_missing_imports = true
+warn_unused_ignores = true
+# Scoped strictness (roadmap R2-P1 task 2): Role 2 application packages.
+files = ["backend/app/core", "backend/app/api", "backend/app/schemas", "backend/app/main.py"]
+strict = true
