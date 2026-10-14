@@ -13,6 +13,7 @@ from fastapi import Depends, Header, Request
 
 from app.api.errors import ApiError, ErrorCode
 from app.core.config import Settings
+from app.db.session import Database
 
 
 def app_settings(request: Request) -> Settings:
@@ -22,6 +23,15 @@ def app_settings(request: Request) -> Settings:
 
 
 SettingsDep = Annotated[Settings, Depends(app_settings)]
+
+
+def app_database(request: Request) -> Database:
+    """The Database (engine + session factory) owned by this app instance."""
+    database: Database = request.app.state.db
+    return database
+
+
+DatabaseDep = Annotated[Database, Depends(app_database)]
 
 
 def require_api_key(

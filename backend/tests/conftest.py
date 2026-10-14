@@ -16,6 +16,8 @@ def make_settings(**overrides: object) -> Settings:
         "intelligence_backend": IntelligenceBackendMode.MOCK,
         "log_format": "console",
         "log_level": "WARNING",
+        # Never touch var/smqi.db from tests; DB tests pass a migrated temp file instead.
+        "database_url": "sqlite:///:memory:",
     }
     base.update(overrides)
     # _env_file=None: tests never read a developer's local .env

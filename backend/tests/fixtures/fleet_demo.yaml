@@ -1,0 +1,18 @@
+# Role 2 TEST FIXTURE ONLY: exercises app.db.seed with the documented fleet.yaml format.
+# The real fleet.yaml is authored by Role 1 at backend/app/domain/fleet.yaml.
+fleet_version: fleet-test-0.0.1
+machines:
+  - {machine_id: MC-01, machine_type: HYDRAULIC, tonnage_ton: 150, max_inj_pressure_bar: 1800,
+     max_clamp_force_ton: 150, installed_on: 2016-03-01, last_maintenance_on: 2026-07-15}
+  - {machine_id: MC-03, machine_type: ELECTRIC, tonnage_ton: 180, max_inj_pressure_bar: 2000,
+     max_clamp_force_ton: 180, installed_on: 2020-01-01, last_maintenance_on: 2026-09-01}
+  - {machine_id: MC-09, machine_type: HYBRID, tonnage_ton: 220, max_inj_pressure_bar: 2200,
+     max_clamp_force_ton: 220, installed_on: 2023-05-01, last_maintenance_on: 2026-09-10, demo: false}
+products:
+  - {product_id: PP-JBOX-42, name: "PP junction-box housing", cavity_count: 4,
+     nominal_shot_weight_g: 42, wall_thickness_mm: 2.5, projected_area_cm2: 100}
+material_lots:
+  - {material_lot_id: A-771, resin_grade: PP-H, mfi: 12, moisture_pct: 0.04, regrind_pct: 15,
+     colourant_pct: 2, received_on: 2026-09-01}
+  - {material_lot_id: A-772, resin_grade: PP-H, mfi: 11.2, moisture_pct: 0.09, regrind_pct: 25,
+     colourant_pct: 2}

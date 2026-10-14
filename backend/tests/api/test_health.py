@@ -1,8 +1,13 @@
 from __future__ import annotations
 
+from pathlib import Path
+
 from fastapi.testclient import TestClient
 
 from app.core.ids import is_valid_uuid
+from app.main import create_app
+from tests.conftest import make_settings
+from tests.db.conftest import migrate
 
 
 def test_health_returns_envelope(client: TestClient) -> None:
@@ -58,3 +63,13 @@ def test_cors_allows_configured_frontend_origin(client: TestClient) -> None:
     assert resp.headers["access-control-allow-origin"] == "http://localhost:5173"
     other = client.get("/api/v1/health", headers={"Origin": "http://evil.example"})
     assert "access-control-allow-origin" not in other.headers
+
+
+def test_health_reports_migrated_database(tmp_path: Path) -> None:
+    url = f"sqlite:///{(tmp_path / 'h.db').as_posix()}"
+    migrate(url)
+    with TestClient(create_app(make_settings(database_url=url))) as c:
+        data = c.get("/api/v1/health").json()["data"]
+    assert data["db"] is True
+    db = next(comp for comp in data["components"] if comp["name"] == "database")
+    assert db["available"] is True and db["detail"].startswith("at head")

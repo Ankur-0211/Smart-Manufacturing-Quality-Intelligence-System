@@ -19,12 +19,13 @@ and no message broker.
 | `app/core/logging.py` | R2 | done | structlog JSON. `request_id` bound per request |
 | `app/api/middleware.py` | R2 | done | Pure-ASGI request-ID middleware (SSE-safe) |
 | `app/api/errors.py` | R2 | done | Stable error codes, `ApiError`, envelope handlers |
-| `app/api/deps.py` | R2 | partial | Settings, optional API key. Intelligence factory pending contracts |
+| `app/api/deps.py` | R2 | partial | Settings, Database, optional API key. Intelligence factory pending contracts |
 | `app/api/routes_meta.py` | R2 | partial | `/health` done. `/constraints`, `/models` pending |
 | `app/schemas/envelope.py` | R2 | done | `Envelope[T]`, `Meta`, `ErrorBody` |
 | `app/contracts`, `app/domain` | R1 (joint) | awaited | R1-P1 |
 | `app/intelligence_mock` | R2 | blocked | Needs contracts |
-| `app/db`, `app/engine`, `app/services` | R2 | not started | R2-P2…P5 |
+| `app/db` | R2 | done (R2-P2) | Models, Alembic `0001`, repositories, immutability guards, seed. See `database.md` |
+| `app/engine`, `app/services` | R2 | not started | R2-P3…P5 |
 
 ## Request lifecycle
 

@@ -66,6 +66,7 @@ class Settings(BaseSettings):
     anomaly_model_version: str = "active"
     stage_stats_version: str = "active"
     constraints_path: Path = REPO_ROOT / "backend" / "app" / "domain" / "constraints.yaml"
+    fleet_path: Path = REPO_ROOT / "backend" / "app" / "domain" / "fleet.yaml"
     recommend_time_budget_s: float = Field(default=5.0, gt=0)
 
     @field_validator("cors_origins", mode="before")
@@ -82,7 +83,7 @@ class Settings(BaseSettings):
             return None
         return value
 
-    @field_validator("model_dir", "constraints_path", mode="after")
+    @field_validator("model_dir", "constraints_path", "fleet_path", mode="after")
     @classmethod
     def _resolve_relative_to_repo(cls, value: Path) -> Path:
         return value if value.is_absolute() else (REPO_ROOT / value).resolve()

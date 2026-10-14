@@ -9,7 +9,7 @@ from typing import Literal
 from fastapi import APIRouter, Request
 from pydantic import BaseModel, ConfigDict
 
-from app.api.deps import SettingsDep
+from app.api.deps import DatabaseDep, SettingsDep
 from app.api.errors import build_meta
 from app.schemas.envelope import Envelope
 
@@ -38,11 +38,12 @@ class HealthData(BaseModel):
 
 
 @router.get("/health", response_model=Envelope[HealthData], summary="Liveness and readiness")
-def health(request: Request, settings: SettingsDep) -> Envelope[HealthData]:
+def health(request: Request, settings: SettingsDep, database: DatabaseDep) -> Envelope[HealthData]:
     # Components are reported honestly: anything not built yet is "available": false.
+    db_status = database.status()
     components = [
         ComponentStatus(name="api", available=True, detail="FastAPI application running"),
-        ComponentStatus(name="database", available=False, detail="Not configured yet (R2-P2)"),
+        ComponentStatus(name="database", available=db_status.migrated, detail=db_status.detail),
         ComponentStatus(
             name="intelligence",
             available=False,
@@ -63,7 +64,7 @@ def health(request: Request, settings: SettingsDep) -> Envelope[HealthData]:
         status=status,
         env=settings.env.value,
         intelligence_backend=settings.intelligence_backend.value,
-        db=False,
+        db=db_status.migrated,
         model_loaded=False,
         intelligence=None,
         components=components,

@@ -100,6 +100,11 @@ Role 2 pushes these to `role-2-application`, records them in `docs/integration_s
    - **Do not rename parameters.** Names are canonical across the DB, API and UI.
 4. **Own `fleet.yaml`.** Extend it to the 6–10 machines your generator needs. Keep `MC-01..MC-04`,
    `PP-JBOX-42` and `A-771`, because the Role 2 seed and demo use them.
+   - Keep the format documented in `docs/database.md` → "Seed": top-level `fleet_version`,
+     `machines`, `products`, `material_lots`, with canonical field names.
+   - Extra keys are ignored, so generator-only fields are fine.
+   - Mark entries the app should not seed with `demo: false`.
+   - Check your file with `uv run python -m app.db.seed --fleet backend/app/domain/fleet.yaml` against a migrated dev DB.
 5. **Own the fixtures.** Keep the 5 `recipe_*.json` file names and their intent:
 
    | Fixture | Intent |

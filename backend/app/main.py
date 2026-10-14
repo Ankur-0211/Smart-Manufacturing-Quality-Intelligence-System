@@ -18,6 +18,7 @@ from app.api.errors import register_exception_handlers
 from app.api.middleware import RequestContextMiddleware
 from app.core.config import Settings, get_settings
 from app.core.logging import configure_logging, get_logger
+from app.db.session import Database
 
 API_PREFIX = "/api/v1"
 
@@ -27,17 +28,26 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     configure_logging(settings)
     log = get_logger("app.startup")
 
+    database = Database(settings.database_url)
+
     @asynccontextmanager
     async def lifespan(_: FastAPI) -> AsyncIterator[None]:
         # Startup order (roadmap R2-P1 task 3): settings -> registry -> intelligence -> DB.
-        # Registry, intelligence and DB are wired in later tasks/phases.
+        # Registry and intelligence are wired once Role 1 contracts exist.
+        db_status = database.status()
         log.info(
             "startup",
             env=settings.env.value,
             intelligence_backend=settings.intelligence_backend.value,
             database_url_scheme=settings.database_url.split(":", 1)[0],
+            db_reachable=db_status.reachable,
+            db_revision=db_status.revision,
+            db_head=db_status.head,
         )
+        if not db_status.migrated:
+            log.warning("database_not_migrated", detail=db_status.detail)
         yield
+        database.dispose()
         log.info("shutdown")
 
     app = FastAPI(
@@ -54,6 +64,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         lifespan=lifespan,
     )
     app.state.settings = settings
+    app.state.db = database
 
     app.add_middleware(
         CORSMiddleware,

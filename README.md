@@ -31,8 +31,12 @@ housing.
 
 ```bash
 uv sync --frozen                     # Role 1 adds: --group ml
+uv run alembic -c backend/alembic.ini upgrade head
+uv run python -m app.db.seed         # needs backend/app/domain/fleet.yaml (Role 1)
 uv run uvicorn app.main:app --reload --app-dir backend --port 8000
 ```
+
+Database details are in [`docs/database.md`](docs/database.md).
 
 - API docs: <http://localhost:8000/api/v1/docs>
 - Health: <http://localhost:8000/api/v1/health>

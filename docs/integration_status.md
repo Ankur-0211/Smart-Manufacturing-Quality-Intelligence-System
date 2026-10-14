@@ -3,7 +3,7 @@
 Both roles update this file (roadmap §10.1). A capability counts as **REAL** only when
 `QualityIntelligence.capabilities()` reports it **and** this table says so.
 
-_Last updated: 2026-10-15 by Role 2 (R2-P1)._
+_Last updated: 2026-10-15 by Role 2 (R2-P2)._
 
 ## Capability matrix
 
@@ -25,11 +25,11 @@ Status values: `NOT AVAILABLE` → `MOCK` → `HYBRID` → `REAL`.
 |---|---|---|
 | `backend/app/contracts` | — | **Awaited from Role 1 (R1-P1 task 1)** |
 | `backend/app/domain/constraints.yaml` + loader | — | **Awaited from Role 1 (R1-P1 tasks 4–9)** |
-| `fleet.yaml` | — | Awaited (R1-P1 task 8). Needed for the R2-P2 seed |
+| `fleet.yaml` | — | Awaited (R1-P1 task 8). The seed is ready and needs this file; format in `database.md` |
 | Contract fixtures (`backend/tests/contract/fixtures`) | — | Awaited (R1-P1). Harness ready (R2-P1) |
 | API (`docs/openapi.json`) | api_version 1 | `/api/v1/health` only |
 | Event catalogue (`docs/events.md`) | draft | From roadmap §9.5. Frozen at M4 |
-| DB schema | — | R2-P2 |
+| DB schema | Alembic `0001` | Done (R2-P2): 10 tables, immutability guards, seed |
 | Model bundles | — | R1-P4 onwards |
 
 ## Milestones
