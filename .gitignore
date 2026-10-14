@@ -1,0 +1,51 @@
+# --- Python ---
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+*.egg-info/
+build/
+
+# --- Environment / secrets ---
+.env
+.env.*
+!.env.example
+
+# --- Runtime (Role 2) ---
+var/
+
+# --- Datasets (Role 1): only manifests and READMEs are versioned ---
+data/**
+!data/
+!data/**/
+!data/**/source_manifest.json
+!data/**/MANIFEST.sha256
+!data/**/README.md
+
+# --- Model store (Role 1): bundles are transferred as archives ---
+models/**
+!models/
+!models/registry.json
+!models/MANIFEST.sha256
+!models/README.md
+
+# --- Experiment tracking ---
+mlruns/
+
+# --- Frontend ---
+node_modules/
+frontend/dist/
+frontend/coverage/
+frontend/test-results/
+frontend/playwright-report/
+
+# --- OS / editors ---
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json

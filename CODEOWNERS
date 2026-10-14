@@ -1,0 +1,42 @@
+# Ownership per PROJECT_DEVELOPMENT_ROADMAP.md Section 4.
+# @role1 = Role 1 (AI/ML & Manufacturing Intelligence)
+# @role2 = Role 2 (Backend, Simulation, Database & Frontend)
+# Replace the placeholder handles with real GitHub usernames once the remote exists (UD-02).
+
+*                                       @role2
+
+# JOINT (both approvals required)
+/PROJECT_DEVELOPMENT_ROADMAP.md         @role1 @role2
+/backend/app/contracts/                 @role1 @role2
+/backend/app/domain/                    @role1 @role2
+/backend/tests/contract/                @role1 @role2
+/docs/contracts/                        @role1 @role2
+/docs/contract_changes/                 @role1 @role2
+/docs/integration_status.md             @role1 @role2
+/docs/decisions/                        @role1 @role2
+/pyproject.toml                         @role2 @role1
+
+# Role 1
+/backend/app/intelligence/              @role1
+/backend/app/ml/                        @role1
+/backend/app/recommendation/            @role1
+/backend/tests/domain/                  @role1
+/backend/tests/intelligence/            @role1
+/backend/tests/ml/                      @role1
+/backend/tests/recommendation/          @role1
+/backend/tests/fixtures/model_bundle_tiny/  @role1
+/ml_pipeline/                           @role1
+/data/                                  @role1
+/models/                                @role1
+
+# Role 2 (explicit for clarity)
+/backend/app/api/                       @role2
+/backend/app/schemas/                   @role2
+/backend/app/services/                  @role2
+/backend/app/engine/                    @role2
+/backend/app/db/                        @role2
+/backend/app/core/                      @role2
+/backend/app/intelligence_mock/         @role2
+/frontend/                              @role2
+/docker/                                @role2
+/scripts/                               @role2
