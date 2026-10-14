@@ -45,6 +45,7 @@ Status values: `NOT AVAILABLE` → `MOCK` → `HYBRID` → `REAL`.
 | CCR | Title | Status |
 |---|---|---|
 | [CCR-001](contract_changes/CCR-001-route-error-codes.md) | Add `ROUTE_NOT_FOUND`, `METHOD_NOT_ALLOWED` error codes | proposed |
+| [CCR-002](contract_changes/CCR-002-role2-bootstraps-contracts.md) | Role 2 bootstraps contracts v0.1.0 / registry / fixtures (one-time UD-19 exception) | proposed; waiting for Role 1 answer |
 
 ## Environments
 
@@ -54,6 +55,8 @@ Status values: `NOT AVAILABLE` → `MOCK` → `HYBRID` → `REAL`.
 | Role 1 machine | — | — | — | — | — | — |
 
 ## Blockers
+
+- **Role 1: please read [`coordination/ROLE1_AGENT_INSTRUCTIONS.md`](coordination/ROLE1_AGENT_INSTRUCTIONS.md) before working on R1-P1.**
 
 - **Role 2 is blocked on R2-P1 tasks 8–11 (mock intelligence, `/constraints`, registry-driven
   validation, real contract tests) until Role 1 delivers `app/contracts` v0.1.0 and the registry
