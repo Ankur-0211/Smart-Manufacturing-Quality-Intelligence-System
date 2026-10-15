@@ -12,13 +12,17 @@ from contextlib import asynccontextmanager
 from fastapi import APIRouter, Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api import routes_meta
+from app.api import routes_meta, routes_simulation
 from app.api.deps import require_api_key
 from app.api.errors import register_exception_handlers
 from app.api.middleware import RequestContextMiddleware
+from app.api.rate_limit import TokenBucketLimiter
 from app.core.config import Settings, get_settings
 from app.core.logging import configure_logging, get_logger
 from app.db.session import Database
+from app.engine.cache import StageCache
+from app.engine.events import EventBus
+from app.services.simulation_service import SimulationService
 
 API_PREFIX = "/api/v1"
 
@@ -29,6 +33,15 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     log = get_logger("app.startup")
 
     database = Database(settings.database_url)
+    # No StageExecutor yet: it is bound to the mock/real QualityIntelligence once app.contracts
+    # exists (R2-P1 tasks 8-10). Until then simulation commands answer 501 CAPABILITY_UNAVAILABLE.
+    simulation = SimulationService(
+        database,
+        EventBus(),
+        StageCache(settings.stage_cache_size),
+        executor=None,
+        stage_presentation_ms=settings.stage_presentation_ms,
+    )
 
     @asynccontextmanager
     async def lifespan(_: FastAPI) -> AsyncIterator[None]:
@@ -44,9 +57,14 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             db_revision=db_status.revision,
             db_head=db_status.head,
         )
-        if not db_status.migrated:
+        if db_status.migrated:
+            recovered = simulation.recover_interrupted()
+            if recovered:
+                log.warning("runs_aborted_after_restart", run_ids=recovered)
+        else:
             log.warning("database_not_migrated", detail=db_status.detail)
         yield
+        await simulation.shutdown()
         database.dispose()
         log.info("shutdown")
 
@@ -65,6 +83,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     )
     app.state.settings = settings
     app.state.db = database
+    app.state.simulation = simulation
+    app.state.sse_keepalive_s = 15.0
+    app.state.rate_limiter = TokenBucketLimiter(settings.rate_limit_per_min)
 
     app.add_middleware(
         CORSMiddleware,
@@ -87,7 +108,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
 
 # Feature routers (simulation, predict, whatif, ...) are registered here in later phases.
-PROTECTED_ROUTERS: list[APIRouter] = []
+PROTECTED_ROUTERS: list[APIRouter] = [routes_simulation.router]
 
 
 def include_protected(app: FastAPI, router: APIRouter) -> None:

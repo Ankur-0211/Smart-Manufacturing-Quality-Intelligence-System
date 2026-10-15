@@ -17,6 +17,24 @@ regenerated with `scripts/gen_api_types.(sh|ps1)`.
 | Method | Path | Phase | Notes |
 |---|---|---|---|
 | GET | `/health` | R2-P1 | Per-component availability. `status` is `degraded` while any component is missing |
+| GET | `/simulation/runs` | R2-P4 | History with filters (`machine_id`, `product_id`, `material_lot_id`, `label`, `risk_level`, `is_whatif`, `inference_backend`, `from`, `to`), `limit`/`offset`, `meta.total` |
+| GET | `/simulation/runs/{id}` | R2-P4 | Full SimulationState incl. `timeline` and `last_seq` (polling / re-sync) |
+| GET | `/simulation/runs/{id}/stages/{stage}` | R2-P4 | One stage result |
+| GET | `/simulation/runs/{id}/events` | R2-P4 | SSE (see `events.md`) |
+| POST | `/simulation/runs/{id}/start` `{mode, speed_factor}` | R2-P4 | 501 `CAPABILITY_UNAVAILABLE` until intelligence is bound |
+| POST | `/simulation/runs/{id}/advance` | R2-P4 | Stepwise: exactly one stage |
+| POST | `/simulation/runs/{id}/pause`, `/resume` | R2-P4 | Auto mode only |
+| POST | `/simulation/runs/{id}/reset` | R2-P4 | Non-finished runs only (finished → 409 `RUN_IMMUTABLE`) |
+| POST | `/simulation/runs/{id}/abort` `{reason?}` | R2-P4 | |
+| POST | `/simulation/runs/{id}/override` `{stage, acknowledgement}` | R2-P4 | From BLOCKED |
+| PATCH | `/simulation/runs/{id}/label` `{scenario_label}` | R2-P4 | Save scenario (allowed on finished runs) |
+
+`POST /simulation/runs` (create) follows with recipe validation once the contracts and the
+registry loader are in (R2-P1 tasks 9–10 / R2-P3).
+
+Expensive endpoints (`/recommend`, `/whatif/sensitivity`, when added) use the in-process token
+bucket in `api/rate_limit.py` (`SMQI_RATE_LIMIT_PER_MIN`, per client and endpoint) → 429
+`RATE_LIMITED`.
 
 ## Error codes
 

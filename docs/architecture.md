@@ -25,7 +25,9 @@ and no message broker.
 | `app/contracts`, `app/domain` | R1 (joint) | awaited | R1-P1 |
 | `app/intelligence_mock` | R2 | blocked | Needs contracts |
 | `app/db` | R2 | done (R2-P2) | Models, Alembic `0001`, repositories, immutability guards, seed. See `database.md` |
-| `app/engine`, `app/services` | R2 | not started | R2-P3…P5 |
+| `app/engine` | R2 | core done (R2-P4) | State machine, stage cache, event bus, executor port. See `events.md` |
+| `app/services/simulation_service.py` | R2 | done (R2-P4 core) | Orchestration; no intelligence bound yet |
+| `app/api/routes_simulation.py`, `sse.py`, `rate_limit.py` | R2 | done | Run commands/queries, SSE, rate limiter. Run creation pending |
 
 ## Request lifecycle
 

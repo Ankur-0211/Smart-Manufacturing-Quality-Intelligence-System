@@ -88,14 +88,17 @@ class ReferenceRepository:
 def context_snapshot(
     machine: Machine, product: Product, lot: MaterialLot, *, today: date
 ) -> dict[str, Any]:
-    """Machine/product/lot values as used by a run (contract field names, roadmap 7.3-7.5)."""
+    """Machine/product/lot values as used by a run (contract field names, roadmap 7.3-7.5).
+
+    Float columns are coerced to float so a freshly created entity and a reloaded one snapshot
+    identically (12 vs 12.0 would otherwise change JSON and cache keys)."""
     return {
         "machine": {
             "machine_id": machine.code,
             "machine_type": machine.machine_type,
-            "tonnage_ton": machine.tonnage_ton,
-            "max_inj_pressure_bar": machine.max_inj_pressure_bar,
-            "max_clamp_force_ton": machine.max_clamp_force_ton,
+            "tonnage_ton": float(machine.tonnage_ton),
+            "max_inj_pressure_bar": float(machine.max_inj_pressure_bar),
+            "max_clamp_force_ton": float(machine.max_clamp_force_ton),
             "machine_age_days": (today - machine.installed_on).days,
             "days_since_maintenance": (today - machine.last_maintenance_on).days,
         },
@@ -103,17 +106,17 @@ def context_snapshot(
             "product_id": product.code,
             "name": product.name,
             "cavity_count": product.cavity_count,
-            "nominal_shot_weight_g": product.nominal_shot_weight_g,
-            "wall_thickness_mm": product.wall_thickness_mm,
-            "projected_area_cm2": product.projected_area_cm2,
+            "nominal_shot_weight_g": float(product.nominal_shot_weight_g),
+            "wall_thickness_mm": float(product.wall_thickness_mm),
+            "projected_area_cm2": float(product.projected_area_cm2),
         },
         "material_lot": {
             "material_lot_id": lot.lot_code,
             "resin_grade": lot.resin_grade,
-            "mfi": lot.mfi,
-            "moisture_pct": lot.moisture_pct,
-            "regrind_pct": lot.regrind_pct,
-            "colourant_pct": lot.colourant_pct,
+            "mfi": float(lot.mfi),
+            "moisture_pct": float(lot.moisture_pct),
+            "regrind_pct": float(lot.regrind_pct),
+            "colourant_pct": float(lot.colourant_pct),
         },
     }
 
@@ -482,6 +485,11 @@ class ModelVersionRepository:
                 other.is_active = False
         self.s.flush()
         return row
+
+    def find(self, name: str, semver: str) -> ModelVersion | None:
+        return self.s.scalar(
+            select(ModelVersion).where(ModelVersion.name == name, ModelVersion.semver == semver)
+        )
 
     def ensure_mock(self) -> ModelVersion:
         """The row mock predictions reference (roadmap 9.4 traceability)."""

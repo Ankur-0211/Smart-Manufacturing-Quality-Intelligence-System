@@ -21,10 +21,219 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/simulation/runs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Run history (paginated) */
+        get: operations["list_runs_api_v1_simulation_runs_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/simulation/runs/{run_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Full SimulationState */
+        get: operations["get_run_api_v1_simulation_runs__run_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/simulation/runs/{run_id}/abort": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Abort */
+        post: operations["abort_api_v1_simulation_runs__run_id__abort_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/simulation/runs/{run_id}/advance": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Advance */
+        post: operations["advance_api_v1_simulation_runs__run_id__advance_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/simulation/runs/{run_id}/events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Server-Sent Events stream of run events */
+        get: operations["stream_events_api_v1_simulation_runs__run_id__events_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/simulation/runs/{run_id}/label": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Save scenario label */
+        patch: operations["set_label_api_v1_simulation_runs__run_id__label_patch"];
+        trace?: never;
+    };
+    "/api/v1/simulation/runs/{run_id}/override": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Override */
+        post: operations["override_api_v1_simulation_runs__run_id__override_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/simulation/runs/{run_id}/pause": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Pause */
+        post: operations["pause_api_v1_simulation_runs__run_id__pause_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/simulation/runs/{run_id}/reset": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Reset */
+        post: operations["reset_api_v1_simulation_runs__run_id__reset_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/simulation/runs/{run_id}/resume": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Resume */
+        post: operations["resume_api_v1_simulation_runs__run_id__resume_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/simulation/runs/{run_id}/stages/{stage}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Single stage result */
+        get: operations["get_stage_api_v1_simulation_runs__run_id__stages__stage__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/simulation/runs/{run_id}/start": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Start */
+        post: operations["start_api_v1_simulation_runs__run_id__start_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** AbortRequest */
+        AbortRequest: {
+            /** Reason */
+            reason?: string | null;
+        };
         /** ComponentStatus */
         ComponentStatus: {
             /** Available */
@@ -37,6 +246,34 @@ export interface components {
         /** Envelope[HealthData] */
         Envelope_HealthData_: {
             data?: components["schemas"]["HealthData"] | null;
+            error?: components["schemas"]["ErrorBody"] | null;
+            meta: components["schemas"]["Meta"];
+        };
+        /** Envelope[ScenarioSummary] */
+        Envelope_ScenarioSummary_: {
+            data?: components["schemas"]["ScenarioSummary"] | null;
+            error?: components["schemas"]["ErrorBody"] | null;
+            meta: components["schemas"]["Meta"];
+        };
+        /** Envelope[SimulationStateOut] */
+        Envelope_SimulationStateOut_: {
+            data?: components["schemas"]["SimulationStateOut"] | null;
+            error?: components["schemas"]["ErrorBody"] | null;
+            meta: components["schemas"]["Meta"];
+        };
+        /** Envelope[dict[str, Any]] */
+        Envelope_dict_str__Any__: {
+            /** Data */
+            data?: {
+                [key: string]: unknown;
+            } | null;
+            error?: components["schemas"]["ErrorBody"] | null;
+            meta: components["schemas"]["Meta"];
+        };
+        /** Envelope[list[ScenarioSummary]] */
+        Envelope_list_ScenarioSummary__: {
+            /** Data */
+            data?: components["schemas"]["ScenarioSummary"][] | null;
             error?: components["schemas"]["ErrorBody"] | null;
             meta: components["schemas"]["Meta"];
         };
@@ -71,6 +308,28 @@ export interface components {
             /** Value */
             value?: unknown;
         };
+        /** EventOut */
+        EventOut: {
+            /** Payload */
+            payload: {
+                [key: string]: unknown;
+            };
+            /** Run Id */
+            run_id: string;
+            /** Seq */
+            seq: number;
+            /** Stage */
+            stage: string | null;
+            /** Ts */
+            ts: string;
+            /** Type */
+            type: string;
+        };
+        /** HTTPValidationError */
+        HTTPValidationError: {
+            /** Detail */
+            detail?: components["schemas"]["ValidationError"][];
+        };
         /** HealthData */
         HealthData: {
             /** Components */
@@ -93,6 +352,11 @@ export interface components {
              */
             status: "ok" | "degraded";
         };
+        /** LabelRequest */
+        LabelRequest: {
+            /** Scenario Label */
+            scenario_label?: string | null;
+        };
         /** Meta */
         Meta: {
             /**
@@ -111,6 +375,142 @@ export interface components {
              * @description Total rows for paginated lists
              */
             total?: number | null;
+        };
+        /** OverrideRequest */
+        OverrideRequest: {
+            /** Acknowledgement */
+            acknowledgement: string;
+            /**
+             * Stage
+             * @enum {string}
+             */
+            stage: "MATERIAL_CONDITIONING" | "PLASTICIZING" | "INJECTION" | "PACKING" | "COOLING";
+        };
+        /**
+         * ScenarioSummary
+         * @description History row (roadmap §7.16).
+         */
+        ScenarioSummary: {
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Inference Backend */
+            inference_backend: string | null;
+            /** Is Whatif */
+            is_whatif: boolean;
+            /** Label */
+            label: string | null;
+            /** Machine Id */
+            machine_id: string;
+            /** Material Lot Id */
+            material_lot_id: string;
+            /** Model Version */
+            model_version: string | null;
+            /** P Fail */
+            p_fail: number | null;
+            /** Parent Run Id */
+            parent_run_id: string | null;
+            /** Product Id */
+            product_id: string;
+            /** Risk Level */
+            risk_level: string | null;
+            /** Run Id */
+            run_id: string;
+            /** Scenario Label */
+            scenario_label: string | null;
+            /** Status */
+            status: string;
+        };
+        /** SimulationStateOut */
+        SimulationStateOut: {
+            /** Abort Reason */
+            abort_reason: string | null;
+            /** Blocked Stage */
+            blocked_stage: string | null;
+            /** Completed At */
+            completed_at: string | null;
+            /** Constraints Version */
+            constraints_version: string | null;
+            /** Context */
+            context: {
+                [key: string]: unknown;
+            };
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Current Stage */
+            current_stage: string | null;
+            /** Halt On Critical */
+            halt_on_critical: boolean;
+            /** Inference Backend */
+            inference_backend: string | null;
+            /** Is Whatif */
+            is_whatif: boolean;
+            /** Last Seq */
+            last_seq: number;
+            /** Mode */
+            mode: string;
+            /** Override Count */
+            override_count: number;
+            /** Parameters */
+            parameters: {
+                [key: string]: number;
+            };
+            /** Parent Run Id */
+            parent_run_id: string | null;
+            /** Prediction */
+            prediction: {
+                [key: string]: unknown;
+            } | null;
+            /** Run Id */
+            run_id: string;
+            /** Scenario Label */
+            scenario_label: string | null;
+            /** Speed Factor */
+            speed_factor: string;
+            /** Stage Results */
+            stage_results: {
+                [key: string]: unknown;
+            }[];
+            /** Started At */
+            started_at: string | null;
+            /** Status */
+            status: string;
+            /** Timeline */
+            timeline: components["schemas"]["EventOut"][];
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+        };
+        /** StartRequest */
+        StartRequest: {
+            /**
+             * Mode
+             * @default auto
+             * @enum {string}
+             */
+            mode: "auto" | "stepwise";
+            /** Speed Factor */
+            speed_factor?: ("0.5x" | "1x" | "2x" | "instant") | null;
+        };
+        /** ValidationError */
+        ValidationError: {
+            /** Context */
+            ctx?: Record<string, never>;
+            /** Input */
+            input?: unknown;
+            /** Location */
+            loc: (string | number)[];
+            /** Message */
+            msg: string;
+            /** Error Type */
+            type: string;
         };
     };
     responses: never;
@@ -137,6 +537,430 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Envelope_HealthData_"];
+                };
+            };
+        };
+    };
+    list_runs_api_v1_simulation_runs_get: {
+        parameters: {
+            query?: {
+                machine_id?: string | null;
+                product_id?: string | null;
+                material_lot_id?: string | null;
+                label?: ("PASS" | "FAIL") | null;
+                risk_level?: ("NORMAL" | "LOW" | "MEDIUM" | "HIGH" | "CRITICAL") | null;
+                is_whatif?: boolean | null;
+                inference_backend?: ("real" | "mock") | null;
+                from?: string | null;
+                to?: string | null;
+                limit?: number;
+                offset?: number;
+            };
+            header?: {
+                "x-api-key"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Envelope_list_ScenarioSummary__"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_run_api_v1_simulation_runs__run_id__get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-api-key"?: string | null;
+            };
+            path: {
+                run_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Envelope_SimulationStateOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    abort_api_v1_simulation_runs__run_id__abort_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-api-key"?: string | null;
+            };
+            path: {
+                run_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["AbortRequest"] | null;
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Envelope_SimulationStateOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    advance_api_v1_simulation_runs__run_id__advance_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-api-key"?: string | null;
+            };
+            path: {
+                run_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Envelope_SimulationStateOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    stream_events_api_v1_simulation_runs__run_id__events_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "Last-Event-ID"?: string | null;
+                "x-api-key"?: string | null;
+            };
+            path: {
+                run_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/event-stream": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    set_label_api_v1_simulation_runs__run_id__label_patch: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-api-key"?: string | null;
+            };
+            path: {
+                run_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LabelRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Envelope_ScenarioSummary_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    override_api_v1_simulation_runs__run_id__override_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-api-key"?: string | null;
+            };
+            path: {
+                run_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OverrideRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Envelope_SimulationStateOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    pause_api_v1_simulation_runs__run_id__pause_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-api-key"?: string | null;
+            };
+            path: {
+                run_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Envelope_SimulationStateOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    reset_api_v1_simulation_runs__run_id__reset_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-api-key"?: string | null;
+            };
+            path: {
+                run_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Envelope_SimulationStateOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    resume_api_v1_simulation_runs__run_id__resume_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-api-key"?: string | null;
+            };
+            path: {
+                run_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Envelope_SimulationStateOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_stage_api_v1_simulation_runs__run_id__stages__stage__get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-api-key"?: string | null;
+            };
+            path: {
+                run_id: string;
+                stage: "MATERIAL_CONDITIONING" | "PLASTICIZING" | "INJECTION" | "PACKING" | "COOLING";
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Envelope_dict_str__Any__"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    start_api_v1_simulation_runs__run_id__start_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-api-key"?: string | null;
+            };
+            path: {
+                run_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StartRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Envelope_SimulationStateOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };
