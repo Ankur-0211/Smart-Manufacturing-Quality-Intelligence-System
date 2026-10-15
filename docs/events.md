@@ -38,8 +38,10 @@ The contract is roadmap §9.5. This file records the implementation. `EVENTS_VER
   is presentation time, never process time (Plan §7.4).
 - **Errors.** Any executor exception → `run.error` + `run.aborted`
   (`abort_reason = ERROR:INTERNAL_ERROR`).
-- **Restart recovery.** At startup (DB migrated), runs that were started but not finished →
-  `ABORTED` (`SERVER_RESTART`) plus a `run.aborted` event. Completed stage rows stay inspectable.
+- **Restart recovery.** At startup (DB migrated), only **auto-mode runs that were executing a
+  stage** (their in-process task died) → `ABORTED` (`SERVER_RESTART`) plus a `run.aborted` event.
+  Runs waiting for the user survive: stepwise runs (no task), BLOCKED runs (override starts a new
+  task) and PAUSED runs (resume starts a new task). Completed stage rows stay inspectable.
 
 ## SSE (`GET /api/v1/simulation/runs/{id}/events`)
 

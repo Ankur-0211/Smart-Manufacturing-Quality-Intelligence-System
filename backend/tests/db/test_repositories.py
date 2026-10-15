@@ -261,7 +261,29 @@ def test_abort_interrupted_runs(session: Session, refs: Refs, recipe: dict[str, 
     repo.set_status(running, "INJECTION")
     done = _run(session, refs, recipe)
     repo.set_status(done, "FINAL_RESULT")
+    stepwise = _run(session, refs, recipe, mode="stepwise")
+    repo.set_status(stepwise, "PACKING")
+    blocked = _run(session, refs, recipe)
+    repo.set_status(blocked, "BLOCKED", blocked_stage="PLASTICIZING")
+    paused = _run(session, refs, recipe)
+    repo.set_status(paused, "PAUSED", current_stage="COOLING")
     aborted = repo.abort_interrupted()
     assert aborted == [running.id]
+    # Runs waiting for the user have no task to lose and survive a restart.
+    assert (stepwise.status, blocked.status, paused.status) == ("PACKING", "BLOCKED", "PAUSED")
     assert running.status == "ABORTED" and running.abort_reason == "SERVER_RESTART"
     assert fresh.status == "INITIALIZED" and done.status == "FINAL_RESULT"
+
+
+def test_timestamps_round_trip_as_utc(
+    session: Session, refs: Refs, recipe: dict[str, float]
+) -> None:
+    from datetime import UTC
+
+    run = _run(session, refs, recipe)
+    session.commit()
+    session.expire_all()
+    reloaded = RunRepository(session).get(run.id)
+    assert reloaded.created_at.tzinfo is not None
+    assert reloaded.created_at.utcoffset().total_seconds() == 0  # type: ignore[union-attr]
+    assert abs((reloaded.created_at - run.created_at.astimezone(UTC)).total_seconds()) < 1

@@ -52,6 +52,9 @@ errors -> ApiError | RequestValidationError | HTTPException | Exception
 | `src/features/process-control/useRunEvents.ts` | EventSource subscription (`Last-Event-ID` replay by the browser), one-shot resync on gap or malformed frame, 300 ms polling after 2 consecutive SSE failures, closes on terminal status |
 | `src/features/process-control/controls.ts` | Allowed run controls per status/mode, mirroring the FSM table (roadmap §9.5.1) |
 | `src/components/pipeline/*` | SVG six-stage pipeline (colour + glyph + text per state, anomaly badge, BLOCKED, reduced-motion aware), event timeline, active-stage panel (indicators with provenance), run controls |
+| `src/api/runs.ts` | Run hooks: history list (filters/paging), run state, scenario label, run commands. Typed from the generated OpenAPI |
+| `src/features/history/*` | History table (filters, paging, MOCK and what-if badges) and read-only run detail (pipeline, result, timeline, label edit) |
+| `src/features/process-control/eventSource.ts` | Injectable EventSource factory. Without EventSource it falls back to polling |
 | `src/components/result/ResultCard.tsx` | Three separate blocks (predicted probability / operational risk / anomaly status), NOT RELEASABLE banner, caveats, risk origin |
 | `src/components/common/Banners.tsx` | MOCK banner, API status, permanent simulation disclaimer |
 | `src/test/*` | Vitest setup + MSW server. **Test-only** (an ESLint rule blocks `msw` imports in app code) |

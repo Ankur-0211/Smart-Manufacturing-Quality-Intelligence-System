@@ -86,6 +86,9 @@ def test_stepwise_run_over_http(app: FastAPI, client: TestClient) -> None:
         "A-771",
     )
     assert row["p_fail"] == 0.71 and row["inference_backend"] == "mock"
+    # Timestamps carry an explicit UTC offset so browsers never read them as local time.
+    assert row["created_at"].endswith("Z") or row["created_at"].endswith("+00:00")
+    assert state["completed_at"].endswith("Z") or state["completed_at"].endswith("+00:00")
 
     labelled = client.patch(f"{API}/{run_id}/label", json={"scenario_label": "baseline"})
     assert labelled.status_code == 200 and labelled.json()["data"]["scenario_label"] == "baseline"

@@ -10,6 +10,7 @@ import { useCallback, useEffect, useReducer, useRef, useState } from 'react'
 
 import { API_BASE_URL, apiGet } from '@/api/client'
 
+import { useEventSourceFactory } from './eventSource'
 import { EVENT_TYPES, type SimulationEvent, type SimulationSnapshot } from './model'
 import { initialRunState, isTerminal, runReducer, type RunViewState } from './runReducer'
 
@@ -32,8 +33,6 @@ export interface RunEventsOptions {
   maxSseFailures?: number
 }
 
-const defaultCreate = (url: string): EventSourceLike => new EventSource(url) as unknown as EventSourceLike
-
 const defaultFetch = async (runId: string): Promise<SimulationSnapshot> =>
   (await apiGet<SimulationSnapshot>(`/simulation/runs/${encodeURIComponent(runId)}`)).data
 
@@ -45,12 +44,14 @@ export interface RunEvents {
 export function useRunEvents(runId: string | null, options: RunEventsOptions = {}): RunEvents {
   const {
     baseUrl = API_BASE_URL,
-    createEventSource = defaultCreate,
+    createEventSource: createOverride,
     fetchSnapshot = defaultFetch,
     pollIntervalMs = 300,
     maxSseFailures = 2,
   } = options
 
+  const contextFactory = useEventSourceFactory()
+  const createEventSource = createOverride ?? contextFactory
   const [state, dispatch] = useReducer(runReducer, runId, initialRunState)
   // Connection phase is only ever set from EventSource callbacks; everything else is derived.
   const [conn, setConn] = useState<{ runId: string | null; phase: Phase }>({ runId, phase: 'connecting' })

@@ -285,9 +285,22 @@ class RunRepository:
         return build(root)
 
     def abort_interrupted(self, reason: str = "SERVER_RESTART") -> list[str]:
-        """Startup recovery (roadmap 9.5.1): non-terminal, started runs become ABORTED."""
+        """Startup recovery (roadmap 9.5.1): runs whose in-process task died with the server.
+
+        Only AUTO-mode runs that were executing a stage had a task. Runs that are waiting for the
+        user survive a restart: stepwise runs (no task), BLOCKED runs (waiting for override) and
+        PAUSED runs (resume starts a new task).
+        """
+        executing = [
+            "MATERIAL_CONDITIONING",
+            "PLASTICIZING",
+            "INJECTION",
+            "PACKING",
+            "COOLING",
+            "QUALITY_INSPECTION",
+        ]
         rows = self.s.scalars(
-            select(ProcessRun).where(ProcessRun.status.not_in([*TERMINAL_STATUSES, "INITIALIZED"]))
+            select(ProcessRun).where(ProcessRun.status.in_(executing), ProcessRun.mode == "auto")
         ).all()
         for run in rows:
             self.set_status(run, "ABORTED", abort_reason=reason)

@@ -3,46 +3,10 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { fullRun, prediction, RUN_ID } from '@/test/fixtures/runEvents'
 
-import type { SimulationEvent, SimulationSnapshot } from './model'
-import { useRunEvents, type EventSourceLike } from './useRunEvents'
+import type { SimulationSnapshot } from './model'
+import { FakeEventSource } from '@/test/fakeEventSource'
 
-class FakeEventSource implements EventSourceLike {
-  static instances: FakeEventSource[] = []
-  onopen: EventSourceLike['onopen'] = null
-  onerror: EventSourceLike['onerror'] = null
-  closed = false
-  private listeners = new Map<string, ((ev: MessageEvent<string>) => void)[]>()
-
-  constructor(readonly url: string) {
-    FakeEventSource.instances.push(this)
-  }
-
-  addEventListener(type: string, listener: (ev: MessageEvent<string>) => void): void {
-    this.listeners.set(type, [...(this.listeners.get(type) ?? []), listener])
-  }
-
-  close(): void {
-    this.closed = true
-  }
-
-  open(): void {
-    this.onopen?.call(this, new Event('open'))
-  }
-
-  fail(): void {
-    this.onerror?.call(this, new Event('error'))
-  }
-
-  emit(event: SimulationEvent): void {
-    for (const l of this.listeners.get(event.type) ?? []) {
-      l(new MessageEvent(event.type, { data: JSON.stringify(event) }))
-    }
-  }
-
-  emitRaw(type: string, data: string): void {
-    for (const l of this.listeners.get(type) ?? []) l(new MessageEvent(type, { data }))
-  }
-}
+import { useRunEvents } from './useRunEvents'
 
 const create = (url: string) => new FakeEventSource(url)
 

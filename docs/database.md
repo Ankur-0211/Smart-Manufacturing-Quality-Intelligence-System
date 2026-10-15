@@ -11,6 +11,7 @@ The contract is roadmap §9.4. This file records the implementation.
 | Demo DB (P2) | PostgreSQL, same models (install the `postgres` dependency group) |
 | Transactions | Services own them via `with db.session() as s:` (commit on success, rollback on error). Repositories never commit |
 | Health | `/api/v1/health` reports `database.available = true` only when reachable **and** at the Alembic head |
+| Timestamps | `UTCDateTime` (`app/db/base.py`): stored as UTC, always returned timezone-aware. SQLite drops tzinfo, and naive values would be read as local time by browsers |
 
 ## Migrations
 
