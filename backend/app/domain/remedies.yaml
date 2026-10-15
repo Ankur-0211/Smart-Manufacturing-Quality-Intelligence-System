@@ -1,0 +1,85 @@
+# BOOTSTRAP v0.1.0 by Role 2 (CCR-002) — owner: Role 1
+# Rule-guided remedy table for recommendation funnel Stage 1 (PROJECT_DEVELOPMENT_ROADMAP.md §14.3,
+# R1-P1 task 7). Rules propose DIRECTIONS only; magnitudes are bounded by each parameter's
+# max_step_change and admissible window in constraints.yaml, and every candidate still passes the
+# six-check feasibility guard. All rules are heuristic (provenance: unvalidated) until Role 1 cites them.
+#
+# when:    {stage, indicator, op, threshold}  — fires when the stage indicator satisfies op/threshold
+#          or {breach: <rule_id>}             — fires when that coupling/hard-constraint breach is present
+# actions: parameter + direction (increase | decrease); step_fractions are fractions of max_step_change
+
+remedies_version: remedies-0.1.0
+default_step_fractions: [0.5, 1.0]
+
+rules:
+  - id: RM-COOL-ADEQ
+    when: {stage: COOLING, indicator: cooling_adequacy, op: "<", threshold: 1.0}
+    actions:
+      - {parameter: cooling_time_s, direction: increase}
+      - {parameter: mold_temp_c, direction: decrease}
+    rationale: "Cooling time below the thickness-based requirement -> warp/dimensional risk."
+    provenance: unvalidated
+
+  - id: RM-THERM-DEGR
+    when: {stage: PLASTICIZING, indicator: degradation_exposure, op: ">=", threshold: 0.5}
+    actions:
+      - {parameter: melt_temp_c, direction: decrease}
+      - {parameter: residence_time_s, direction: decrease}
+    rationale: "Time-at-temperature drives thermal degradation (burn marks, brittleness)."
+    provenance: unvalidated
+
+  - id: RM-PACK-SINK
+    when: {stage: PACKING, indicator: sink_void_risk, op: ">=", threshold: 0.5}
+    actions:
+      - {parameter: hold_pressure_bar, direction: increase}
+      - {parameter: hold_time_s, direction: increase}
+    rationale: "Insufficient packing integral before gate freeze -> sink marks / voids."
+    provenance: unvalidated
+
+  - id: RM-PACK-OVER
+    when: {stage: PACKING, indicator: over_pack_risk, op: ">=", threshold: 0.5}
+    actions:
+      - {parameter: hold_pressure_bar, direction: decrease}
+      - {parameter: hold_time_s, direction: decrease}
+    rationale: "Over-packing raises residual stress, flash and ejection difficulty."
+    provenance: unvalidated
+
+  - id: RM-INJ-FLASH
+    when: {stage: INJECTION, indicator: flash_risk, op: ">=", threshold: 0.5}
+    actions:
+      - {parameter: inj_pressure_bar, direction: decrease}
+      - {parameter: hold_pressure_bar, direction: decrease}
+      - {parameter: clamp_force_ton, direction: increase}
+    rationale: "Cavity pressure exceeds clamp capacity -> material escapes the parting line."
+    provenance: unvalidated
+
+  - id: RM-INJ-SHORT
+    when: {stage: INJECTION, indicator: short_shot_risk, op: ">=", threshold: 0.5}
+    actions:
+      - {parameter: melt_temp_c, direction: increase}
+      - {parameter: inj_pressure_bar, direction: increase}
+      - {parameter: inj_velocity_mm_s, direction: increase}
+    rationale: "Cold, viscous melt with too little pressure/velocity -> incomplete fill."
+    provenance: unvalidated
+
+  - id: RM-MAT-MOIST
+    when: {stage: MATERIAL_CONDITIONING, indicator: moisture_flag, op: "==", threshold: true}
+    actions:
+      - {parameter: drying_time_h, direction: increase}
+    rationale: "Moisture above spec becomes splay at elevated melt temperature; drying is the actionable lever."
+    provenance: unvalidated
+
+  - id: RM-HC-HEADROOM
+    when: {breach: HC-003}
+    actions:
+      - {parameter: inj_pressure_bar, direction: decrease}
+      - {parameter: melt_temp_c, direction: increase}
+    rationale: "Restore injection-pressure headroom below 90% of machine maximum."
+    provenance: unvalidated
+
+  - id: RM-HC-CLAMP
+    when: {breach: HC-002}
+    actions:
+      - {parameter: clamp_force_ton, direction: increase}
+    rationale: "Clamp force must cover the cavity-pressure load (machine-safety guard)."
+    provenance: unvalidated

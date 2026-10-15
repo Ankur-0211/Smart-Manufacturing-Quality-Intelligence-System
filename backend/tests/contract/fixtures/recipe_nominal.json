@@ -1,0 +1,54 @@
+{
+  "context": {
+    "machine": {
+      "machine_id": "MC-03",
+      "machine_type": "ELECTRIC",
+      "tonnage_ton": 180.0,
+      "max_inj_pressure_bar": 2000.0,
+      "max_clamp_force_ton": 180.0,
+      "machine_age_days": 2479,
+      "days_since_maintenance": 44
+    },
+    "product": {
+      "product_id": "PP-JBOX-42",
+      "name": "PP electrical junction-box housing",
+      "cavity_count": 4,
+      "nominal_shot_weight_g": 42.0,
+      "wall_thickness_mm": 2.5,
+      "projected_area_cm2": 100.0
+    },
+    "material_lot": {
+      "material_lot_id": "A-771",
+      "resin_grade": "PP-H",
+      "mfi": 12.0,
+      "moisture_pct": 0.04,
+      "regrind_pct": 15,
+      "colourant_pct": 2.0
+    }
+  },
+  "recipe": {
+    "drying_time_h": 1.0,
+    "dryer_temp_c": 80.0,
+    "barrel_temp_rear_c": 200.0,
+    "barrel_temp_mid_c": 215.0,
+    "barrel_temp_front_c": 225.0,
+    "nozzle_temp_c": 230.0,
+    "melt_temp_c": 230.0,
+    "screw_rpm": 100.0,
+    "back_pressure_bar": 60.0,
+    "residence_time_s": 30.0,
+    "inj_velocity_mm_s": 100.0,
+    "inj_pressure_bar": 900.0,
+    "fill_time_s": 1.4,
+    "shot_size_mm": 45.0,
+    "switchover_position_mm": 12.0,
+    "clamp_force_ton": 150.0,
+    "hold_pressure_bar": 600.0,
+    "hold_time_s": 2.5,
+    "cushion_mm": 5.0,
+    "mold_temp_c": 40.0,
+    "cooling_time_s": 22.0,
+    "cycle_time_s": 38.0,
+    "ejection_force_proxy": 0.5
+  }
+}

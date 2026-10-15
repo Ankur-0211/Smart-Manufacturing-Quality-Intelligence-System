@@ -4,7 +4,7 @@
 |---|---|
 | Requested by | Role 2 |
 | Date | 2026-10-15 |
-| Status | proposed (waiting for Role 1) |
+| Status | **approved by Role 1 for the remainder only** (2026-10-15, relayed by the project owner); partially delivered |
 | Type | process / ownership (no field, endpoint or semantic change) |
 
 ## Problem
@@ -47,8 +47,29 @@ delivery date is unknown. All three items are already fully specified in roadmap
 No contract content differs from the approved roadmap. Contract tests will run for the mock as soon
 as it lands.
 
+## Role 1 answer (2026-10-15)
+
+1. Role 1 has already written **contracts part 1**: `version`, `enums`, `recipe` (23 fields),
+   `context` (MachineProfile, ProductContext, MaterialLot, RunContext, ProcessInput), `errors`,
+   plus `tests/contract/test_contracts_part1.py`. It will push them to `role-1-ai-ml`.
+   **Role 2 must not touch these files.** Mistakes found in them go to a CCR or a direct message.
+2. CCR-002 is approved **for the remainder only**, using the exact names of roadmap §7 and §9.1.
+   Role 1 will review, adopt, remove the BOOTSTRAP headers and bump versions.
+3. Role 2's `pyproject.toml`, `.python-version` and `uv.lock` are authoritative. Role 1 adds
+   `ml_pipeline` and the `ml` group when it creates that package.
+
+## Delivery status
+
+| Item | Status |
+|---|---|
+| `constraints.yaml`, `remedies.yaml`, `fleet.yaml`, `CHANGELOG.md` | **Delivered** (`constraints-0.1.0`, `remedies-0.1.0`, `fleet-0.1.0`) |
+| 5 recipe fixtures (`recipe_*.json`) | **Delivered** (ProcessInput JSON shape per §7.3–7.7) |
+| Data-level tests (`backend/tests/domain/test_registry_data.py`) | **Delivered** (24 tests) |
+| Remaining contracts: stage, anomaly, prediction, explanation, recommendation, sensitivity, `interface.py` (Protocol) | **Waiting.** They import part-1 enums and types, so they are written after Role 1's part 1 is pushed and merged, against the real files |
+| `constraint_loader.py`, `dependency_graph.py` + loader tests (R1-P1 task 10) | **Waiting**, same reason (they use `StageName`, `ConstraintSeverity`, …) |
+
 ## Approvals
 
-- Role 1 [ ] (also confirm: "no prior contracts/registry work exists")
+- Role 1 [ ] (approved verbally for the remainder; box to be ticked by Role 1 after merge)
 - Role 2 [x]
-- Project owner (user) [ ]
+- Project owner (user) [x]

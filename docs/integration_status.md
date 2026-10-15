@@ -3,7 +3,7 @@
 Both roles update this file (roadmap §10.1). A capability counts as **REAL** only when
 `QualityIntelligence.capabilities()` reports it **and** this table says so.
 
-_Last updated: 2026-10-15 by Role 2 (R2-P2 + R2-P6 visual components)._
+_Last updated: 2026-10-15 by Role 2 (CCR-002 data bootstrap)._
 
 ## Capability matrix
 
@@ -23,10 +23,10 @@ Status values: `NOT AVAILABLE` → `MOCK` → `HYBRID` → `REAL`.
 
 | Artifact | Version | Status |
 |---|---|---|
-| `backend/app/contracts` | — | **Awaited from Role 1 (R1-P1 task 1)** |
-| `backend/app/domain/constraints.yaml` + loader | — | **Awaited from Role 1 (R1-P1 tasks 4–9)** |
-| `fleet.yaml` | — | Awaited (R1-P1 task 8). The seed is ready and needs this file; format in `database.md` |
-| Contract fixtures (`backend/tests/contract/fixtures`) | — | Awaited (R1-P1). Harness ready (R2-P1) |
+| `backend/app/contracts` | part 1 (Role 1) | **Part 1 written by Role 1, not yet pushed** (version, enums, recipe, context, errors). Remainder bootstrapped by Role 2 after that push (CCR-002) |
+| `backend/app/domain/constraints.yaml`, `remedies.yaml` | constraints-0.1.0 / remedies-0.1.0 | Bootstrapped by Role 2 (CCR-002); all values `unvalidated`; Role 1 to adopt. Loader + dependency graph wait for part 1 |
+| `fleet.yaml` | fleet-0.1.0 | Bootstrapped (CCR-002): MC-01…04, PP-JBOX-42, 4 lots. Seed verified with it |
+| Contract fixtures (`backend/tests/contract/fixtures`) | v0.1.0 | 5 `recipe_*.json` bootstrapped (CCR-002). Harness ready; runs once contracts exist |
 | API (`docs/openapi.json`) | api_version 1 | `/api/v1/health` only |
 | Event catalogue (`docs/events.md`) | draft | From roadmap §9.5. Frozen at M4 |
 | DB schema | Alembic `0001` | Done (R2-P2): 10 tables, immutability guards, seed |
@@ -45,7 +45,7 @@ Status values: `NOT AVAILABLE` → `MOCK` → `HYBRID` → `REAL`.
 | CCR | Title | Status |
 |---|---|---|
 | [CCR-001](contract_changes/CCR-001-route-error-codes.md) | Add `ROUTE_NOT_FOUND`, `METHOD_NOT_ALLOWED` error codes | proposed |
-| [CCR-002](contract_changes/CCR-002-role2-bootstraps-contracts.md) | Role 2 bootstraps contracts v0.1.0 / registry / fixtures (one-time UD-19 exception) | proposed; waiting for Role 1 answer |
+| [CCR-002](contract_changes/CCR-002-role2-bootstraps-contracts.md) | Role 2 bootstraps the contracts remainder / registry / fixtures | approved for the remainder; data files delivered; code waits for part-1 push |
 
 ## Environments
 
@@ -56,7 +56,7 @@ Status values: `NOT AVAILABLE` → `MOCK` → `HYBRID` → `REAL`.
 
 ## Blockers
 
-- **Role 1: please read [`coordination/ROLE1_AGENT_INSTRUCTIONS.md`](coordination/ROLE1_AGENT_INSTRUCTIONS.md) before working on R1-P1.**
+- **Role 1: please push contracts part 1 to `role-1-ai-ml`.** The remaining contracts, the loader and Role 2's R2-P1 tasks 8–11 wait for it.
 
 - **Role 2 is blocked on R2-P1 tasks 8–11 (mock intelligence, `/constraints`, registry-driven
   validation, real contract tests) until Role 1 delivers `app/contracts` v0.1.0 and the registry
