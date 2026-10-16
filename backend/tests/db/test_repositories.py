@@ -26,7 +26,12 @@ Refs = tuple[Machine, Product, MaterialLot]
 def _run(session: Session, refs: Refs, recipe: dict[str, float], **kw: object) -> ProcessRun:
     m, p, lot = refs
     return RunRepository(session).create(
-        machine=m, product=p, material_lot=lot, parameters=recipe, today=date(2026, 10, 15), **kw  # type: ignore[arg-type]
+        machine=m,
+        product=p,
+        material_lot=lot,
+        parameters=recipe,
+        today=date(2026, 10, 15),
+        **kw,  # type: ignore[arg-type]
     )
 
 

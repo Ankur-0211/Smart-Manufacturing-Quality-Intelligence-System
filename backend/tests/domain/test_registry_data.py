@@ -148,9 +148,9 @@ def test_every_parameter_has_required_metadata(
         if p["kind"] == "setpoint" and p["actionable"]:
             assert 0 <= p["change_cost"] <= 1 and p["max_step_change"] is not None, name
         if p["kind"] != "setpoint":
-            assert (
-                p["actionable"] is False
-            ), f"{name}: context/lot fields are never knobs (Plan 14.7)"
+            assert p["actionable"] is False, (
+                f"{name}: context/lot fields are never knobs (Plan 14.7)"
+            )
 
 
 def test_parameter_stage_is_earliest_consuming_stage(
@@ -222,9 +222,9 @@ def test_remedies_reference_known_parameters_and_indicators(
             assert when["indicator"] in STAGE_INDICATORS[when["stage"]], rule["id"]
         for action in rule["actions"]:
             p = params[action["parameter"]]
-            assert (
-                p["kind"] == "setpoint" and p["actionable"]
-            ), f"{rule['id']}: {action['parameter']} is not a knob"
+            assert p["kind"] == "setpoint" and p["actionable"], (
+                f"{rule['id']}: {action['parameter']} is not a knob"
+            )
             assert action["direction"] in {"increase", "decrease"}
 
 

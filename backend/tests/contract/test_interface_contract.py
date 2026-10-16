@@ -117,7 +117,7 @@ def test_evaluate_satisfies_contract(impl: Any, fixture: Path | None) -> None:
         pytest.skip("No QualityIntelligence implementation available yet (mock pending)")
     if fixture is None:
         pytest.skip("No contract fixtures yet")
-    from app.contracts.recipe import ProcessInput
+    from app.contracts.context import ProcessInput
 
     process_input = ProcessInput.model_validate_json(fixture.read_text(encoding="utf-8"))
     result = impl.evaluate(process_input, include_explanation=True)
