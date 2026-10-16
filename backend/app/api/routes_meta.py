@@ -1,5 +1,5 @@
-"""Meta endpoints. R2-P1 provides ``/health``; ``/constraints`` and ``/models`` follow
-once the Role 1 registry loader and contracts are integrated (R2-P1 task 9, R2-P3).
+"""Meta endpoints. R2-P1 provides ``/health``; ``/constraints`` (R2-P1 task 9) and ``/models``
+(R2-P3) follow.
 """
 
 from __future__ import annotations
@@ -9,8 +9,9 @@ from typing import Literal
 from fastapi import APIRouter, Request
 from pydantic import BaseModel, ConfigDict
 
-from app.api.deps import DatabaseDep, SettingsDep
+from app.api.deps import DatabaseDep, IntelligenceDep, RegistryDep, SettingsDep
 from app.api.errors import build_meta
+from app.contracts.interface import IntelligenceVersionInfo
 from app.schemas.envelope import Envelope
 
 router = APIRouter(tags=["meta"])
@@ -32,31 +33,37 @@ class HealthData(BaseModel):
     intelligence_backend: str
     db: bool
     model_loaded: bool
-    # IntelligenceVersionInfo (roadmap 9.1) once contracts exist; null until then.
-    intelligence: dict[str, object] | None = None
+    intelligence: IntelligenceVersionInfo
     components: list[ComponentStatus]
 
 
 @router.get("/health", response_model=Envelope[HealthData], summary="Liveness and readiness")
-def health(request: Request, settings: SettingsDep, database: DatabaseDep) -> Envelope[HealthData]:
+def health(
+    request: Request,
+    settings: SettingsDep,
+    database: DatabaseDep,
+    intelligence: IntelligenceDep,
+    registry: RegistryDep,
+) -> Envelope[HealthData]:
     # Components are reported honestly: anything not built yet is "available": false.
     db_status = database.status()
+    info = intelligence.version_info()
     components = [
         ComponentStatus(name="api", available=True, detail="FastAPI application running"),
         ComponentStatus(name="database", available=db_status.migrated, detail=db_status.detail),
         ComponentStatus(
             name="intelligence",
-            available=False,
-            detail="Awaiting app.contracts v0.1.0 from Role 1 (R2-P1 tasks 8-10)",
+            available=True,
+            detail=(
+                "MOCK intelligence: outputs are placeholders, not model predictions"
+                if info.is_mock
+                else f"Real intelligence ({info.fusion_model_version})"
+            ),
         ),
         ComponentStatus(
             name="constraint_registry",
-            available=settings.constraints_path.is_file(),
-            detail=(
-                "Registry file present (loader integration pending)"
-                if settings.constraints_path.is_file()
-                else "constraints.yaml not delivered yet (R1-P1)"
-            ),
+            available=True,
+            detail=f"{registry.version} (sha256 {registry.content_hash[:12]})",
         ),
     ]
     status: Literal["ok", "degraded"] = "ok" if all(c.available for c in components) else "degraded"
@@ -65,8 +72,8 @@ def health(request: Request, settings: SettingsDep, database: DatabaseDep) -> En
         env=settings.env.value,
         intelligence_backend=settings.intelligence_backend.value,
         db=db_status.migrated,
-        model_loaded=False,
-        intelligence=None,
+        model_loaded=not info.is_mock,
+        intelligence=info,
         components=components,
     )
     return Envelope(data=data, meta=build_meta(request))

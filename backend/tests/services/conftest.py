@@ -144,8 +144,16 @@ def database(tmp_path: Path) -> Iterator[Database]:
     db.dispose()
 
 
-def create_test_run(database: Database, **kw: Any) -> str:
-    """Create machine/product/lot (once) and a run with an arbitrary in-type recipe."""
+def create_test_run(
+    database: Database,
+    *,
+    recipe: Mapping[str, float] | None = None,
+    lot_code: str = "A-771",
+    moisture_pct: float = 0.04,
+    **kw: Any,
+) -> str:
+    """Create machine/product/lot (once) and a run. Without ``recipe`` the setpoints are
+    arbitrary in-type numbers; pass a real recipe when an actual intelligence evaluates it."""
     with database.session() as s:
         machine = s.query(Machine).filter_by(code="MC-03").one_or_none() or Machine(
             code="MC-03",
@@ -164,11 +172,11 @@ def create_test_run(database: Database, **kw: Any) -> str:
             wall_thickness_mm=2.5,
             projected_area_cm2=100,
         )
-        lot = s.query(MaterialLot).filter_by(lot_code="A-771").one_or_none() or MaterialLot(
-            lot_code="A-771",
+        lot = s.query(MaterialLot).filter_by(lot_code=lot_code).one_or_none() or MaterialLot(
+            lot_code=lot_code,
             resin_grade="PP-H",
             mfi=12,
-            moisture_pct=0.04,
+            moisture_pct=moisture_pct,
             regrind_pct=15,
             colourant_pct=2,
         )
@@ -178,7 +186,9 @@ def create_test_run(database: Database, **kw: Any) -> str:
             machine=machine,
             product=product,
             material_lot=lot,
-            parameters={f: float(i + 1) for i, f in enumerate(RECIPE_FIELDS)},
+            parameters=dict(recipe)
+            if recipe is not None
+            else {f: float(i + 1) for i, f in enumerate(RECIPE_FIELDS)},
             today=date(2026, 10, 15),
             **kw,
         )

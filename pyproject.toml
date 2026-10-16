@@ -104,5 +104,5 @@ plugins = ["pydantic.mypy"]
 ignore_missing_imports = true
 warn_unused_ignores = true
 # Scoped strictness (roadmap R2-P1 task 2): Role 2 application packages.
-files = ["backend/app/core", "backend/app/api", "backend/app/schemas", "backend/app/db", "backend/app/engine", "backend/app/services", "backend/app/contracts", "backend/app/domain", "backend/app/main.py"]
+files = ["backend/app/core", "backend/app/api", "backend/app/schemas", "backend/app/db", "backend/app/engine", "backend/app/services", "backend/app/contracts", "backend/app/domain", "backend/app/intelligence_mock", "backend/app/main.py"]
 strict = true

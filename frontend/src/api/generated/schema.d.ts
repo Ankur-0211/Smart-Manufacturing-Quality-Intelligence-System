@@ -338,10 +338,7 @@ export interface components {
             db: boolean;
             /** Env */
             env: string;
-            /** Intelligence */
-            intelligence?: {
-                [key: string]: unknown;
-            } | null;
+            intelligence: components["schemas"]["IntelligenceVersionInfo"];
             /** Intelligence Backend */
             intelligence_backend: string;
             /** Model Loaded */
@@ -351,6 +348,37 @@ export interface components {
              * @enum {string}
              */
             status: "ok" | "degraded";
+        };
+        /**
+         * InferenceBackend
+         * @enum {string}
+         */
+        InferenceBackend: "real" | "mock";
+        /** IntelligenceVersionInfo */
+        IntelligenceVersionInfo: {
+            /** Anomaly Model Version */
+            anomaly_model_version?: string | null;
+            /** Capabilities */
+            capabilities?: {
+                [key: string]: boolean;
+            };
+            /** Constraints Version */
+            constraints_version: string;
+            /** Contracts Version */
+            contracts_version: string;
+            /** Feature Schema Hash */
+            feature_schema_hash: string | null;
+            /** Fusion Model Version */
+            fusion_model_version: string | null;
+            inference_backend: components["schemas"]["InferenceBackend"];
+            /** Is Mock */
+            is_mock: boolean;
+            /** Module Versions */
+            module_versions: {
+                [key: string]: string;
+            };
+            /** Stage Stats Version */
+            stage_stats_version?: string | null;
         };
         /** LabelRequest */
         LabelRequest: {
@@ -488,6 +516,11 @@ export interface components {
              */
             updated_at: string;
         };
+        /**
+         * StageName
+         * @enum {string}
+         */
+        StageName: "MATERIAL_CONDITIONING" | "PLASTICIZING" | "INJECTION" | "PACKING" | "COOLING" | "QUALITY_INSPECTION";
         /** StartRequest */
         StartRequest: {
             /**

@@ -66,6 +66,12 @@ def _dump(obj: Any) -> dict[str, Any]:
     return dumped
 
 
+def _comparable(obj: Any) -> dict[str, Any]:
+    """Dump without wall-clock timing, which is the only field allowed to differ between calls."""
+    dumped: dict[str, Any] = obj.model_dump(mode="json", exclude={"compute_ms"})
+    return dumped
+
+
 def _assert_stage_results(stage_results: list[Any]) -> None:
     dumped = [_dump(r) for r in stage_results]
     assert [r["stage_name"] for r in dumped] == STAGE_ORDER
@@ -126,7 +132,16 @@ def test_evaluate_satisfies_contract(impl: Any, fixture: Path | None) -> None:
 
     # Equivalence guarantee (roadmap 9.1 #4): evaluate == run_all_stages + predict.
     stages = impl.run_all_stages(process_input)
-    assert [_dump(s) for s in stages] == [_dump(s) for s in result.stage_results]
+    assert [_comparable(s) for s in stages] == [_comparable(s) for s in result.stage_results]
+    prediction = impl.predict(process_input, stages, include_explanation=True)
+    assert _comparable(prediction) == _comparable(result.prediction)
+
+    # Determinism guarantee (roadmap 9.1 #1): identical inputs give identical outputs.
+    again = impl.evaluate(process_input, include_explanation=True)
+    assert [_comparable(s) for s in again.stage_results] == [
+        _comparable(s) for s in result.stage_results
+    ]
+    assert _comparable(again.prediction) == _comparable(result.prediction)
 
 
 @requires_contracts

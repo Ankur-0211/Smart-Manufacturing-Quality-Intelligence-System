@@ -22,16 +22,31 @@ def test_health_returns_envelope(client: TestClient) -> None:
     assert body["data"]["intelligence_backend"] == "mock"
 
 
-def test_health_reports_unbuilt_components_honestly(client: TestClient) -> None:
+def test_health_reports_components_honestly(client: TestClient) -> None:
     data = client.get("/api/v1/health").json()["data"]
-    # DB and intelligence do not exist yet in R2-P1, so the service must say "degraded".
+    # The client fixture's DB is not migrated, so the service must say "degraded".
     assert data["status"] == "degraded"
     assert data["db"] is False
-    assert data["model_loaded"] is False
+    assert data["model_loaded"] is False  # mock: no model artifacts
     names = {c["name"]: c["available"] for c in data["components"]}
-    assert names["api"] is True
-    assert names["database"] is False
-    assert names["intelligence"] is False
+    assert names == {
+        "api": True,
+        "database": False,
+        "intelligence": True,
+        "constraint_registry": True,
+    }
+
+
+def test_app_starts_with_mock_and_says_so(client: TestClient) -> None:
+    data = client.get("/api/v1/health").json()["data"]
+    info = data["intelligence"]
+    assert info["is_mock"] is True
+    assert info["inference_backend"] == "mock"
+    assert info["fusion_model_version"] == "mock-0.0.0"
+    assert info["constraints_version"] == "constraints-0.1.0"
+    assert info["capabilities"]["run_stage"] is True
+    intelligence = next(c for c in data["components"] if c["name"] == "intelligence")
+    assert intelligence["detail"].startswith("MOCK intelligence")
 
 
 def test_request_id_generated_and_echoed(client: TestClient) -> None:

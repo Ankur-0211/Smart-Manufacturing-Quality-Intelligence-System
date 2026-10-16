@@ -3,19 +3,19 @@
 Both roles update this file (roadmap §10.1). A capability counts as **REAL** only when
 `QualityIntelligence.capabilities()` reports it **and** this table says so.
 
-_Last updated: 2026-10-16 by Role 2 (contracts part 1 received; remainder, loader and graph bootstrapped)._
+_Last updated: 2026-10-16 by Role 2 (mock intelligence wired into the simulation engine; M3)._
 
 ## Capability matrix
 
 | Capability | Status | Since | Notes |
 |---|---|---|---|
-| `run_stage` (S1–S5) | NOT AVAILABLE | — | Contracts v0.1.0 in place; mock next (R2-P1 task 8) |
-| `predict` | NOT AVAILABLE | — | Mock after contracts; real from `fusion-0.1.0` (R1-P4) |
-| `explain` / `global_explanation` | NOT AVAILABLE | — | R1-P7 |
-| `anomaly_global` | NOT AVAILABLE | — | R1-P7 (P1) |
-| `recommend` | NOT AVAILABLE | — | R1-P8; UI gated on the "guard tested" statement |
-| `sensitivity` | NOT AVAILABLE | — | R1-P8 (P1) |
-| `spc` | NOT AVAILABLE | — | R1-P7 (P1) |
+| `run_stage` (S1–S5) | MOCK | 2026-10-16 | `MockQualityIntelligence`; BLOCKED driven by `check_hard_constraints`. HC-002/HC-004 need derived values only real stage modules produce, so the mock never fires them |
+| `predict` | MOCK | 2026-10-16 | Hash-derived placeholder `p_fail`, threshold 0.5, `MOCK_INFERENCE` caveat; real from `fusion-0.1.0` (R1-P4) |
+| `explain` / `global_explanation` | MOCK | 2026-10-16 | Placeholder attributions; real in R1-P7 |
+| `anomaly_global` | MOCK | 2026-10-16 | `detect_anomaly` placeholder; `PredictionResult.anomaly_global` stays null (MVP); real R1-P7 (P1) |
+| `recommend` | MOCK | 2026-10-16 | Registry-guarded one-step candidates scored through the same mock pipeline; real R1-P8. UI gated on the "guard tested" statement |
+| `sensitivity` | MOCK | 2026-10-16 | Real R1-P8 (P1) |
+| `spc` | NOT AVAILABLE | — | Mock raises `CAPABILITY_UNAVAILABLE`; R1-P7 (P1) |
 
 Status values: `NOT AVAILABLE` → `MOCK` → `HYBRID` → `REAL`.
 
@@ -26,7 +26,7 @@ Status values: `NOT AVAILABLE` → `MOCK` → `HYBRID` → `REAL`.
 | `backend/app/contracts` | 0.1.0 | Part 1 by Role 1 (committed unchanged, review in [CCR-003](contract_changes/CCR-003-part1-review-notes.md)). Remainder (`stage`, `anomaly`, `prediction`, `explanation`, `recommendation`, `sensitivity`, `interface`) bootstrapped by Role 2 (CCR-002); Role 1 to adopt |
 | `backend/app/domain/constraints.yaml`, `remedies.yaml` | constraints-0.1.0 / remedies-0.1.0 | Bootstrapped by Role 2 (CCR-002); all values `unvalidated`; Role 1 to adopt. `constraint_loader.py` + `dependency_graph.py` bootstrapped (CCR-002) with tests |
 | `fleet.yaml` | fleet-0.1.0 | Bootstrapped (CCR-002): MC-01…04, PP-JBOX-42, 4 lots. Seed verified with it |
-| Contract fixtures (`backend/tests/contract/fixtures`) | v0.1.0 | 5 `recipe_*.json` bootstrapped (CCR-002). All validate against `ProcessInput`. Harness runs once the mock exists |
+| Contract fixtures (`backend/tests/contract/fixtures`) | v0.1.0 | 5 `recipe_*.json` bootstrapped (CCR-002). All validate against `ProcessInput`; the harness runs them against the mock (determinism + equivalence) |
 | API (`docs/openapi.json`) | api_version 1 | `/health`, simulation queries/commands, SSE, scenario label |
 | Event catalogue (`docs/events.md`) | EVENTS_VERSION 1 | Implemented and tested (R2-P4). Freeze at M4 once a real/mock executor runs end-to-end |
 | DB schema | Alembic `0001` | Done (R2-P2): 10 tables, immutability guards, seed |
@@ -38,7 +38,7 @@ Status values: `NOT AVAILABLE` → `MOCK` → `HYBRID` → `REAL`.
 |---|---|---|
 | M1 | Contracts approved | Open. v0.1.0 complete on `role-2-application`; awaiting Role 1 review of the bootstrap + CCR-003 answers |
 | M2 | Dataset feasibility & canonical schema | Open (Role 1) |
-| M3 | Mock inference operational | Open. Unblocked (R2-P1 task 8 next) |
+| M3 | Mock inference operational | **Reached 2026-10-16.** Mock passes the contract harness on all 5 fixtures; simulation runs end to end (auto, stepwise, BLOCKED + override) |
 
 ## Open CCRs
 

@@ -36,6 +36,11 @@ def _imported_modules(path: Path) -> set[str]:
     return modules
 
 
+def _is_forbidden(module: str) -> bool:
+    """Whole-package match: ``app.intelligence_mock`` is not ``app.intelligence``."""
+    return any(module == f or module.startswith(f + ".") for f in FORBIDDEN_APP_MODULES)
+
+
 def _python_files(*dirs: Path) -> list[Path]:
     files: list[Path] = []
     for d in dirs:
@@ -55,7 +60,7 @@ def test_application_layer_does_not_import_ml(path: Path) -> None:
         assert root not in FORBIDDEN_LIBS, f"{path.name} imports ML library '{module}' (rule B1/B7)"
         if module in allowed:
             continue
-        assert not module.startswith(FORBIDDEN_APP_MODULES), (
+        assert not _is_forbidden(module), (
             f"{path.name} imports intelligence internals '{module}' (rule B2); "
             "use app.contracts.interface.QualityIntelligence instead"
         )
@@ -65,7 +70,7 @@ def test_mock_does_not_import_role1_internals() -> None:
     # Roadmap R2-P1 #15: the mock may use app.contracts and app.domain only.
     for path in _python_files(APP_DIR / "intelligence_mock"):
         for module in _imported_modules(path):
-            assert not module.startswith(FORBIDDEN_APP_MODULES), f"{path.name} imports '{module}'"
+            assert not _is_forbidden(module), f"{path.name} imports '{module}'"
             assert module.split(".")[0] not in FORBIDDEN_LIBS, f"{path.name} imports '{module}'"
 
 
@@ -73,3 +78,6 @@ def test_boundary_checker_detects_violations(tmp_path: Path) -> None:
     bad = tmp_path / "bad.py"
     bad.write_text("import joblib\nfrom app.ml.predict import x\n", encoding="utf-8")
     assert {"joblib", "app.ml.predict"} <= _imported_modules(bad)
+    assert _is_forbidden("app.intelligence.facade")
+    assert _is_forbidden("app.intelligence")
+    assert not _is_forbidden("app.intelligence_mock.mock")

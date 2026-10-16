@@ -13,15 +13,17 @@ from fastapi import APIRouter, Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api import routes_meta, routes_simulation
-from app.api.deps import require_api_key
+from app.api.deps import build_intelligence, require_api_key
 from app.api.errors import register_exception_handlers
 from app.api.middleware import RequestContextMiddleware
 from app.api.rate_limit import TokenBucketLimiter
 from app.core.config import Settings, get_settings
 from app.core.logging import configure_logging, get_logger
 from app.db.session import Database
+from app.domain.constraint_loader import ConstraintRegistry
 from app.engine.cache import StageCache
 from app.engine.events import EventBus
+from app.services.intelligence_executor import IntelligenceStageExecutor
 from app.services.simulation_service import SimulationService
 
 API_PREFIX = "/api/v1"
@@ -32,26 +34,32 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     configure_logging(settings)
     log = get_logger("app.startup")
 
+    # Startup order (roadmap R2-P1 task 3): settings -> registry -> intelligence -> DB.
+    # An invalid registry or an unavailable `real` backend raises here, so the app never starts.
+    registry = ConstraintRegistry.load(settings.constraints_path)
+    intelligence = build_intelligence(settings, registry)
+    executor = IntelligenceStageExecutor(intelligence, registry)
     database = Database(settings.database_url)
-    # No StageExecutor yet: it is bound to the mock/real QualityIntelligence once app.contracts
-    # exists (R2-P1 tasks 8-10). Until then simulation commands answer 501 CAPABILITY_UNAVAILABLE.
     simulation = SimulationService(
         database,
         EventBus(),
         StageCache(settings.stage_cache_size),
-        executor=None,
+        executor=executor,
         stage_presentation_ms=settings.stage_presentation_ms,
     )
 
     @asynccontextmanager
     async def lifespan(_: FastAPI) -> AsyncIterator[None]:
-        # Startup order (roadmap R2-P1 task 3): settings -> registry -> intelligence -> DB.
-        # Registry and intelligence are wired once Role 1 contracts exist.
         db_status = database.status()
+        info = intelligence.version_info()
         log.info(
             "startup",
             env=settings.env.value,
             intelligence_backend=settings.intelligence_backend.value,
+            inference_backend=info.inference_backend.value,
+            is_mock=info.is_mock,
+            constraints_version=registry.version,
+            constraints_hash=registry.content_hash[:12],
             database_url_scheme=settings.database_url.split(":", 1)[0],
             db_reachable=db_status.reachable,
             db_revision=db_status.revision,
@@ -83,6 +91,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     )
     app.state.settings = settings
     app.state.db = database
+    app.state.registry = registry
+    app.state.intelligence = intelligence
     app.state.simulation = simulation
     app.state.sse_keepalive_s = 15.0
     app.state.rate_limiter = TokenBucketLimiter(settings.rate_limit_per_min)

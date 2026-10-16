@@ -24,7 +24,16 @@ export function healthPayload(overrides: Partial<Schemas['HealthData']> = {}): S
     intelligence_backend: 'mock',
     db: false,
     model_loaded: false,
-    intelligence: null,
+    intelligence: {
+      contracts_version: '0.1.0',
+      constraints_version: 'constraints-0.1.0',
+      module_versions: {},
+      fusion_model_version: 'mock-0.0.0',
+      feature_schema_hash: null,
+      inference_backend: 'mock',
+      is_mock: true,
+      capabilities: { run_stage: true, predict: true },
+    },
     components: [{ name: 'api', available: true, detail: 'running' }],
     ...overrides,
   }

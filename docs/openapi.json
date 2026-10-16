@@ -407,16 +407,7 @@
             "type": "string"
           },
           "intelligence": {
-            "anyOf": [
-              {
-                "additionalProperties": true,
-                "type": "object"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Intelligence"
+            "$ref": "#/components/schemas/IntelligenceVersionInfo"
           },
           "intelligence_backend": {
             "title": "Intelligence Backend",
@@ -441,9 +432,110 @@
           "intelligence_backend",
           "db",
           "model_loaded",
+          "intelligence",
           "components"
         ],
         "title": "HealthData",
+        "type": "object"
+      },
+      "InferenceBackend": {
+        "enum": [
+          "real",
+          "mock"
+        ],
+        "title": "InferenceBackend",
+        "type": "string"
+      },
+      "IntelligenceVersionInfo": {
+        "additionalProperties": false,
+        "properties": {
+          "anomaly_model_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Anomaly Model Version"
+          },
+          "capabilities": {
+            "additionalProperties": {
+              "type": "boolean"
+            },
+            "title": "Capabilities",
+            "type": "object"
+          },
+          "constraints_version": {
+            "title": "Constraints Version",
+            "type": "string"
+          },
+          "contracts_version": {
+            "title": "Contracts Version",
+            "type": "string"
+          },
+          "feature_schema_hash": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Feature Schema Hash"
+          },
+          "fusion_model_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fusion Model Version"
+          },
+          "inference_backend": {
+            "$ref": "#/components/schemas/InferenceBackend"
+          },
+          "is_mock": {
+            "title": "Is Mock",
+            "type": "boolean"
+          },
+          "module_versions": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "propertyNames": {
+              "$ref": "#/components/schemas/StageName"
+            },
+            "title": "Module Versions",
+            "type": "object"
+          },
+          "stage_stats_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Stage Stats Version"
+          }
+        },
+        "required": [
+          "contracts_version",
+          "constraints_version",
+          "module_versions",
+          "fusion_model_version",
+          "feature_schema_hash",
+          "inference_backend",
+          "is_mock"
+        ],
+        "title": "IntelligenceVersionInfo",
         "type": "object"
       },
       "LabelRequest": {
@@ -888,6 +980,18 @@
         ],
         "title": "SimulationStateOut",
         "type": "object"
+      },
+      "StageName": {
+        "enum": [
+          "MATERIAL_CONDITIONING",
+          "PLASTICIZING",
+          "INJECTION",
+          "PACKING",
+          "COOLING",
+          "QUALITY_INSPECTION"
+        ],
+        "title": "StageName",
+        "type": "string"
       },
       "StartRequest": {
         "additionalProperties": false,

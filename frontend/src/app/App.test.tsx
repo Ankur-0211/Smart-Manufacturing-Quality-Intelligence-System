@@ -43,7 +43,20 @@ describe('App shell', () => {
   it('hides the MOCK banner only for real intelligence', async () => {
     server.use(
       http.get(`${API}/health`, () =>
-        HttpResponse.json(envelope(healthPayload({ status: 'ok', intelligence_backend: 'real' }))),
+        HttpResponse.json(
+          envelope(
+            healthPayload({
+              status: 'ok',
+              intelligence_backend: 'real',
+              intelligence: {
+                ...healthPayload().intelligence,
+                fusion_model_version: 'fusion-1.0.0',
+                inference_backend: 'real',
+                is_mock: false,
+              },
+            }),
+          ),
+        ),
       ),
     )
     renderApp()

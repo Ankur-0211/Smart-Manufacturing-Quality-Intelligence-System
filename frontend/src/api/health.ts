@@ -17,6 +17,5 @@ export function useHealth() {
 export function isMockIntelligence(health: HealthData | undefined): boolean {
   if (!health) return false
   if (health.intelligence_backend !== 'real') return true
-  const info = health.intelligence as { is_mock?: boolean } | null | undefined
-  return info?.is_mock === true
+  return health.intelligence.is_mock
 }
