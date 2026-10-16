@@ -482,15 +482,20 @@ class ModelVersionRepository:
         self.s = session
 
     def upsert(self, name: str, semver: str, **fields: Any) -> ModelVersion:
-        row = self.s.scalar(
-            select(ModelVersion).where(ModelVersion.name == name, ModelVersion.semver == semver)
-        )
+        row = self.find(name, semver)
         if row is None:
-            row = ModelVersion(name=name, semver=semver, **fields)
-            self.s.add(row)
-        else:
-            for key, value in fields.items():
-                setattr(row, key, value)
+            try:
+                # Savepoint: concurrent runs may register the same version at once; the loser
+                # re-reads the winner's row instead of failing its run (IntegrityError).
+                with self.s.begin_nested():
+                    row = ModelVersion(name=name, semver=semver, **fields)
+                    self.s.add(row)
+            except IntegrityError:
+                row = self.find(name, semver)
+                if row is None:
+                    raise
+        for key, value in fields.items():
+            setattr(row, key, value)
         if fields.get("is_active"):
             for other in self.s.scalars(
                 select(ModelVersion).where(ModelVersion.name == name, ModelVersion.semver != semver)

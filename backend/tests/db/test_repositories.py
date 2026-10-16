@@ -18,6 +18,7 @@ from app.db.repositories import (
     RunRepository,
     StageResultRepository,
 )
+from app.db.session import Database
 from app.db.vocab import RECIPE_FIELDS
 
 Refs = tuple[Machine, Product, MaterialLot]
@@ -233,6 +234,20 @@ def test_model_version_upsert_switches_active(session: Session) -> None:
     assert active is not None and active.semver == "1.0.0"
     assert sum(1 for m in repo.all_versions() if m.name == "fusion" and m.is_active) == 1
     assert repo.ensure_mock().id == repo.ensure_mock().id
+
+
+def test_model_version_upsert_survives_concurrent_insert(
+    database: Database, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Two runs registering mock-0.0.0 at once: the loser must reuse the winner's row."""
+    with database.session() as winner:
+        winner_id = ModelVersionRepository(winner).ensure_mock().id
+    with database.session() as loser:
+        repo = ModelVersionRepository(loser)
+        real_find = repo.find
+        calls = iter([None])  # the loser's first lookup ran before the winner committed
+        monkeypatch.setattr(repo, "find", lambda n, v: next(calls, None) or real_find(n, v))
+        assert repo.ensure_mock().id == winner_id
 
 
 def test_duplicate_lot_does_not_roll_back_caller(session: Session, refs: Refs) -> None:
