@@ -44,6 +44,210 @@
         "title": "ComponentStatus",
         "type": "object"
       },
+      "ConstraintSeverity": {
+        "enum": [
+          "INFO",
+          "WARNING",
+          "CRITICAL"
+        ],
+        "title": "ConstraintSeverity",
+        "type": "string"
+      },
+      "ConstraintsOut": {
+        "additionalProperties": false,
+        "properties": {
+          "content_hash": {
+            "title": "Content Hash",
+            "type": "string"
+          },
+          "coupling_rules": {
+            "items": {
+              "$ref": "#/components/schemas/CouplingRule"
+            },
+            "title": "Coupling Rules",
+            "type": "array"
+          },
+          "hard_constraints": {
+            "items": {
+              "$ref": "#/components/schemas/HardConstraint"
+            },
+            "title": "Hard Constraints",
+            "type": "array"
+          },
+          "parameters": {
+            "items": {
+              "$ref": "#/components/schemas/ParameterSpec"
+            },
+            "title": "Parameters",
+            "type": "array"
+          },
+          "recommendation": {
+            "$ref": "#/components/schemas/RecommendationSettings"
+          },
+          "resin_grades": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/ResinGradeSpec"
+            },
+            "title": "Resin Grades",
+            "type": "object"
+          },
+          "risk_bands": {
+            "$ref": "#/components/schemas/RiskBands"
+          },
+          "stage_checks": {
+            "additionalProperties": {
+              "items": {
+                "$ref": "#/components/schemas/StageCheck"
+              },
+              "type": "array"
+            },
+            "propertyNames": {
+              "$ref": "#/components/schemas/StageName"
+            },
+            "title": "Stage Checks",
+            "type": "object"
+          },
+          "stage_inputs": {
+            "additionalProperties": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "propertyNames": {
+              "$ref": "#/components/schemas/StageName"
+            },
+            "title": "Stage Inputs",
+            "type": "object"
+          },
+          "submodels": {
+            "$ref": "#/components/schemas/Submodels"
+          },
+          "units_allowed": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Units Allowed",
+            "type": "array"
+          },
+          "version": {
+            "title": "Version",
+            "type": "string"
+          }
+        },
+        "required": [
+          "version",
+          "content_hash",
+          "units_allowed",
+          "resin_grades",
+          "stage_inputs",
+          "parameters",
+          "coupling_rules",
+          "hard_constraints",
+          "stage_checks",
+          "risk_bands",
+          "recommendation",
+          "submodels"
+        ],
+        "title": "ConstraintsOut",
+        "type": "object"
+      },
+      "CouplingRule": {
+        "additionalProperties": false,
+        "properties": {
+          "description": {
+            "title": "Description",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "le",
+              "ge_offset"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "left": {
+            "title": "Left",
+            "type": "string"
+          },
+          "offset": {
+            "default": 0.0,
+            "title": "Offset",
+            "type": "number"
+          },
+          "provenance": {
+            "$ref": "#/components/schemas/DataProvenance",
+            "default": "unvalidated"
+          },
+          "right": {
+            "title": "Right",
+            "type": "string"
+          },
+          "severity": {
+            "$ref": "#/components/schemas/ConstraintSeverity"
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "left",
+          "right",
+          "severity",
+          "description"
+        ],
+        "title": "CouplingRule",
+        "type": "object"
+      },
+      "DataProvenance": {
+        "enum": [
+          "dataset_derived",
+          "specification_derived",
+          "heuristic",
+          "learned",
+          "synthetic",
+          "unvalidated"
+        ],
+        "title": "DataProvenance",
+        "type": "string"
+      },
+      "Envelope_ConstraintsOut_": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ConstraintsOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "error": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ErrorBody"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "meta": {
+            "$ref": "#/components/schemas/Meta"
+          }
+        },
+        "required": [
+          "meta"
+        ],
+        "title": "Envelope[ConstraintsOut]",
+        "type": "object"
+      },
       "Envelope_HealthData_": {
         "additionalProperties": false,
         "properties": {
@@ -388,6 +592,152 @@
         "title": "HTTPValidationError",
         "type": "object"
       },
+      "HardConstraint": {
+        "additionalProperties": false,
+        "properties": {
+          "blocks_stage": {
+            "title": "Blocks Stage",
+            "type": "boolean"
+          },
+          "derived": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Derived"
+          },
+          "description": {
+            "title": "Description",
+            "type": "string"
+          },
+          "enforced_in_guard": {
+            "title": "Enforced In Guard",
+            "type": "boolean"
+          },
+          "factor": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Factor"
+          },
+          "factor_field": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Factor Field"
+          },
+          "grade_field": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Grade Field"
+          },
+          "hint": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Hint"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "max_from_grade",
+              "max_from_grade_factor",
+              "max_ratio",
+              "min_derived",
+              "range"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "max": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max"
+          },
+          "min": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Min"
+          },
+          "other": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Other"
+          },
+          "param": {
+            "title": "Param",
+            "type": "string"
+          },
+          "provenance": {
+            "$ref": "#/components/schemas/DataProvenance",
+            "default": "unvalidated"
+          },
+          "severity_in_simulation": {
+            "$ref": "#/components/schemas/ConstraintSeverity"
+          },
+          "stage": {
+            "$ref": "#/components/schemas/StageName"
+          }
+        },
+        "required": [
+          "id",
+          "stage",
+          "kind",
+          "param",
+          "blocks_stage",
+          "severity_in_simulation",
+          "enforced_in_guard",
+          "description"
+        ],
+        "title": "HardConstraint",
+        "type": "object"
+      },
       "HealthData": {
         "additionalProperties": false,
         "properties": {
@@ -637,6 +987,372 @@
         ],
         "title": "OverrideRequest",
         "type": "object"
+      },
+      "ParameterKind": {
+        "enum": [
+          "setpoint",
+          "lot_attribute",
+          "product_context",
+          "machine_context"
+        ],
+        "title": "ParameterKind",
+        "type": "string"
+      },
+      "ParameterSpec": {
+        "additionalProperties": false,
+        "properties": {
+          "actionable": {
+            "title": "Actionable",
+            "type": "boolean"
+          },
+          "allowed_values": {
+            "anyOf": [
+              {
+                "items": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "integer"
+                    }
+                  ]
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Allowed Values"
+          },
+          "change_cost": {
+            "anyOf": [
+              {
+                "maximum": 1.0,
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Change Cost"
+          },
+          "citation": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Citation"
+          },
+          "display_name": {
+            "title": "Display Name",
+            "type": "string"
+          },
+          "dtype": {
+            "enum": [
+              "float",
+              "int",
+              "category"
+            ],
+            "title": "Dtype",
+            "type": "string"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/ParameterKind"
+          },
+          "max": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max"
+          },
+          "max_step_change": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Step Change"
+          },
+          "min": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Min"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "nominal": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Nominal"
+          },
+          "policy_max": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Policy Max"
+          },
+          "provenance": {
+            "$ref": "#/components/schemas/DataProvenance"
+          },
+          "stage": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/StageName"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "step": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Step"
+          },
+          "tolerance": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tolerance"
+          },
+          "unit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit"
+          }
+        },
+        "required": [
+          "name",
+          "kind",
+          "stage",
+          "unit",
+          "dtype",
+          "actionable",
+          "display_name",
+          "provenance"
+        ],
+        "title": "ParameterSpec",
+        "type": "object"
+      },
+      "RecommendationSettings": {
+        "additionalProperties": false,
+        "properties": {
+          "coordinate_levels": {
+            "minimum": 2.0,
+            "title": "Coordinate Levels",
+            "type": "integer"
+          },
+          "cycle_time_follows_stage_times": {
+            "title": "Cycle Time Follows Stage Times",
+            "type": "boolean"
+          },
+          "default_max_changes": {
+            "maximum": 6.0,
+            "minimum": 1.0,
+            "title": "Default Max Changes",
+            "type": "integer"
+          },
+          "max_unstable_flip_rate": {
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Max Unstable Flip Rate",
+            "type": "number"
+          },
+          "pairwise_top_k": {
+            "minimum": 1.0,
+            "title": "Pairwise Top K",
+            "type": "integer"
+          },
+          "stability_noise_fraction_of_step": {
+            "exclusiveMinimum": 0.0,
+            "title": "Stability Noise Fraction Of Step",
+            "type": "number"
+          },
+          "stability_trials": {
+            "minimum": 1.0,
+            "title": "Stability Trials",
+            "type": "integer"
+          },
+          "weights": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "title": "Weights",
+            "type": "object"
+          }
+        },
+        "required": [
+          "default_max_changes",
+          "coordinate_levels",
+          "pairwise_top_k",
+          "stability_trials",
+          "stability_noise_fraction_of_step",
+          "max_unstable_flip_rate",
+          "weights",
+          "cycle_time_follows_stage_times"
+        ],
+        "title": "RecommendationSettings",
+        "type": "object"
+      },
+      "ResinGradeSpec": {
+        "additionalProperties": false,
+        "properties": {
+          "citation": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Citation"
+          },
+          "degradation_ceiling_c": {
+            "title": "Degradation Ceiling C",
+            "type": "number"
+          },
+          "melt_window_c": {
+            "maxItems": 2,
+            "minItems": 2,
+            "prefixItems": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              }
+            ],
+            "title": "Melt Window C",
+            "type": "array"
+          },
+          "mfi_nominal": {
+            "title": "Mfi Nominal",
+            "type": "number"
+          },
+          "moisture_critical_factor": {
+            "exclusiveMinimum": 0.0,
+            "title": "Moisture Critical Factor",
+            "type": "number"
+          },
+          "moisture_spec_max_pct": {
+            "exclusiveMinimum": 0.0,
+            "title": "Moisture Spec Max Pct",
+            "type": "number"
+          },
+          "provenance": {
+            "$ref": "#/components/schemas/DataProvenance"
+          }
+        },
+        "required": [
+          "melt_window_c",
+          "degradation_ceiling_c",
+          "moisture_spec_max_pct",
+          "moisture_critical_factor",
+          "mfi_nominal",
+          "provenance"
+        ],
+        "title": "ResinGradeSpec",
+        "type": "object"
+      },
+      "RiskBands": {
+        "additionalProperties": false,
+        "properties": {
+          "p_fail": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "propertyNames": {
+              "$ref": "#/components/schemas/RiskLevel"
+            },
+            "title": "P Fail",
+            "type": "object"
+          },
+          "stage_health": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "propertyNames": {
+              "$ref": "#/components/schemas/RiskLevel"
+            },
+            "title": "Stage Health",
+            "type": "object"
+          }
+        },
+        "required": [
+          "stage_health",
+          "p_fail"
+        ],
+        "title": "RiskBands",
+        "type": "object"
+      },
+      "RiskLevel": {
+        "enum": [
+          "NORMAL",
+          "LOW",
+          "MEDIUM",
+          "HIGH",
+          "CRITICAL"
+        ],
+        "title": "RiskLevel",
+        "type": "string"
       },
       "ScenarioSummary": {
         "description": "History row (roadmap \u00a77.16).",
@@ -981,6 +1697,46 @@
         "title": "SimulationStateOut",
         "type": "object"
       },
+      "StageCheck": {
+        "additionalProperties": false,
+        "properties": {
+          "check_id": {
+            "title": "Check Id",
+            "type": "string"
+          },
+          "provenance": {
+            "$ref": "#/components/schemas/DataProvenance"
+          },
+          "target": {
+            "title": "Target",
+            "type": "string"
+          },
+          "type": {
+            "enum": [
+              "range",
+              "zscore",
+              "indicator"
+            ],
+            "title": "Type",
+            "type": "string"
+          },
+          "weight": {
+            "exclusiveMinimum": 0.0,
+            "maximum": 1.0,
+            "title": "Weight",
+            "type": "number"
+          }
+        },
+        "required": [
+          "check_id",
+          "type",
+          "target",
+          "weight",
+          "provenance"
+        ],
+        "title": "StageCheck",
+        "type": "object"
+      },
       "StageName": {
         "enum": [
           "MATERIAL_CONDITIONING",
@@ -1024,6 +1780,20 @@
           }
         },
         "title": "StartRequest",
+        "type": "object"
+      },
+      "Submodels": {
+        "additionalProperties": false,
+        "properties": {
+          "enabled": {
+            "title": "Enabled",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "enabled"
+        ],
+        "title": "Submodels",
         "type": "object"
       },
       "ValidationError": {
@@ -1075,6 +1845,74 @@
   },
   "openapi": "3.1.0",
   "paths": {
+    "/api/v1/constraints": {
+      "get": {
+        "operationId": "get_constraints_api_v1_constraints_get",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "if-none-match",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "If-None-Match"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-api-key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Envelope_ConstraintsOut_"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "304": {
+            "description": "Unchanged since the ETag sent in If-None-Match"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Constraint registry: windows, units, steps, rules and bands",
+        "tags": [
+          "reference"
+        ]
+      }
+    },
     "/api/v1/health": {
       "get": {
         "operationId": "health_api_v1_health_get",

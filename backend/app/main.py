@@ -12,7 +12,7 @@ from contextlib import asynccontextmanager
 from fastapi import APIRouter, Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api import routes_meta, routes_simulation
+from app.api import routes_meta, routes_reference, routes_simulation
 from app.api.deps import build_intelligence, require_api_key
 from app.api.errors import register_exception_handlers
 from app.api.middleware import RequestContextMiddleware
@@ -118,7 +118,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
 
 # Feature routers (simulation, predict, whatif, ...) are registered here in later phases.
-PROTECTED_ROUTERS: list[APIRouter] = [routes_simulation.router]
+PROTECTED_ROUTERS: list[APIRouter] = [routes_reference.router, routes_simulation.router]
 
 
 def include_protected(app: FastAPI, router: APIRouter) -> None:

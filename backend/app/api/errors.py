@@ -17,6 +17,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
+from app.contracts.errors import IntelligenceError
 from app.core.logging import get_logger
 from app.schemas.envelope import Envelope, ErrorBody, ErrorDetail, Meta
 
@@ -198,6 +199,17 @@ async def _handle_api_error(request: Request, exc: Exception) -> JSONResponse:
     return error_response(request, exc.status_code, exc.to_body())
 
 
+async def _handle_intelligence_error(request: Request, exc: Exception) -> JSONResponse:
+    """Role 1 failures (roadmap 9.1 error table) -> envelope with the same stable code."""
+    assert isinstance(exc, IntelligenceError)
+    try:
+        code = ErrorCode(exc.code)
+    except ValueError:
+        code = ErrorCode.INTERNAL_ERROR
+    api_error = ApiError(code, exc.message, field=exc.field, hint=exc.hint)
+    return await _handle_api_error(request, api_error)
+
+
 async def _handle_validation_error(request: Request, exc: Exception) -> JSONResponse:
     assert isinstance(exc, RequestValidationError)
     api_error = validation_error_to_api_error(list(exc.errors()))
@@ -238,6 +250,7 @@ async def _handle_unexpected(request: Request, exc: Exception) -> JSONResponse:
 
 def register_exception_handlers(app: FastAPI) -> None:
     app.add_exception_handler(ApiError, _handle_api_error)
+    app.add_exception_handler(IntelligenceError, _handle_intelligence_error)
     app.add_exception_handler(RequestValidationError, _handle_validation_error)
     app.add_exception_handler(StarletteHTTPException, _handle_http_exception)
     app.add_exception_handler(Exception, _handle_unexpected)

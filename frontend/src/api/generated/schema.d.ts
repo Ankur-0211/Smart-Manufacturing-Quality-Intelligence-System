@@ -4,6 +4,23 @@
  */
 
 export interface paths {
+    "/api/v1/constraints": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Constraint registry: windows, units, steps, rules and bands */
+        get: operations["get_constraints_api_v1_constraints_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/health": {
         parameters: {
             query?: never;
@@ -243,6 +260,76 @@ export interface components {
             /** Name */
             name: string;
         };
+        /**
+         * ConstraintSeverity
+         * @enum {string}
+         */
+        ConstraintSeverity: "INFO" | "WARNING" | "CRITICAL";
+        /** ConstraintsOut */
+        ConstraintsOut: {
+            /** Content Hash */
+            content_hash: string;
+            /** Coupling Rules */
+            coupling_rules: components["schemas"]["CouplingRule"][];
+            /** Hard Constraints */
+            hard_constraints: components["schemas"]["HardConstraint"][];
+            /** Parameters */
+            parameters: components["schemas"]["ParameterSpec"][];
+            recommendation: components["schemas"]["RecommendationSettings"];
+            /** Resin Grades */
+            resin_grades: {
+                [key: string]: components["schemas"]["ResinGradeSpec"];
+            };
+            risk_bands: components["schemas"]["RiskBands"];
+            /** Stage Checks */
+            stage_checks: {
+                [key: string]: components["schemas"]["StageCheck"][];
+            };
+            /** Stage Inputs */
+            stage_inputs: {
+                [key: string]: string[];
+            };
+            submodels: components["schemas"]["Submodels"];
+            /** Units Allowed */
+            units_allowed: string[];
+            /** Version */
+            version: string;
+        };
+        /** CouplingRule */
+        CouplingRule: {
+            /** Description */
+            description: string;
+            /** Id */
+            id: string;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "le" | "ge_offset";
+            /** Left */
+            left: string;
+            /**
+             * Offset
+             * @default 0
+             */
+            offset: number;
+            /** @default unvalidated */
+            provenance: components["schemas"]["DataProvenance"];
+            /** Right */
+            right: string;
+            severity: components["schemas"]["ConstraintSeverity"];
+        };
+        /**
+         * DataProvenance
+         * @enum {string}
+         */
+        DataProvenance: "dataset_derived" | "specification_derived" | "heuristic" | "learned" | "synthetic" | "unvalidated";
+        /** Envelope[ConstraintsOut] */
+        Envelope_ConstraintsOut_: {
+            data?: components["schemas"]["ConstraintsOut"] | null;
+            error?: components["schemas"]["ErrorBody"] | null;
+            meta: components["schemas"]["Meta"];
+        };
         /** Envelope[HealthData] */
         Envelope_HealthData_: {
             data?: components["schemas"]["HealthData"] | null;
@@ -330,6 +417,44 @@ export interface components {
             /** Detail */
             detail?: components["schemas"]["ValidationError"][];
         };
+        /** HardConstraint */
+        HardConstraint: {
+            /** Blocks Stage */
+            blocks_stage: boolean;
+            /** Derived */
+            derived?: string | null;
+            /** Description */
+            description: string;
+            /** Enforced In Guard */
+            enforced_in_guard: boolean;
+            /** Factor */
+            factor?: number | null;
+            /** Factor Field */
+            factor_field?: string | null;
+            /** Grade Field */
+            grade_field?: string | null;
+            /** Hint */
+            hint?: string | null;
+            /** Id */
+            id: string;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "max_from_grade" | "max_from_grade_factor" | "max_ratio" | "min_derived" | "range";
+            /** Max */
+            max?: number | null;
+            /** Min */
+            min?: number | null;
+            /** Other */
+            other?: string | null;
+            /** Param */
+            param: string;
+            /** @default unvalidated */
+            provenance: components["schemas"]["DataProvenance"];
+            severity_in_simulation: components["schemas"]["ConstraintSeverity"];
+            stage: components["schemas"]["StageName"];
+        };
         /** HealthData */
         HealthData: {
             /** Components */
@@ -414,6 +539,106 @@ export interface components {
              */
             stage: "MATERIAL_CONDITIONING" | "PLASTICIZING" | "INJECTION" | "PACKING" | "COOLING";
         };
+        /**
+         * ParameterKind
+         * @enum {string}
+         */
+        ParameterKind: "setpoint" | "lot_attribute" | "product_context" | "machine_context";
+        /** ParameterSpec */
+        ParameterSpec: {
+            /** Actionable */
+            actionable: boolean;
+            /** Allowed Values */
+            allowed_values?: (string | number)[] | null;
+            /** Change Cost */
+            change_cost?: number | null;
+            /** Citation */
+            citation?: string | null;
+            /** Display Name */
+            display_name: string;
+            /**
+             * Dtype
+             * @enum {string}
+             */
+            dtype: "float" | "int" | "category";
+            kind: components["schemas"]["ParameterKind"];
+            /** Max */
+            max?: number | null;
+            /** Max Step Change */
+            max_step_change?: number | null;
+            /** Min */
+            min?: number | null;
+            /** Name */
+            name: string;
+            /** Nominal */
+            nominal?: number | string | null;
+            /** Policy Max */
+            policy_max?: number | null;
+            provenance: components["schemas"]["DataProvenance"];
+            stage: components["schemas"]["StageName"] | null;
+            /** Step */
+            step?: number | null;
+            /** Tolerance */
+            tolerance?: number | null;
+            /** Unit */
+            unit: string | null;
+        };
+        /** RecommendationSettings */
+        RecommendationSettings: {
+            /** Coordinate Levels */
+            coordinate_levels: number;
+            /** Cycle Time Follows Stage Times */
+            cycle_time_follows_stage_times: boolean;
+            /** Default Max Changes */
+            default_max_changes: number;
+            /** Max Unstable Flip Rate */
+            max_unstable_flip_rate: number;
+            /** Pairwise Top K */
+            pairwise_top_k: number;
+            /** Stability Noise Fraction Of Step */
+            stability_noise_fraction_of_step: number;
+            /** Stability Trials */
+            stability_trials: number;
+            /** Weights */
+            weights: {
+                [key: string]: number;
+            };
+        };
+        /** ResinGradeSpec */
+        ResinGradeSpec: {
+            /** Citation */
+            citation?: string | null;
+            /** Degradation Ceiling C */
+            degradation_ceiling_c: number;
+            /** Melt Window C */
+            melt_window_c: [
+                number,
+                number
+            ];
+            /** Mfi Nominal */
+            mfi_nominal: number;
+            /** Moisture Critical Factor */
+            moisture_critical_factor: number;
+            /** Moisture Spec Max Pct */
+            moisture_spec_max_pct: number;
+            provenance: components["schemas"]["DataProvenance"];
+        };
+        /** RiskBands */
+        RiskBands: {
+            /** P Fail */
+            p_fail: {
+                [key: string]: number;
+            };
+            /** Stage Health */
+            stage_health: {
+                [key: string]: number;
+            };
+        };
+        /**
+         * RiskLevel
+         * @enum {string}
+         */
+        RiskLevel: "NORMAL" | "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
         /**
          * ScenarioSummary
          * @description History row (roadmap §7.16).
@@ -516,6 +741,21 @@ export interface components {
              */
             updated_at: string;
         };
+        /** StageCheck */
+        StageCheck: {
+            /** Check Id */
+            check_id: string;
+            provenance: components["schemas"]["DataProvenance"];
+            /** Target */
+            target: string;
+            /**
+             * Type
+             * @enum {string}
+             */
+            type: "range" | "zscore" | "indicator";
+            /** Weight */
+            weight: number;
+        };
         /**
          * StageName
          * @enum {string}
@@ -531,6 +771,11 @@ export interface components {
             mode: "auto" | "stepwise";
             /** Speed Factor */
             speed_factor?: ("0.5x" | "1x" | "2x" | "instant") | null;
+        };
+        /** Submodels */
+        Submodels: {
+            /** Enabled */
+            enabled: boolean;
         };
         /** ValidationError */
         ValidationError: {
@@ -554,6 +799,45 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    get_constraints_api_v1_constraints_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "if-none-match"?: string | null;
+                "x-api-key"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Envelope_ConstraintsOut_"];
+                };
+            };
+            /** @description Unchanged since the ETag sent in If-None-Match */
+            304: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     health_api_v1_health_get: {
         parameters: {
             query?: never;

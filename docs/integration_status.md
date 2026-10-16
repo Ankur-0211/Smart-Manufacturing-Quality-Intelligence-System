@@ -3,7 +3,7 @@
 Both roles update this file (roadmap §10.1). A capability counts as **REAL** only when
 `QualityIntelligence.capabilities()` reports it **and** this table says so.
 
-_Last updated: 2026-10-16 by Role 2 (mock intelligence wired into the simulation engine; M3)._
+_Last updated: 2026-10-16 by Role 2 (`GET /constraints` + registry-driven validation; R2-P1 tasks 8-11 done)._
 
 ## Capability matrix
 
@@ -27,10 +27,19 @@ Status values: `NOT AVAILABLE` → `MOCK` → `HYBRID` → `REAL`.
 | `backend/app/domain/constraints.yaml`, `remedies.yaml` | constraints-0.1.0 / remedies-0.1.0 | Bootstrapped by Role 2 (CCR-002); all values `unvalidated`; Role 1 to adopt. `constraint_loader.py` + `dependency_graph.py` bootstrapped (CCR-002) with tests |
 | `fleet.yaml` | fleet-0.1.0 | Bootstrapped (CCR-002): MC-01…04, PP-JBOX-42, 4 lots. Seed verified with it |
 | Contract fixtures (`backend/tests/contract/fixtures`) | v0.1.0 | 5 `recipe_*.json` bootstrapped (CCR-002). All validate against `ProcessInput`; the harness runs them against the mock (determinism + equivalence) |
-| API (`docs/openapi.json`) | api_version 1 | `/health`, simulation queries/commands, SSE, scenario label |
+| API (`docs/openapi.json`) | api_version 1 | `/health` (with `IntelligenceVersionInfo`), `/constraints` (ETag), simulation queries/commands, SSE, scenario label |
 | Event catalogue (`docs/events.md`) | EVENTS_VERSION 1 | Implemented and tested (R2-P4). Freeze at M4 once a real/mock executor runs end-to-end |
 | DB schema | Alembic `0001` | Done (R2-P2): 10 tables, immutability guards, seed |
 | Model bundles | — | R1-P4 onwards |
+
+## Role 2 phase status
+
+| Phase | Status |
+|---|---|
+| R2-P1 | Tasks 1-12 done. Completion gate waits on M1 (Role 1 approves contracts v0.1.0 + CCR-003) |
+| R2-P2 | Done |
+| R2-P4 | Engine, SSE, recovery done and running on the mock; `create_run` / `POST /simulation/runs` lands with R2-P3 |
+| R2-P6 | Visual components and live run viewing done; parameter sliders next (they use `GET /constraints`) |
 
 ## Milestones
 
