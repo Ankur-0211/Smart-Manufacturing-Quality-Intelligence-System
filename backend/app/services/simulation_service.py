@@ -19,6 +19,7 @@ import contextlib
 import time
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, field
+from datetime import date
 from typing import Any
 
 from sqlalchemy import select
@@ -26,14 +27,17 @@ from sqlalchemy.orm import Session
 
 from app.core.logging import get_logger
 from app.db.base import utcnow
+from app.db.errors import NotFoundError
 from app.db.models import ProcessRun, SimulationEvent
 from app.db.repositories import (
     EventRepository,
     ModelVersionRepository,
     PredictionRepository,
+    ReferenceRepository,
     RunFilters,
     RunRepository,
     StageResultRepository,
+    context_snapshot,
     reset_run_results,
 )
 from app.db.session import Database
@@ -56,6 +60,10 @@ log = get_logger(__name__)
 SPEED_MULTIPLIER: dict[str, float] = {"0.5x": 2.0, "1x": 1.0, "2x": 0.5, "instant": 0.0}
 
 EventSpec = tuple[str, str | None, Mapping[str, Any]]
+
+
+#: (recipe, flat machine/product/lot context) -> validated recipe; raises on violation.
+ParameterValidator = Callable[[Mapping[str, float], Mapping[str, Any]], Mapping[str, float]]
 
 
 class ExecutorUnavailableError(Exception):
@@ -692,6 +700,60 @@ class SimulationService:
             "model_version": f"{mv.name}-{mv.semver}" if mv is not None else None,
             "inference_backend": run.inference_backend,
         }
+
+    def create_run(
+        self,
+        *,
+        machine_id: str,
+        product_id: str,
+        material_lot_id: str,
+        parameters: Mapping[str, float],
+        validate_parameters: ParameterValidator,
+        mode: str = "auto",
+        speed_factor: str = "1x",
+        halt_on_critical: bool = True,
+        scenario_label: str | None = None,
+        today: date | None = None,
+    ) -> str:
+        """Create an INITIALIZED run with a frozen context snapshot (roadmap R2-P4 task 5).
+
+        ``validate_parameters(recipe, flat_context)`` is the registry check (tiers 1-2) supplied
+        by the API layer; it runs after the references resolve so machine-dependent couplings
+        (CPL-003/CPL-004) see this machine's limits. Raises ``NotFoundError`` for an unknown or
+        inactive machine/product/lot.
+        """
+        executor = self._require_executor()
+        with self.db.session() as s:
+            refs = ReferenceRepository(s)
+            machine, product = refs.machine(machine_id), refs.product(product_id)
+            lot = refs.material(material_lot_id)
+            if not machine.active:
+                raise NotFoundError("machine", machine_id)
+            if not product.active:
+                raise NotFoundError("product", product_id)
+            day = today or utcnow().date()
+            snapshot = context_snapshot(machine, product, lot, today=day)
+            flat_context = {
+                **snapshot["machine"],
+                **snapshot["product"],
+                **snapshot["material_lot"],
+            }
+            recipe = validate_parameters(parameters, flat_context)
+            run = RunRepository(s).create(
+                machine=machine,
+                product=product,
+                material_lot=lot,
+                parameters=recipe,
+                mode=mode,
+                speed_factor=speed_factor,
+                halt_on_critical=halt_on_critical,
+                scenario_label=scenario_label,
+                inference_backend=executor.inference_backend,
+                constraints_version=executor.constraints_version,
+                today=day,
+            )
+            log.info("run_created", run_id=run.id, machine_id=machine_id, mode=mode)
+            return run.id
 
     def list_runs(
         self, filters: RunFilters | None = None, *, limit: int = 50, offset: int = 0

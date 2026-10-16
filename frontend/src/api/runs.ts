@@ -4,7 +4,7 @@
  */
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
-import { apiGet, apiRequest, type Schemas } from './client'
+import { apiGet, apiPost, apiRequest, type Schemas } from './client'
 
 export type ScenarioSummary = Schemas['ScenarioSummary']
 export type SimulationState = Schemas['SimulationStateOut']
@@ -89,6 +89,21 @@ export function useRunCommand(runId: string | null) {
     },
     onSettled: () => {
       void client.invalidateQueries({ queryKey: ['run', runId] })
+      void client.invalidateQueries({ queryKey: ['runs'] })
+    },
+  })
+}
+
+export type CreateRunRequest = Schemas['CreateRunRequest']
+
+/** POST /simulation/runs: the server validates the recipe against the registry (422 details). */
+export function useCreateRun() {
+  const client = useQueryClient()
+  return useMutation({
+    mutationFn: async (body: CreateRunRequest) =>
+      (await apiPost<SimulationState>('/simulation/runs', body)).data,
+    onSuccess: (state) => {
+      client.setQueryData(['run', state.run_id], state)
       void client.invalidateQueries({ queryKey: ['runs'] })
     },
   })

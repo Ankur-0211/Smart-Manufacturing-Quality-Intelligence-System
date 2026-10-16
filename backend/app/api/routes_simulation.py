@@ -1,13 +1,10 @@
 """Simulation routes (roadmap §9.3.2). Thin: validation + error mapping; logic lives in
 ``SimulationService``.
-
-``POST /simulation/runs`` (run creation) is added once recipe validation exists; it needs the
-shared contracts and the constraint-registry loader (R2-P1 tasks 9-10 / R2-P3).
 """
 
 from __future__ import annotations
 
-from collections.abc import Callable, Iterator
+from collections.abc import Callable, Iterator, Mapping
 from contextlib import contextmanager
 from datetime import datetime
 from typing import Annotated, Any, Literal
@@ -16,15 +13,17 @@ from fastapi import APIRouter, Depends, Header, Query, Request
 from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import StreamingResponse
 
-from app.api.deps import DatabaseDep
+from app.api.deps import DatabaseDep, RegistryDep
 from app.api.errors import ApiError, ErrorCode, build_meta
 from app.api.sse import SSE_HEADERS, parse_last_event_id, run_event_stream
+from app.api.validation import validate_recipe
 from app.db.errors import NotFoundError, RunImmutableError
 from app.db.repositories import RunFilters
 from app.engine.state_machine import InvalidTransitionError, RunImmutableTransitionError
 from app.schemas.envelope import Envelope
 from app.schemas.simulation import (
     AbortRequest,
+    CreateRunRequest,
     LabelRequest,
     OverrideRequest,
     ScenarioSummary,
@@ -81,6 +80,51 @@ async def _sync[T](fn: Callable[..., T], *args: Any) -> T:
 
 
 # ------------------------------------------------------------------ queries
+
+
+_REFERENCE_FIELDS = {
+    "machine": "machine_id",
+    "product": "product_id",
+    "material lot": "material_lot_id",
+}
+
+
+@router.post(
+    "",
+    status_code=201,
+    response_model=Envelope[SimulationStateOut],
+    summary="Create a run (INITIALIZED); recipe validated against the constraint registry",
+)
+async def create_run(
+    request: Request, body: CreateRunRequest, service: ServiceDep, registry: RegistryDep
+) -> Envelope[SimulationStateOut]:
+    def validate(recipe: Mapping[str, float], context: Mapping[str, Any]) -> dict[str, float]:
+        return validate_recipe(registry, recipe, context=context)
+
+    with _mapped_errors():
+        try:
+            run_id = await run_in_threadpool(
+                lambda: service.create_run(
+                    machine_id=body.machine_id,
+                    product_id=body.product_id,
+                    material_lot_id=body.material_lot_id,
+                    parameters=body.parameters.model_dump(),
+                    validate_parameters=validate,
+                    mode=body.mode,
+                    speed_factor=body.speed_factor,
+                    halt_on_critical=body.halt_on_critical,
+                    scenario_label=body.scenario_label,
+                )
+            )
+        except NotFoundError as exc:
+            raise ApiError(
+                ErrorCode.REFERENCE_NOT_FOUND,
+                str(exc),
+                field=_REFERENCE_FIELDS.get(exc.entity),
+                hint="Codes come from GET /machines, /products and /materials.",
+            ) from exc
+    with _mapped_errors(run_id):
+        return await _state(request, service, run_id)
 
 
 @router.get("", response_model=Envelope[list[ScenarioSummary]], summary="Run history (paginated)")

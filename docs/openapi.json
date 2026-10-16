@@ -203,6 +203,72 @@
         "title": "CouplingRule",
         "type": "object"
       },
+      "CreateRunRequest": {
+        "additionalProperties": false,
+        "description": "``POST /simulation/runs``. ``parameters`` is the contract ProcessRecipe (all 23 setpoints);\nits windows and coupling rules come from the registry (GET /constraints) and are enforced by\nthe server, so none are declared here (rule B6).",
+        "properties": {
+          "halt_on_critical": {
+            "default": true,
+            "title": "Halt On Critical",
+            "type": "boolean"
+          },
+          "machine_id": {
+            "title": "Machine Id",
+            "type": "string"
+          },
+          "material_lot_id": {
+            "title": "Material Lot Id",
+            "type": "string"
+          },
+          "mode": {
+            "default": "auto",
+            "enum": [
+              "auto",
+              "stepwise"
+            ],
+            "title": "Mode",
+            "type": "string"
+          },
+          "parameters": {
+            "$ref": "#/components/schemas/ProcessRecipe"
+          },
+          "product_id": {
+            "title": "Product Id",
+            "type": "string"
+          },
+          "scenario_label": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Scenario Label"
+          },
+          "speed_factor": {
+            "default": "1x",
+            "enum": [
+              "0.5x",
+              "1x",
+              "2x",
+              "instant"
+            ],
+            "title": "Speed Factor",
+            "type": "string"
+          }
+        },
+        "required": [
+          "machine_id",
+          "product_id",
+          "material_lot_id",
+          "parameters"
+        ],
+        "title": "CreateRunRequest",
+        "type": "object"
+      },
       "DataProvenance": {
         "enum": [
           "dataset_derived",
@@ -279,6 +345,39 @@
           "meta"
         ],
         "title": "Envelope[HealthData]",
+        "type": "object"
+      },
+      "Envelope_MaterialLotOut_": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/MaterialLotOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "error": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ErrorBody"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "meta": {
+            "$ref": "#/components/schemas/Meta"
+          }
+        },
+        "required": [
+          "meta"
+        ],
+        "title": "Envelope[MaterialLotOut]",
         "type": "object"
       },
       "Envelope_ScenarioSummary_": {
@@ -380,6 +479,117 @@
           "meta"
         ],
         "title": "Envelope[dict[str, Any]]",
+        "type": "object"
+      },
+      "Envelope_list_MachineOut__": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/MachineOut"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Data"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ErrorBody"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "meta": {
+            "$ref": "#/components/schemas/Meta"
+          }
+        },
+        "required": [
+          "meta"
+        ],
+        "title": "Envelope[list[MachineOut]]",
+        "type": "object"
+      },
+      "Envelope_list_MaterialLotOut__": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/MaterialLotOut"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Data"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ErrorBody"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "meta": {
+            "$ref": "#/components/schemas/Meta"
+          }
+        },
+        "required": [
+          "meta"
+        ],
+        "title": "Envelope[list[MaterialLotOut]]",
+        "type": "object"
+      },
+      "Envelope_list_ProductOut__": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/ProductOut"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Data"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ErrorBody"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "meta": {
+            "$ref": "#/components/schemas/Meta"
+          }
+        },
+        "required": [
+          "meta"
+        ],
+        "title": "Envelope[list[ProductOut]]",
         "type": "object"
       },
       "Envelope_list_ScenarioSummary__": {
@@ -907,6 +1117,202 @@
         "title": "LabelRequest",
         "type": "object"
       },
+      "MachineOut": {
+        "additionalProperties": false,
+        "description": "``machine_age_days`` / ``days_since_maintenance`` are computed for today's date.",
+        "properties": {
+          "days_since_maintenance": {
+            "minimum": 0.0,
+            "title": "Days Since Maintenance",
+            "type": "integer"
+          },
+          "installed_on": {
+            "format": "date",
+            "title": "Installed On",
+            "type": "string"
+          },
+          "last_maintenance_on": {
+            "format": "date",
+            "title": "Last Maintenance On",
+            "type": "string"
+          },
+          "machine_age_days": {
+            "minimum": 0.0,
+            "title": "Machine Age Days",
+            "type": "integer"
+          },
+          "machine_id": {
+            "title": "Machine Id",
+            "type": "string"
+          },
+          "machine_type": {
+            "$ref": "#/components/schemas/MachineType"
+          },
+          "max_clamp_force_ton": {
+            "exclusiveMinimum": 0.0,
+            "title": "Max Clamp Force Ton",
+            "type": "number"
+          },
+          "max_inj_pressure_bar": {
+            "exclusiveMinimum": 0.0,
+            "title": "Max Inj Pressure Bar",
+            "type": "number"
+          },
+          "tonnage_ton": {
+            "exclusiveMinimum": 0.0,
+            "title": "Tonnage Ton",
+            "type": "number"
+          }
+        },
+        "required": [
+          "machine_id",
+          "machine_type",
+          "tonnage_ton",
+          "max_inj_pressure_bar",
+          "max_clamp_force_ton",
+          "machine_age_days",
+          "days_since_maintenance",
+          "installed_on",
+          "last_maintenance_on"
+        ],
+        "title": "MachineOut",
+        "type": "object"
+      },
+      "MachineType": {
+        "enum": [
+          "HYDRAULIC",
+          "ELECTRIC",
+          "HYBRID"
+        ],
+        "title": "MachineType",
+        "type": "string"
+      },
+      "MaterialLotCreate": {
+        "additionalProperties": false,
+        "description": "``POST /materials`` body. The code format and registry windows are checked on create.",
+        "properties": {
+          "colourant_pct": {
+            "title": "Colourant Pct",
+            "type": "number"
+          },
+          "material_lot_id": {
+            "title": "Material Lot Id",
+            "type": "string"
+          },
+          "mfi": {
+            "title": "Mfi",
+            "type": "number"
+          },
+          "moisture_pct": {
+            "title": "Moisture Pct",
+            "type": "number"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "maxLength": 500,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          },
+          "received_on": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Received On"
+          },
+          "regrind_pct": {
+            "title": "Regrind Pct",
+            "type": "number"
+          },
+          "resin_grade": {
+            "title": "Resin Grade",
+            "type": "string"
+          }
+        },
+        "required": [
+          "material_lot_id",
+          "resin_grade",
+          "mfi",
+          "moisture_pct",
+          "regrind_pct",
+          "colourant_pct"
+        ],
+        "title": "MaterialLotCreate",
+        "type": "object"
+      },
+      "MaterialLotOut": {
+        "additionalProperties": false,
+        "properties": {
+          "colourant_pct": {
+            "title": "Colourant Pct",
+            "type": "number"
+          },
+          "material_lot_id": {
+            "title": "Material Lot Id",
+            "type": "string"
+          },
+          "mfi": {
+            "title": "Mfi",
+            "type": "number"
+          },
+          "moisture_pct": {
+            "title": "Moisture Pct",
+            "type": "number"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          },
+          "received_on": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Received On"
+          },
+          "regrind_pct": {
+            "title": "Regrind Pct",
+            "type": "number"
+          },
+          "resin_grade": {
+            "title": "Resin Grade",
+            "type": "string"
+          }
+        },
+        "required": [
+          "material_lot_id",
+          "resin_grade",
+          "mfi",
+          "moisture_pct",
+          "regrind_pct",
+          "colourant_pct"
+        ],
+        "title": "MaterialLotOut",
+        "type": "object"
+      },
       "Meta": {
         "additionalProperties": false,
         "properties": {
@@ -1189,6 +1595,169 @@
           "provenance"
         ],
         "title": "ParameterSpec",
+        "type": "object"
+      },
+      "ProcessRecipe": {
+        "additionalProperties": false,
+        "properties": {
+          "back_pressure_bar": {
+            "title": "Back Pressure Bar",
+            "type": "number"
+          },
+          "barrel_temp_front_c": {
+            "title": "Barrel Temp Front C",
+            "type": "number"
+          },
+          "barrel_temp_mid_c": {
+            "title": "Barrel Temp Mid C",
+            "type": "number"
+          },
+          "barrel_temp_rear_c": {
+            "title": "Barrel Temp Rear C",
+            "type": "number"
+          },
+          "clamp_force_ton": {
+            "title": "Clamp Force Ton",
+            "type": "number"
+          },
+          "cooling_time_s": {
+            "title": "Cooling Time S",
+            "type": "number"
+          },
+          "cushion_mm": {
+            "title": "Cushion Mm",
+            "type": "number"
+          },
+          "cycle_time_s": {
+            "title": "Cycle Time S",
+            "type": "number"
+          },
+          "dryer_temp_c": {
+            "title": "Dryer Temp C",
+            "type": "number"
+          },
+          "drying_time_h": {
+            "title": "Drying Time H",
+            "type": "number"
+          },
+          "ejection_force_proxy": {
+            "title": "Ejection Force Proxy",
+            "type": "number"
+          },
+          "fill_time_s": {
+            "title": "Fill Time S",
+            "type": "number"
+          },
+          "hold_pressure_bar": {
+            "title": "Hold Pressure Bar",
+            "type": "number"
+          },
+          "hold_time_s": {
+            "title": "Hold Time S",
+            "type": "number"
+          },
+          "inj_pressure_bar": {
+            "title": "Inj Pressure Bar",
+            "type": "number"
+          },
+          "inj_velocity_mm_s": {
+            "title": "Inj Velocity Mm S",
+            "type": "number"
+          },
+          "melt_temp_c": {
+            "title": "Melt Temp C",
+            "type": "number"
+          },
+          "mold_temp_c": {
+            "title": "Mold Temp C",
+            "type": "number"
+          },
+          "nozzle_temp_c": {
+            "title": "Nozzle Temp C",
+            "type": "number"
+          },
+          "residence_time_s": {
+            "title": "Residence Time S",
+            "type": "number"
+          },
+          "screw_rpm": {
+            "title": "Screw Rpm",
+            "type": "number"
+          },
+          "shot_size_mm": {
+            "title": "Shot Size Mm",
+            "type": "number"
+          },
+          "switchover_position_mm": {
+            "title": "Switchover Position Mm",
+            "type": "number"
+          }
+        },
+        "required": [
+          "drying_time_h",
+          "dryer_temp_c",
+          "barrel_temp_rear_c",
+          "barrel_temp_mid_c",
+          "barrel_temp_front_c",
+          "nozzle_temp_c",
+          "melt_temp_c",
+          "screw_rpm",
+          "back_pressure_bar",
+          "residence_time_s",
+          "inj_velocity_mm_s",
+          "inj_pressure_bar",
+          "fill_time_s",
+          "shot_size_mm",
+          "switchover_position_mm",
+          "clamp_force_ton",
+          "hold_pressure_bar",
+          "hold_time_s",
+          "cushion_mm",
+          "mold_temp_c",
+          "cooling_time_s",
+          "cycle_time_s",
+          "ejection_force_proxy"
+        ],
+        "title": "ProcessRecipe",
+        "type": "object"
+      },
+      "ProductOut": {
+        "additionalProperties": false,
+        "properties": {
+          "cavity_count": {
+            "title": "Cavity Count",
+            "type": "integer"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "nominal_shot_weight_g": {
+            "title": "Nominal Shot Weight G",
+            "type": "number"
+          },
+          "product_id": {
+            "title": "Product Id",
+            "type": "string"
+          },
+          "projected_area_cm2": {
+            "title": "Projected Area Cm2",
+            "type": "number"
+          },
+          "wall_thickness_mm": {
+            "title": "Wall Thickness Mm",
+            "type": "number"
+          }
+        },
+        "required": [
+          "product_id",
+          "name",
+          "cavity_count",
+          "nominal_shot_weight_g",
+          "wall_thickness_mm",
+          "projected_area_cm2"
+        ],
+        "title": "ProductOut",
         "type": "object"
       },
       "RecommendationSettings": {
@@ -1934,6 +2503,210 @@
         ]
       }
     },
+    "/api/v1/machines": {
+      "get": {
+        "operationId": "list_machines_api_v1_machines_get",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "x-api-key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Envelope_list_MachineOut__"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Active machines",
+        "tags": [
+          "reference"
+        ]
+      }
+    },
+    "/api/v1/materials": {
+      "get": {
+        "operationId": "list_materials_api_v1_materials_get",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "x-api-key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Envelope_list_MaterialLotOut__"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Material lots",
+        "tags": [
+          "reference"
+        ]
+      },
+      "post": {
+        "operationId": "create_material_api_v1_materials_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "x-api-key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MaterialLotCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Envelope_MaterialLotOut_"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create a material lot (attributes validated against the registry)",
+        "tags": [
+          "reference"
+        ]
+      }
+    },
+    "/api/v1/products": {
+      "get": {
+        "operationId": "list_products_api_v1_products_get",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "x-api-key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Envelope_list_ProductOut__"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Active products",
+        "tags": [
+          "reference"
+        ]
+      }
+    },
     "/api/v1/simulation/runs": {
       "get": {
         "operationId": "list_runs_api_v1_simulation_runs_get",
@@ -2162,6 +2935,63 @@
           }
         },
         "summary": "Run history (paginated)",
+        "tags": [
+          "simulation"
+        ]
+      },
+      "post": {
+        "operationId": "create_run_api_v1_simulation_runs_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "x-api-key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateRunRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Envelope_SimulationStateOut_"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create a run (INITIALIZED); recipe validated against the constraint registry",
         "tags": [
           "simulation"
         ]

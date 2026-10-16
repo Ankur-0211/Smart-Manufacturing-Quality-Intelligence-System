@@ -38,6 +38,58 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/machines": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Active machines */
+        get: operations["list_machines_api_v1_machines_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/materials": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Material lots */
+        get: operations["list_materials_api_v1_materials_get"];
+        put?: never;
+        /** Create a material lot (attributes validated against the registry) */
+        post: operations["create_material_api_v1_materials_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/products": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Active products */
+        get: operations["list_products_api_v1_products_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/simulation/runs": {
         parameters: {
             query?: never;
@@ -48,7 +100,8 @@ export interface paths {
         /** Run history (paginated) */
         get: operations["list_runs_api_v1_simulation_runs_get"];
         put?: never;
-        post?: never;
+        /** Create a run (INITIALIZED); recipe validated against the constraint registry */
+        post: operations["create_run_api_v1_simulation_runs_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -320,6 +373,40 @@ export interface components {
             severity: components["schemas"]["ConstraintSeverity"];
         };
         /**
+         * CreateRunRequest
+         * @description ``POST /simulation/runs``. ``parameters`` is the contract ProcessRecipe (all 23 setpoints);
+         *     its windows and coupling rules come from the registry (GET /constraints) and are enforced by
+         *     the server, so none are declared here (rule B6).
+         */
+        CreateRunRequest: {
+            /**
+             * Halt On Critical
+             * @default true
+             */
+            halt_on_critical: boolean;
+            /** Machine Id */
+            machine_id: string;
+            /** Material Lot Id */
+            material_lot_id: string;
+            /**
+             * Mode
+             * @default auto
+             * @enum {string}
+             */
+            mode: "auto" | "stepwise";
+            parameters: components["schemas"]["ProcessRecipe"];
+            /** Product Id */
+            product_id: string;
+            /** Scenario Label */
+            scenario_label?: string | null;
+            /**
+             * Speed Factor
+             * @default 1x
+             * @enum {string}
+             */
+            speed_factor: "0.5x" | "1x" | "2x" | "instant";
+        };
+        /**
          * DataProvenance
          * @enum {string}
          */
@@ -333,6 +420,12 @@ export interface components {
         /** Envelope[HealthData] */
         Envelope_HealthData_: {
             data?: components["schemas"]["HealthData"] | null;
+            error?: components["schemas"]["ErrorBody"] | null;
+            meta: components["schemas"]["Meta"];
+        };
+        /** Envelope[MaterialLotOut] */
+        Envelope_MaterialLotOut_: {
+            data?: components["schemas"]["MaterialLotOut"] | null;
             error?: components["schemas"]["ErrorBody"] | null;
             meta: components["schemas"]["Meta"];
         };
@@ -354,6 +447,27 @@ export interface components {
             data?: {
                 [key: string]: unknown;
             } | null;
+            error?: components["schemas"]["ErrorBody"] | null;
+            meta: components["schemas"]["Meta"];
+        };
+        /** Envelope[list[MachineOut]] */
+        Envelope_list_MachineOut__: {
+            /** Data */
+            data?: components["schemas"]["MachineOut"][] | null;
+            error?: components["schemas"]["ErrorBody"] | null;
+            meta: components["schemas"]["Meta"];
+        };
+        /** Envelope[list[MaterialLotOut]] */
+        Envelope_list_MaterialLotOut__: {
+            /** Data */
+            data?: components["schemas"]["MaterialLotOut"][] | null;
+            error?: components["schemas"]["ErrorBody"] | null;
+            meta: components["schemas"]["Meta"];
+        };
+        /** Envelope[list[ProductOut]] */
+        Envelope_list_ProductOut__: {
+            /** Data */
+            data?: components["schemas"]["ProductOut"][] | null;
             error?: components["schemas"]["ErrorBody"] | null;
             meta: components["schemas"]["Meta"];
         };
@@ -510,6 +624,81 @@ export interface components {
             /** Scenario Label */
             scenario_label?: string | null;
         };
+        /**
+         * MachineOut
+         * @description ``machine_age_days`` / ``days_since_maintenance`` are computed for today's date.
+         */
+        MachineOut: {
+            /** Days Since Maintenance */
+            days_since_maintenance: number;
+            /**
+             * Installed On
+             * Format: date
+             */
+            installed_on: string;
+            /**
+             * Last Maintenance On
+             * Format: date
+             */
+            last_maintenance_on: string;
+            /** Machine Age Days */
+            machine_age_days: number;
+            /** Machine Id */
+            machine_id: string;
+            machine_type: components["schemas"]["MachineType"];
+            /** Max Clamp Force Ton */
+            max_clamp_force_ton: number;
+            /** Max Inj Pressure Bar */
+            max_inj_pressure_bar: number;
+            /** Tonnage Ton */
+            tonnage_ton: number;
+        };
+        /**
+         * MachineType
+         * @enum {string}
+         */
+        MachineType: "HYDRAULIC" | "ELECTRIC" | "HYBRID";
+        /**
+         * MaterialLotCreate
+         * @description ``POST /materials`` body. The code format and registry windows are checked on create.
+         */
+        MaterialLotCreate: {
+            /** Colourant Pct */
+            colourant_pct: number;
+            /** Material Lot Id */
+            material_lot_id: string;
+            /** Mfi */
+            mfi: number;
+            /** Moisture Pct */
+            moisture_pct: number;
+            /** Notes */
+            notes?: string | null;
+            /** Received On */
+            received_on?: string | null;
+            /** Regrind Pct */
+            regrind_pct: number;
+            /** Resin Grade */
+            resin_grade: string;
+        };
+        /** MaterialLotOut */
+        MaterialLotOut: {
+            /** Colourant Pct */
+            colourant_pct: number;
+            /** Material Lot Id */
+            material_lot_id: string;
+            /** Mfi */
+            mfi: number;
+            /** Moisture Pct */
+            moisture_pct: number;
+            /** Notes */
+            notes?: string | null;
+            /** Received On */
+            received_on?: string | null;
+            /** Regrind Pct */
+            regrind_pct: number;
+            /** Resin Grade */
+            resin_grade: string;
+        };
         /** Meta */
         Meta: {
             /**
@@ -582,6 +771,70 @@ export interface components {
             tolerance?: number | null;
             /** Unit */
             unit: string | null;
+        };
+        /** ProcessRecipe */
+        ProcessRecipe: {
+            /** Back Pressure Bar */
+            back_pressure_bar: number;
+            /** Barrel Temp Front C */
+            barrel_temp_front_c: number;
+            /** Barrel Temp Mid C */
+            barrel_temp_mid_c: number;
+            /** Barrel Temp Rear C */
+            barrel_temp_rear_c: number;
+            /** Clamp Force Ton */
+            clamp_force_ton: number;
+            /** Cooling Time S */
+            cooling_time_s: number;
+            /** Cushion Mm */
+            cushion_mm: number;
+            /** Cycle Time S */
+            cycle_time_s: number;
+            /** Dryer Temp C */
+            dryer_temp_c: number;
+            /** Drying Time H */
+            drying_time_h: number;
+            /** Ejection Force Proxy */
+            ejection_force_proxy: number;
+            /** Fill Time S */
+            fill_time_s: number;
+            /** Hold Pressure Bar */
+            hold_pressure_bar: number;
+            /** Hold Time S */
+            hold_time_s: number;
+            /** Inj Pressure Bar */
+            inj_pressure_bar: number;
+            /** Inj Velocity Mm S */
+            inj_velocity_mm_s: number;
+            /** Melt Temp C */
+            melt_temp_c: number;
+            /** Mold Temp C */
+            mold_temp_c: number;
+            /** Nozzle Temp C */
+            nozzle_temp_c: number;
+            /** Residence Time S */
+            residence_time_s: number;
+            /** Screw Rpm */
+            screw_rpm: number;
+            /** Shot Size Mm */
+            shot_size_mm: number;
+            /** Switchover Position Mm */
+            switchover_position_mm: number;
+        };
+        /** ProductOut */
+        ProductOut: {
+            /** Cavity Count */
+            cavity_count: number;
+            /** Name */
+            name: string;
+            /** Nominal Shot Weight G */
+            nominal_shot_weight_g: number;
+            /** Product Id */
+            product_id: string;
+            /** Projected Area Cm2 */
+            projected_area_cm2: number;
+            /** Wall Thickness Mm */
+            wall_thickness_mm: number;
         };
         /** RecommendationSettings */
         RecommendationSettings: {
@@ -858,6 +1111,134 @@ export interface operations {
             };
         };
     };
+    list_machines_api_v1_machines_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-api-key"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Envelope_list_MachineOut__"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_materials_api_v1_materials_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-api-key"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Envelope_list_MaterialLotOut__"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_material_api_v1_materials_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-api-key"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MaterialLotCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Envelope_MaterialLotOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_products_api_v1_products_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-api-key"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Envelope_list_ProductOut__"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     list_runs_api_v1_simulation_runs_get: {
         parameters: {
             query?: {
@@ -888,6 +1269,41 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Envelope_list_ScenarioSummary__"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_run_api_v1_simulation_runs_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-api-key"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateRunRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Envelope_SimulationStateOut_"];
                 };
             };
             /** @description Validation Error */

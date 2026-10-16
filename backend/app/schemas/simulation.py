@@ -13,6 +13,8 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from app.contracts.recipe import ProcessRecipe
+
 StageNameLiteral = Literal[
     "MATERIAL_CONDITIONING", "PLASTICIZING", "INJECTION", "PACKING", "COOLING"
 ]
@@ -21,6 +23,21 @@ SpeedLiteral = Literal["0.5x", "1x", "2x", "instant"]
 
 class _Strict(BaseModel):
     model_config = ConfigDict(extra="forbid")
+
+
+class CreateRunRequest(_Strict):
+    """``POST /simulation/runs``. ``parameters`` is the contract ProcessRecipe (all 23 setpoints);
+    its windows and coupling rules come from the registry (GET /constraints) and are enforced by
+    the server, so none are declared here (rule B6)."""
+
+    machine_id: str
+    product_id: str
+    material_lot_id: str
+    parameters: ProcessRecipe
+    mode: Literal["auto", "stepwise"] = "auto"
+    speed_factor: SpeedLiteral = "1x"
+    halt_on_critical: bool = True
+    scenario_label: str | None = Field(default=None, max_length=200)
 
 
 class StartRequest(_Strict):

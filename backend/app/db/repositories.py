@@ -85,39 +85,54 @@ class ReferenceRepository:
         return lot
 
 
-def context_snapshot(
-    machine: Machine, product: Product, lot: MaterialLot, *, today: date
-) -> dict[str, Any]:
-    """Machine/product/lot values as used by a run (contract field names, roadmap 7.3-7.5).
+def machine_snapshot(machine: Machine, *, today: date) -> dict[str, Any]:
+    """MachineProfile values (roadmap 7.3); ages are derived for ``today``.
 
     Float columns are coerced to float so a freshly created entity and a reloaded one snapshot
     identically (12 vs 12.0 would otherwise change JSON and cache keys)."""
     return {
-        "machine": {
-            "machine_id": machine.code,
-            "machine_type": machine.machine_type,
-            "tonnage_ton": float(machine.tonnage_ton),
-            "max_inj_pressure_bar": float(machine.max_inj_pressure_bar),
-            "max_clamp_force_ton": float(machine.max_clamp_force_ton),
-            "machine_age_days": (today - machine.installed_on).days,
-            "days_since_maintenance": (today - machine.last_maintenance_on).days,
-        },
-        "product": {
-            "product_id": product.code,
-            "name": product.name,
-            "cavity_count": product.cavity_count,
-            "nominal_shot_weight_g": float(product.nominal_shot_weight_g),
-            "wall_thickness_mm": float(product.wall_thickness_mm),
-            "projected_area_cm2": float(product.projected_area_cm2),
-        },
-        "material_lot": {
-            "material_lot_id": lot.lot_code,
-            "resin_grade": lot.resin_grade,
-            "mfi": float(lot.mfi),
-            "moisture_pct": float(lot.moisture_pct),
-            "regrind_pct": float(lot.regrind_pct),
-            "colourant_pct": float(lot.colourant_pct),
-        },
+        "machine_id": machine.code,
+        "machine_type": machine.machine_type,
+        "tonnage_ton": float(machine.tonnage_ton),
+        "max_inj_pressure_bar": float(machine.max_inj_pressure_bar),
+        "max_clamp_force_ton": float(machine.max_clamp_force_ton),
+        "machine_age_days": (today - machine.installed_on).days,
+        "days_since_maintenance": (today - machine.last_maintenance_on).days,
+    }
+
+
+def product_snapshot(product: Product) -> dict[str, Any]:
+    """ProductContext values (roadmap 7.4)."""
+    return {
+        "product_id": product.code,
+        "name": product.name,
+        "cavity_count": product.cavity_count,
+        "nominal_shot_weight_g": float(product.nominal_shot_weight_g),
+        "wall_thickness_mm": float(product.wall_thickness_mm),
+        "projected_area_cm2": float(product.projected_area_cm2),
+    }
+
+
+def lot_snapshot(lot: MaterialLot) -> dict[str, Any]:
+    """MaterialLot values (roadmap 7.5)."""
+    return {
+        "material_lot_id": lot.lot_code,
+        "resin_grade": lot.resin_grade,
+        "mfi": float(lot.mfi),
+        "moisture_pct": float(lot.moisture_pct),
+        "regrind_pct": float(lot.regrind_pct),
+        "colourant_pct": float(lot.colourant_pct),
+    }
+
+
+def context_snapshot(
+    machine: Machine, product: Product, lot: MaterialLot, *, today: date
+) -> dict[str, Any]:
+    """RunContext values as used by a run (contract field names, roadmap 7.3-7.5)."""
+    return {
+        "machine": machine_snapshot(machine, today=today),
+        "product": product_snapshot(product),
+        "material_lot": lot_snapshot(lot),
     }
 
 
