@@ -31,7 +31,6 @@ from app.db.errors import NotFoundError
 from app.db.models import ProcessRun, SimulationEvent
 from app.db.repositories import (
     EventRepository,
-    ModelVersionRepository,
     PredictionRepository,
     ReferenceRepository,
     RunFilters,
@@ -41,7 +40,7 @@ from app.db.repositories import (
     reset_run_results,
 )
 from app.db.session import Database
-from app.db.vocab import MODEL_NAMES, STAGE_NAMES, TERMINAL_STATUSES
+from app.db.vocab import STAGE_NAMES, TERMINAL_STATUSES
 from app.engine.cache import StageCache, stage_cache_key
 from app.engine.events import EventBus, envelope_from_row
 from app.engine.ports import StageExecutor
@@ -52,6 +51,11 @@ from app.engine.state_machine import (
     FsmState,
     InvalidTransitionError,
     transition,
+)
+from app.services.predictions import (
+    persist_prediction,
+    prediction_row_to_json,
+    split_model_version,
 )
 
 log = get_logger(__name__)
@@ -127,36 +131,6 @@ def stage_row_to_json(row: Any) -> dict[str, Any]:
     return out
 
 
-_PREDICTION_JSON_COLUMNS = (
-    "label",
-    "p_fail",
-    "p_fail_raw",
-    "threshold_used",
-    "risk_level",
-    "risk_drivers",
-    "explanation",
-    "stage_risk_mass",
-    "caveats",
-    "anomaly_global",
-    "ood",
-    "uncertainty",
-    "constraint_override_applied",
-    "inference_backend",
-    "feature_schema_hash",
-    "constraints_version",
-)
-
-
-def prediction_row_to_json(row: Any) -> dict[str, Any]:
-    out = {k: getattr(row, k) for k in _PREDICTION_JSON_COLUMNS}
-    mv = row.model_version
-    out["model_version"] = f"{mv.name}-{mv.semver}"
-    out["is_mock"] = row.inference_backend == "mock"
-    out["prediction_id"] = row.id
-    out["compute_ms"] = row.latency_ms
-    return out
-
-
 def process_input_of(run: ProcessRun) -> dict[str, Any]:
     """ProcessInput JSON (roadmap §7.7) from the run's frozen context and recipe."""
     return {"context": run.context_snapshot, "recipe": run.parameters.as_dict()}
@@ -165,13 +139,6 @@ def process_input_of(run: ProcessRun) -> dict[str, Any]:
 def flat_input(process_input: Mapping[str, Any]) -> dict[str, Any]:
     ctx = process_input["context"]
     return {**ctx["machine"], **ctx["product"], **ctx["material_lot"], **process_input["recipe"]}
-
-
-def _split_model_version(value: str) -> tuple[str, str]:
-    name, _, semver = value.partition("-")
-    if name not in MODEL_NAMES or not semver:
-        raise ValueError(f"unrecognised model_version {value!r} (expected '<name>-<semver>')")
-    return name, semver
 
 
 # ---------------------------------------------------------------------------
@@ -404,18 +371,10 @@ class SimulationService:
             compute_ms = round((time.perf_counter() - t0) * 1000, 3)
             if delay:
                 await asyncio.sleep(delay)
-            name, semver = _split_model_version(str(prediction["model_version"]))
+            split_model_version(str(prediction["model_version"]))  # reject before any write
 
             def write_prediction(s: Session, run: ProcessRun) -> None:
-                mv = ModelVersionRepository(s)
-                # Registered at startup in R2-P5; an unknown version is recorded, never overwritten.
-                version = mv.find(name, semver) or mv.upsert(name, semver, algorithm="unregistered")
-                values = {k: prediction.get(k) for k in _PREDICTION_JSON_COLUMNS}
-                values = {k: v for k, v in values.items() if v is not None}
-                values.update(
-                    model_version_id=version.id, latency_ms=prediction.get("compute_ms", compute_ms)
-                )
-                PredictionRepository(s).add(run, **values)
+                persist_prediction(s, run, prediction, compute_ms=compute_ms)
 
             state = await self._apply(
                 run_id,

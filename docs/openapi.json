@@ -20,6 +20,221 @@
         "title": "AbortRequest",
         "type": "object"
       },
+      "ActiveModelsOut": {
+        "properties": {
+          "intelligence": {
+            "$ref": "#/components/schemas/IntelligenceVersionInfo"
+          },
+          "is_mock": {
+            "title": "Is Mock",
+            "type": "boolean"
+          },
+          "models": {
+            "items": {
+              "$ref": "#/components/schemas/ModelVersionOut"
+            },
+            "title": "Models",
+            "type": "array"
+          }
+        },
+        "required": [
+          "is_mock",
+          "intelligence",
+          "models"
+        ],
+        "title": "ActiveModelsOut",
+        "type": "object"
+      },
+      "AnomalyContributor": {
+        "additionalProperties": false,
+        "properties": {
+          "deviation": {
+            "title": "Deviation",
+            "type": "number"
+          },
+          "feature": {
+            "title": "Feature",
+            "type": "string"
+          }
+        },
+        "required": [
+          "feature",
+          "deviation"
+        ],
+        "title": "AnomalyContributor",
+        "type": "object"
+      },
+      "AnomalyMethod": {
+        "enum": [
+          "zscore",
+          "iqr",
+          "percentile_band",
+          "spec_limit",
+          "isolation_forest",
+          "autoencoder",
+          "spc"
+        ],
+        "title": "AnomalyMethod",
+        "type": "string"
+      },
+      "AnomalyResult": {
+        "additionalProperties": false,
+        "properties": {
+          "is_anomaly": {
+            "title": "Is Anomaly",
+            "type": "boolean"
+          },
+          "method": {
+            "$ref": "#/components/schemas/AnomalyMethod"
+          },
+          "model_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model Version"
+          },
+          "note": {
+            "default": "",
+            "title": "Note",
+            "type": "string"
+          },
+          "scope": {
+            "title": "Scope",
+            "type": "string"
+          },
+          "score": {
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Score",
+            "type": "number"
+          },
+          "threshold": {
+            "title": "Threshold",
+            "type": "number"
+          },
+          "top_contributors": {
+            "items": {
+              "$ref": "#/components/schemas/AnomalyContributor"
+            },
+            "title": "Top Contributors",
+            "type": "array"
+          }
+        },
+        "required": [
+          "scope",
+          "method",
+          "score",
+          "is_anomaly",
+          "threshold"
+        ],
+        "title": "AnomalyResult",
+        "type": "object"
+      },
+      "Attribution": {
+        "additionalProperties": false,
+        "properties": {
+          "direction": {
+            "enum": [
+              "toward_fail",
+              "toward_pass"
+            ],
+            "title": "Direction",
+            "type": "string"
+          },
+          "display_name": {
+            "title": "Display Name",
+            "type": "string"
+          },
+          "feature": {
+            "title": "Feature",
+            "type": "string"
+          },
+          "group": {
+            "title": "Group",
+            "type": "string"
+          },
+          "shap_value": {
+            "title": "Shap Value",
+            "type": "number"
+          },
+          "stage": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/StageName"
+              },
+              {
+                "const": "CONTEXT",
+                "type": "string"
+              }
+            ],
+            "title": "Stage"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
+          }
+        },
+        "required": [
+          "feature",
+          "display_name",
+          "value",
+          "shap_value",
+          "direction",
+          "stage",
+          "group"
+        ],
+        "title": "Attribution",
+        "type": "object"
+      },
+      "Caveat": {
+        "additionalProperties": false,
+        "properties": {
+          "code": {
+            "enum": [
+              "OUT_OF_DISTRIBUTION",
+              "ANOMALY_DETECTED",
+              "CRITICAL_CONSTRAINT_OVERRIDDEN",
+              "MOCK_INFERENCE",
+              "CONSTRAINTS_VERSION_MISMATCH",
+              "STAGE_SUBMODEL_DISABLED"
+            ],
+            "title": "Code",
+            "type": "string"
+          },
+          "features": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Features",
+            "type": "array"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "message"
+        ],
+        "title": "Caveat",
+        "type": "object"
+      },
       "ComponentStatus": {
         "additionalProperties": false,
         "properties": {
@@ -42,6 +257,79 @@
           "detail"
         ],
         "title": "ComponentStatus",
+        "type": "object"
+      },
+      "ConstraintBreach": {
+        "additionalProperties": false,
+        "properties": {
+          "constraints_version": {
+            "title": "Constraints Version",
+            "type": "string"
+          },
+          "hint": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Hint"
+          },
+          "limit": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Limit"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          },
+          "parameters": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Parameters",
+            "type": "array"
+          },
+          "provenance": {
+            "$ref": "#/components/schemas/DataProvenance"
+          },
+          "rule_id": {
+            "title": "Rule Id",
+            "type": "string"
+          },
+          "severity": {
+            "$ref": "#/components/schemas/ConstraintSeverity"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
+          }
+        },
+        "required": [
+          "rule_id",
+          "severity",
+          "parameters",
+          "message",
+          "provenance",
+          "constraints_version"
+        ],
+        "title": "ConstraintBreach",
         "type": "object"
       },
       "ConstraintSeverity": {
@@ -281,6 +569,39 @@
         "title": "DataProvenance",
         "type": "string"
       },
+      "Envelope_ActiveModelsOut_": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ActiveModelsOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "error": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ErrorBody"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "meta": {
+            "$ref": "#/components/schemas/Meta"
+          }
+        },
+        "required": [
+          "meta"
+        ],
+        "title": "Envelope[ActiveModelsOut]",
+        "type": "object"
+      },
       "Envelope_ConstraintsOut_": {
         "additionalProperties": false,
         "properties": {
@@ -347,6 +668,39 @@
         "title": "Envelope[HealthData]",
         "type": "object"
       },
+      "Envelope_LocalExplanation_": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LocalExplanation"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "error": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ErrorBody"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "meta": {
+            "$ref": "#/components/schemas/Meta"
+          }
+        },
+        "required": [
+          "meta"
+        ],
+        "title": "Envelope[LocalExplanation]",
+        "type": "object"
+      },
       "Envelope_MaterialLotOut_": {
         "additionalProperties": false,
         "properties": {
@@ -378,6 +732,39 @@
           "meta"
         ],
         "title": "Envelope[MaterialLotOut]",
+        "type": "object"
+      },
+      "Envelope_PredictResponse_": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PredictResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "error": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ErrorBody"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "meta": {
+            "$ref": "#/components/schemas/Meta"
+          }
+        },
+        "required": [
+          "meta"
+        ],
+        "title": "Envelope[PredictResponse]",
         "type": "object"
       },
       "Envelope_ScenarioSummary_": {
@@ -553,6 +940,43 @@
           "meta"
         ],
         "title": "Envelope[list[MaterialLotOut]]",
+        "type": "object"
+      },
+      "Envelope_list_ModelVersionOut__": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/ModelVersionOut"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Data"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ErrorBody"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "meta": {
+            "$ref": "#/components/schemas/Meta"
+          }
+        },
+        "required": [
+          "meta"
+        ],
+        "title": "Envelope[list[ModelVersionOut]]",
         "type": "object"
       },
       "Envelope_list_ProductOut__": {
@@ -787,6 +1211,25 @@
           "payload"
         ],
         "title": "EventOut",
+        "type": "object"
+      },
+      "GroupedAttribution": {
+        "additionalProperties": false,
+        "properties": {
+          "group": {
+            "title": "Group",
+            "type": "string"
+          },
+          "shap_sum": {
+            "title": "Shap Sum",
+            "type": "number"
+          }
+        },
+        "required": [
+          "group",
+          "shap_sum"
+        ],
+        "title": "GroupedAttribution",
         "type": "object"
       },
       "HTTPValidationError": {
@@ -1117,6 +1560,64 @@
         "title": "LabelRequest",
         "type": "object"
       },
+      "LocalExplanation": {
+        "additionalProperties": false,
+        "properties": {
+          "attributions": {
+            "items": {
+              "$ref": "#/components/schemas/Attribution"
+            },
+            "title": "Attributions",
+            "type": "array"
+          },
+          "background_version": {
+            "title": "Background Version",
+            "type": "string"
+          },
+          "base_value": {
+            "title": "Base Value",
+            "type": "number"
+          },
+          "grouped_attributions": {
+            "items": {
+              "$ref": "#/components/schemas/GroupedAttribution"
+            },
+            "title": "Grouped Attributions",
+            "type": "array"
+          },
+          "method": {
+            "const": "tree_shap",
+            "default": "tree_shap",
+            "title": "Method",
+            "type": "string"
+          },
+          "output_space": {
+            "const": "log_odds",
+            "default": "log_odds",
+            "title": "Output Space",
+            "type": "string"
+          },
+          "show_caveat_banner": {
+            "default": false,
+            "title": "Show Caveat Banner",
+            "type": "boolean"
+          },
+          "stage_risk_mass": {
+            "items": {
+              "$ref": "#/components/schemas/StageShare"
+            },
+            "title": "Stage Risk Mass",
+            "type": "array"
+          }
+        },
+        "required": [
+          "base_value",
+          "attributions",
+          "background_version"
+        ],
+        "title": "LocalExplanation",
+        "type": "object"
+      },
       "MachineOut": {
         "additionalProperties": false,
         "description": "``machine_age_days`` / ``days_since_maintenance`` are computed for today's date.",
@@ -1366,6 +1867,148 @@
         "title": "Meta",
         "type": "object"
       },
+      "ModelVersionOut": {
+        "properties": {
+          "algorithm": {
+            "title": "Algorithm",
+            "type": "string"
+          },
+          "constraints_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Constraints Version"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "feature_schema_hash": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Feature Schema Hash"
+          },
+          "is_active": {
+            "title": "Is Active",
+            "type": "boolean"
+          },
+          "metrics": {
+            "additionalProperties": true,
+            "title": "Metrics",
+            "type": "object"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "semver": {
+            "title": "Semver",
+            "type": "string"
+          },
+          "threshold": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Threshold"
+          },
+          "trained_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Trained At"
+          },
+          "version": {
+            "title": "Version",
+            "type": "string"
+          }
+        },
+        "required": [
+          "version",
+          "name",
+          "semver",
+          "algorithm",
+          "is_active",
+          "trained_at",
+          "metrics",
+          "feature_schema_hash",
+          "constraints_version",
+          "threshold",
+          "created_at"
+        ],
+        "title": "ModelVersionOut",
+        "type": "object"
+      },
+      "OodFeature": {
+        "additionalProperties": false,
+        "properties": {
+          "feature": {
+            "title": "Feature",
+            "type": "string"
+          },
+          "p01": {
+            "title": "P01",
+            "type": "number"
+          },
+          "p99": {
+            "title": "P99",
+            "type": "number"
+          },
+          "value": {
+            "title": "Value",
+            "type": "number"
+          }
+        },
+        "required": [
+          "feature",
+          "value",
+          "p01",
+          "p99"
+        ],
+        "title": "OodFeature",
+        "type": "object"
+      },
+      "OodInfo": {
+        "additionalProperties": false,
+        "properties": {
+          "features_outside": {
+            "items": {
+              "$ref": "#/components/schemas/OodFeature"
+            },
+            "title": "Features Outside",
+            "type": "array"
+          },
+          "is_out_of_distribution": {
+            "default": false,
+            "title": "Is Out Of Distribution",
+            "type": "boolean"
+          }
+        },
+        "title": "OodInfo",
+        "type": "object"
+      },
       "OverrideRequest": {
         "additionalProperties": false,
         "properties": {
@@ -1595,6 +2238,193 @@
           "provenance"
         ],
         "title": "ParameterSpec",
+        "type": "object"
+      },
+      "PredictRequest": {
+        "additionalProperties": false,
+        "description": "Windows and couplings come from the registry and are enforced server-side (rule B6).",
+        "properties": {
+          "include_explanation": {
+            "default": true,
+            "title": "Include Explanation",
+            "type": "boolean"
+          },
+          "machine_id": {
+            "title": "Machine Id",
+            "type": "string"
+          },
+          "material_lot_id": {
+            "title": "Material Lot Id",
+            "type": "string"
+          },
+          "parameters": {
+            "$ref": "#/components/schemas/ProcessRecipe"
+          },
+          "product_id": {
+            "title": "Product Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "machine_id",
+          "product_id",
+          "material_lot_id",
+          "parameters"
+        ],
+        "title": "PredictRequest",
+        "type": "object"
+      },
+      "PredictResponse": {
+        "properties": {
+          "prediction": {
+            "$ref": "#/components/schemas/PredictionResult"
+          },
+          "prediction_id": {
+            "title": "Prediction Id",
+            "type": "string"
+          },
+          "stage_results": {
+            "items": {
+              "$ref": "#/components/schemas/StageResult"
+            },
+            "title": "Stage Results",
+            "type": "array"
+          }
+        },
+        "required": [
+          "prediction_id",
+          "stage_results",
+          "prediction"
+        ],
+        "title": "PredictResponse",
+        "type": "object"
+      },
+      "PredictionLabel": {
+        "enum": [
+          "PASS",
+          "FAIL"
+        ],
+        "title": "PredictionLabel",
+        "type": "string"
+      },
+      "PredictionResult": {
+        "additionalProperties": false,
+        "properties": {
+          "anomaly_global": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AnomalyResult"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "caveats": {
+            "items": {
+              "$ref": "#/components/schemas/Caveat"
+            },
+            "title": "Caveats",
+            "type": "array"
+          },
+          "compute_ms": {
+            "minimum": 0.0,
+            "title": "Compute Ms",
+            "type": "number"
+          },
+          "constraint_override_applied": {
+            "default": false,
+            "title": "Constraint Override Applied",
+            "type": "boolean"
+          },
+          "constraints_version": {
+            "title": "Constraints Version",
+            "type": "string"
+          },
+          "explanation": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LocalExplanation"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "feature_schema_hash": {
+            "title": "Feature Schema Hash",
+            "type": "string"
+          },
+          "inference_backend": {
+            "$ref": "#/components/schemas/InferenceBackend"
+          },
+          "is_mock": {
+            "title": "Is Mock",
+            "type": "boolean"
+          },
+          "label": {
+            "$ref": "#/components/schemas/PredictionLabel"
+          },
+          "model_version": {
+            "title": "Model Version",
+            "type": "string"
+          },
+          "ood": {
+            "$ref": "#/components/schemas/OodInfo"
+          },
+          "p_fail": {
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "P Fail",
+            "type": "number"
+          },
+          "p_fail_raw": {
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "P Fail Raw",
+            "type": "number"
+          },
+          "risk_drivers": {
+            "items": {
+              "$ref": "#/components/schemas/RiskDriver"
+            },
+            "title": "Risk Drivers",
+            "type": "array"
+          },
+          "risk_level": {
+            "$ref": "#/components/schemas/RiskLevel"
+          },
+          "stage_risk_mass": {
+            "items": {
+              "$ref": "#/components/schemas/StageShare"
+            },
+            "title": "Stage Risk Mass",
+            "type": "array"
+          },
+          "threshold_used": {
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Threshold Used",
+            "type": "number"
+          },
+          "uncertainty": {
+            "$ref": "#/components/schemas/Uncertainty"
+          }
+        },
+        "required": [
+          "label",
+          "p_fail",
+          "p_fail_raw",
+          "threshold_used",
+          "model_version",
+          "risk_level",
+          "inference_backend",
+          "is_mock",
+          "feature_schema_hash",
+          "constraints_version",
+          "compute_ms"
+        ],
+        "title": "PredictionResult",
         "type": "object"
       },
       "ProcessRecipe": {
@@ -1910,6 +2740,35 @@
           "p_fail"
         ],
         "title": "RiskBands",
+        "type": "object"
+      },
+      "RiskDriver": {
+        "additionalProperties": false,
+        "properties": {
+          "detail": {
+            "title": "Detail",
+            "type": "string"
+          },
+          "source": {
+            "enum": [
+              "model",
+              "anomaly",
+              "constraint"
+            ],
+            "title": "Source",
+            "type": "string"
+          },
+          "weight": {
+            "title": "Weight",
+            "type": "number"
+          }
+        },
+        "required": [
+          "source",
+          "detail",
+          "weight"
+        ],
+        "title": "RiskDriver",
         "type": "object"
       },
       "RiskLevel": {
@@ -2266,6 +3125,44 @@
         "title": "SimulationStateOut",
         "type": "object"
       },
+      "StageAnomaly": {
+        "additionalProperties": false,
+        "description": "L1 per-stage anomaly (Plan 12.2).",
+        "properties": {
+          "contributors": {
+            "items": {
+              "$ref": "#/components/schemas/AnomalyContributor"
+            },
+            "title": "Contributors",
+            "type": "array"
+          },
+          "flag": {
+            "title": "Flag",
+            "type": "boolean"
+          },
+          "method": {
+            "$ref": "#/components/schemas/AnomalyMethod"
+          },
+          "note": {
+            "default": "",
+            "title": "Note",
+            "type": "string"
+          },
+          "score": {
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Score",
+            "type": "number"
+          }
+        },
+        "required": [
+          "flag",
+          "score",
+          "method"
+        ],
+        "title": "StageAnomaly",
+        "type": "object"
+      },
       "StageCheck": {
         "additionalProperties": false,
         "properties": {
@@ -2318,6 +3215,184 @@
         "title": "StageName",
         "type": "string"
       },
+      "StageResult": {
+        "additionalProperties": false,
+        "description": "Output of ``run_stage()`` for S1-S5 (7.9).",
+        "properties": {
+          "anomaly": {
+            "$ref": "#/components/schemas/StageAnomaly"
+          },
+          "block_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Block Reason"
+          },
+          "blocked": {
+            "default": false,
+            "title": "Blocked",
+            "type": "boolean"
+          },
+          "compute_ms": {
+            "minimum": 0.0,
+            "title": "Compute Ms",
+            "type": "number"
+          },
+          "constraint_breaches": {
+            "items": {
+              "$ref": "#/components/schemas/ConstraintBreach"
+            },
+            "title": "Constraint Breaches",
+            "type": "array"
+          },
+          "constraints_version": {
+            "title": "Constraints Version",
+            "type": "string"
+          },
+          "health_score": {
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Health Score",
+            "type": "number"
+          },
+          "indicator_provenance": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/DataProvenance"
+            },
+            "title": "Indicator Provenance",
+            "type": "object"
+          },
+          "indicators": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "title": "Indicators",
+            "type": "object"
+          },
+          "inputs_used": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "title": "Inputs Used",
+            "type": "object"
+          },
+          "module_version": {
+            "title": "Module Version",
+            "type": "string"
+          },
+          "notes": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Notes",
+            "type": "array"
+          },
+          "risk_level": {
+            "$ref": "#/components/schemas/RiskLevel"
+          },
+          "risk_ordinal": {
+            "maximum": 4.0,
+            "minimum": 0.0,
+            "title": "Risk Ordinal",
+            "type": "integer"
+          },
+          "sequence_index": {
+            "maximum": 5.0,
+            "minimum": 1.0,
+            "title": "Sequence Index",
+            "type": "integer"
+          },
+          "stage_name": {
+            "$ref": "#/components/schemas/StageName"
+          },
+          "substate": {
+            "$ref": "#/components/schemas/StageSubstate"
+          },
+          "upstream_in": {
+            "$ref": "#/components/schemas/UpstreamContext"
+          },
+          "upstream_out": {
+            "$ref": "#/components/schemas/UpstreamContext"
+          }
+        },
+        "required": [
+          "stage_name",
+          "sequence_index",
+          "substate",
+          "inputs_used",
+          "upstream_in",
+          "upstream_out",
+          "health_score",
+          "risk_level",
+          "risk_ordinal",
+          "anomaly",
+          "indicators",
+          "indicator_provenance",
+          "module_version",
+          "constraints_version",
+          "compute_ms"
+        ],
+        "title": "StageResult",
+        "type": "object"
+      },
+      "StageShare": {
+        "additionalProperties": false,
+        "properties": {
+          "share": {
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Share",
+            "type": "number"
+          },
+          "stage": {
+            "$ref": "#/components/schemas/StageName"
+          }
+        },
+        "required": [
+          "stage",
+          "share"
+        ],
+        "title": "StageShare",
+        "type": "object"
+      },
+      "StageSubstate": {
+        "enum": [
+          "PENDING",
+          "RUNNING",
+          "COMPLETED",
+          "BLOCKED"
+        ],
+        "title": "StageSubstate",
+        "type": "string"
+      },
       "StartRequest": {
         "additionalProperties": false,
         "properties": {
@@ -2363,6 +3438,125 @@
           "enabled"
         ],
         "title": "Submodels",
+        "type": "object"
+      },
+      "Uncertainty": {
+        "additionalProperties": false,
+        "properties": {
+          "method": {
+            "default": "none",
+            "enum": [
+              "none",
+              "ensemble_spread"
+            ],
+            "title": "Method",
+            "type": "string"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
+          }
+        },
+        "title": "Uncertainty",
+        "type": "object"
+      },
+      "UpstreamContext": {
+        "additionalProperties": false,
+        "description": "Every key is optional; each stage may only add the keys it owns (7.8).",
+        "properties": {
+          "cavity_pressure_estimate_bar": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cavity Pressure Estimate Bar"
+          },
+          "effective_melt_temp_c": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Effective Melt Temp C"
+          },
+          "fill_completion_proxy": {
+            "anyOf": [
+              {
+                "maximum": 1.0,
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fill Completion Proxy"
+          },
+          "moisture_flag": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Moisture Flag"
+          },
+          "residual_stress_proxy": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Residual Stress Proxy"
+          },
+          "viscosity_class": {
+            "anyOf": [
+              {
+                "enum": [
+                  "LOW",
+                  "NOMINAL",
+                  "HIGH"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Viscosity Class"
+          },
+          "viscosity_proxy": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Viscosity Proxy"
+          }
+        },
+        "title": "UpstreamContext",
         "type": "object"
       },
       "ValidationError": {
@@ -2655,6 +3849,221 @@
         "summary": "Create a material lot (attributes validated against the registry)",
         "tags": [
           "reference"
+        ]
+      }
+    },
+    "/api/v1/models": {
+      "get": {
+        "operationId": "all_models_api_v1_models_get",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "x-api-key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Envelope_list_ModelVersionOut__"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Model registry",
+        "tags": [
+          "prediction"
+        ]
+      }
+    },
+    "/api/v1/models/active": {
+      "get": {
+        "operationId": "active_models_api_v1_models_active_get",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "x-api-key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Envelope_ActiveModelsOut_"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Models serving predictions",
+        "tags": [
+          "prediction"
+        ]
+      }
+    },
+    "/api/v1/predict": {
+      "post": {
+        "operationId": "predict_api_v1_predict_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "x-api-key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PredictRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Envelope_PredictResponse_"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Evaluate a recipe end to end without a simulation run (persists the prediction)",
+        "tags": [
+          "prediction"
+        ]
+      }
+    },
+    "/api/v1/predict/{prediction_id}/explain": {
+      "get": {
+        "operationId": "explain_api_v1_predict__prediction_id__explain_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "prediction_id",
+            "required": true,
+            "schema": {
+              "title": "Prediction Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-api-key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Envelope_LocalExplanation_"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Local explanation of a stored prediction",
+        "tags": [
+          "prediction"
         ]
       }
     },

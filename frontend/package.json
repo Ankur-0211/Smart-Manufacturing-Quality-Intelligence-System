@@ -13,7 +13,8 @@
     "format:check": "prettier --check .",
     "test": "vitest run",
     "test:watch": "vitest",
-    "gen:api": "openapi-typescript ../docs/openapi.json -o src/api/generated/schema.d.ts"
+    "gen:api": "openapi-typescript ../docs/openapi.json -o src/api/generated/schema.d.ts",
+    "check:api": "openapi-typescript ../docs/openapi.json -o src/api/generated/schema.d.ts --check"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.104.2",

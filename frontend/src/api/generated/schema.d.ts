@@ -73,6 +73,74 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/models": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Model registry */
+        get: operations["all_models_api_v1_models_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/models/active": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Models serving predictions */
+        get: operations["active_models_api_v1_models_active_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/predict": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Evaluate a recipe end to end without a simulation run (persists the prediction) */
+        post: operations["predict_api_v1_predict_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/predict/{prediction_id}/explain": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Local explanation of a stored prediction */
+        get: operations["explain_api_v1_predict__prediction_id__explain_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/products": {
         parameters: {
             query?: never;
@@ -304,6 +372,79 @@ export interface components {
             /** Reason */
             reason?: string | null;
         };
+        /** ActiveModelsOut */
+        ActiveModelsOut: {
+            intelligence: components["schemas"]["IntelligenceVersionInfo"];
+            /** Is Mock */
+            is_mock: boolean;
+            /** Models */
+            models: components["schemas"]["ModelVersionOut"][];
+        };
+        /** AnomalyContributor */
+        AnomalyContributor: {
+            /** Deviation */
+            deviation: number;
+            /** Feature */
+            feature: string;
+        };
+        /**
+         * AnomalyMethod
+         * @enum {string}
+         */
+        AnomalyMethod: "zscore" | "iqr" | "percentile_band" | "spec_limit" | "isolation_forest" | "autoencoder" | "spc";
+        /** AnomalyResult */
+        AnomalyResult: {
+            /** Is Anomaly */
+            is_anomaly: boolean;
+            method: components["schemas"]["AnomalyMethod"];
+            /** Model Version */
+            model_version?: string | null;
+            /**
+             * Note
+             * @default
+             */
+            note: string;
+            /** Scope */
+            scope: string;
+            /** Score */
+            score: number;
+            /** Threshold */
+            threshold: number;
+            /** Top Contributors */
+            top_contributors?: components["schemas"]["AnomalyContributor"][];
+        };
+        /** Attribution */
+        Attribution: {
+            /**
+             * Direction
+             * @enum {string}
+             */
+            direction: "toward_fail" | "toward_pass";
+            /** Display Name */
+            display_name: string;
+            /** Feature */
+            feature: string;
+            /** Group */
+            group: string;
+            /** Shap Value */
+            shap_value: number;
+            /** Stage */
+            stage: components["schemas"]["StageName"] | "CONTEXT";
+            /** Value */
+            value: number | string | null;
+        };
+        /** Caveat */
+        Caveat: {
+            /**
+             * Code
+             * @enum {string}
+             */
+            code: "OUT_OF_DISTRIBUTION" | "ANOMALY_DETECTED" | "CRITICAL_CONSTRAINT_OVERRIDDEN" | "MOCK_INFERENCE" | "CONSTRAINTS_VERSION_MISMATCH" | "STAGE_SUBMODEL_DISABLED";
+            /** Features */
+            features?: string[];
+            /** Message */
+            message: string;
+        };
         /** ComponentStatus */
         ComponentStatus: {
             /** Available */
@@ -312,6 +453,25 @@ export interface components {
             detail: string;
             /** Name */
             name: string;
+        };
+        /** ConstraintBreach */
+        ConstraintBreach: {
+            /** Constraints Version */
+            constraints_version: string;
+            /** Hint */
+            hint?: string | null;
+            /** Limit */
+            limit?: number | null;
+            /** Message */
+            message: string;
+            /** Parameters */
+            parameters: string[];
+            provenance: components["schemas"]["DataProvenance"];
+            /** Rule Id */
+            rule_id: string;
+            severity: components["schemas"]["ConstraintSeverity"];
+            /** Value */
+            value?: number | null;
         };
         /**
          * ConstraintSeverity
@@ -411,6 +571,12 @@ export interface components {
          * @enum {string}
          */
         DataProvenance: "dataset_derived" | "specification_derived" | "heuristic" | "learned" | "synthetic" | "unvalidated";
+        /** Envelope[ActiveModelsOut] */
+        Envelope_ActiveModelsOut_: {
+            data?: components["schemas"]["ActiveModelsOut"] | null;
+            error?: components["schemas"]["ErrorBody"] | null;
+            meta: components["schemas"]["Meta"];
+        };
         /** Envelope[ConstraintsOut] */
         Envelope_ConstraintsOut_: {
             data?: components["schemas"]["ConstraintsOut"] | null;
@@ -423,9 +589,21 @@ export interface components {
             error?: components["schemas"]["ErrorBody"] | null;
             meta: components["schemas"]["Meta"];
         };
+        /** Envelope[LocalExplanation] */
+        Envelope_LocalExplanation_: {
+            data?: components["schemas"]["LocalExplanation"] | null;
+            error?: components["schemas"]["ErrorBody"] | null;
+            meta: components["schemas"]["Meta"];
+        };
         /** Envelope[MaterialLotOut] */
         Envelope_MaterialLotOut_: {
             data?: components["schemas"]["MaterialLotOut"] | null;
+            error?: components["schemas"]["ErrorBody"] | null;
+            meta: components["schemas"]["Meta"];
+        };
+        /** Envelope[PredictResponse] */
+        Envelope_PredictResponse_: {
+            data?: components["schemas"]["PredictResponse"] | null;
             error?: components["schemas"]["ErrorBody"] | null;
             meta: components["schemas"]["Meta"];
         };
@@ -461,6 +639,13 @@ export interface components {
         Envelope_list_MaterialLotOut__: {
             /** Data */
             data?: components["schemas"]["MaterialLotOut"][] | null;
+            error?: components["schemas"]["ErrorBody"] | null;
+            meta: components["schemas"]["Meta"];
+        };
+        /** Envelope[list[ModelVersionOut]] */
+        Envelope_list_ModelVersionOut__: {
+            /** Data */
+            data?: components["schemas"]["ModelVersionOut"][] | null;
             error?: components["schemas"]["ErrorBody"] | null;
             meta: components["schemas"]["Meta"];
         };
@@ -525,6 +710,13 @@ export interface components {
             ts: string;
             /** Type */
             type: string;
+        };
+        /** GroupedAttribution */
+        GroupedAttribution: {
+            /** Group */
+            group: string;
+            /** Shap Sum */
+            shap_sum: number;
         };
         /** HTTPValidationError */
         HTTPValidationError: {
@@ -624,6 +816,36 @@ export interface components {
             /** Scenario Label */
             scenario_label?: string | null;
         };
+        /** LocalExplanation */
+        LocalExplanation: {
+            /** Attributions */
+            attributions: components["schemas"]["Attribution"][];
+            /** Background Version */
+            background_version: string;
+            /** Base Value */
+            base_value: number;
+            /** Grouped Attributions */
+            grouped_attributions?: components["schemas"]["GroupedAttribution"][];
+            /**
+             * Method
+             * @default tree_shap
+             * @constant
+             */
+            method: "tree_shap";
+            /**
+             * Output Space
+             * @default log_odds
+             * @constant
+             */
+            output_space: "log_odds";
+            /**
+             * Show Caveat Banner
+             * @default false
+             */
+            show_caveat_banner: boolean;
+            /** Stage Risk Mass */
+            stage_risk_mass?: components["schemas"]["StageShare"][];
+        };
         /**
          * MachineOut
          * @description ``machine_age_days`` / ``days_since_maintenance`` are computed for today's date.
@@ -718,6 +940,57 @@ export interface components {
              */
             total?: number | null;
         };
+        /** ModelVersionOut */
+        ModelVersionOut: {
+            /** Algorithm */
+            algorithm: string;
+            /** Constraints Version */
+            constraints_version: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Feature Schema Hash */
+            feature_schema_hash: string | null;
+            /** Is Active */
+            is_active: boolean;
+            /** Metrics */
+            metrics: {
+                [key: string]: unknown;
+            };
+            /** Name */
+            name: string;
+            /** Semver */
+            semver: string;
+            /** Threshold */
+            threshold: number | null;
+            /** Trained At */
+            trained_at: string | null;
+            /** Version */
+            version: string;
+        };
+        /** OodFeature */
+        OodFeature: {
+            /** Feature */
+            feature: string;
+            /** P01 */
+            p01: number;
+            /** P99 */
+            p99: number;
+            /** Value */
+            value: number;
+        };
+        /** OodInfo */
+        OodInfo: {
+            /** Features Outside */
+            features_outside?: components["schemas"]["OodFeature"][];
+            /**
+             * Is Out Of Distribution
+             * @default false
+             */
+            is_out_of_distribution: boolean;
+        };
         /** OverrideRequest */
         OverrideRequest: {
             /** Acknowledgement */
@@ -771,6 +1044,74 @@ export interface components {
             tolerance?: number | null;
             /** Unit */
             unit: string | null;
+        };
+        /**
+         * PredictRequest
+         * @description Windows and couplings come from the registry and are enforced server-side (rule B6).
+         */
+        PredictRequest: {
+            /**
+             * Include Explanation
+             * @default true
+             */
+            include_explanation: boolean;
+            /** Machine Id */
+            machine_id: string;
+            /** Material Lot Id */
+            material_lot_id: string;
+            parameters: components["schemas"]["ProcessRecipe"];
+            /** Product Id */
+            product_id: string;
+        };
+        /** PredictResponse */
+        PredictResponse: {
+            prediction: components["schemas"]["PredictionResult"];
+            /** Prediction Id */
+            prediction_id: string;
+            /** Stage Results */
+            stage_results: components["schemas"]["StageResult"][];
+        };
+        /**
+         * PredictionLabel
+         * @enum {string}
+         */
+        PredictionLabel: "PASS" | "FAIL";
+        /** PredictionResult */
+        PredictionResult: {
+            anomaly_global?: components["schemas"]["AnomalyResult"] | null;
+            /** Caveats */
+            caveats?: components["schemas"]["Caveat"][];
+            /** Compute Ms */
+            compute_ms: number;
+            /**
+             * Constraint Override Applied
+             * @default false
+             */
+            constraint_override_applied: boolean;
+            /** Constraints Version */
+            constraints_version: string;
+            explanation?: components["schemas"]["LocalExplanation"] | null;
+            /** Feature Schema Hash */
+            feature_schema_hash: string;
+            inference_backend: components["schemas"]["InferenceBackend"];
+            /** Is Mock */
+            is_mock: boolean;
+            label: components["schemas"]["PredictionLabel"];
+            /** Model Version */
+            model_version: string;
+            ood?: components["schemas"]["OodInfo"];
+            /** P Fail */
+            p_fail: number;
+            /** P Fail Raw */
+            p_fail_raw: number;
+            /** Risk Drivers */
+            risk_drivers?: components["schemas"]["RiskDriver"][];
+            risk_level: components["schemas"]["RiskLevel"];
+            /** Stage Risk Mass */
+            stage_risk_mass?: components["schemas"]["StageShare"][];
+            /** Threshold Used */
+            threshold_used: number;
+            uncertainty?: components["schemas"]["Uncertainty"];
         };
         /** ProcessRecipe */
         ProcessRecipe: {
@@ -887,6 +1228,18 @@ export interface components {
                 [key: string]: number;
             };
         };
+        /** RiskDriver */
+        RiskDriver: {
+            /** Detail */
+            detail: string;
+            /**
+             * Source
+             * @enum {string}
+             */
+            source: "model" | "anomaly" | "constraint";
+            /** Weight */
+            weight: number;
+        };
         /**
          * RiskLevel
          * @enum {string}
@@ -994,6 +1347,24 @@ export interface components {
              */
             updated_at: string;
         };
+        /**
+         * StageAnomaly
+         * @description L1 per-stage anomaly (Plan 12.2).
+         */
+        StageAnomaly: {
+            /** Contributors */
+            contributors?: components["schemas"]["AnomalyContributor"][];
+            /** Flag */
+            flag: boolean;
+            method: components["schemas"]["AnomalyMethod"];
+            /**
+             * Note
+             * @default
+             */
+            note: string;
+            /** Score */
+            score: number;
+        };
         /** StageCheck */
         StageCheck: {
             /** Check Id */
@@ -1014,6 +1385,64 @@ export interface components {
          * @enum {string}
          */
         StageName: "MATERIAL_CONDITIONING" | "PLASTICIZING" | "INJECTION" | "PACKING" | "COOLING" | "QUALITY_INSPECTION";
+        /**
+         * StageResult
+         * @description Output of ``run_stage()`` for S1-S5 (7.9).
+         */
+        StageResult: {
+            anomaly: components["schemas"]["StageAnomaly"];
+            /** Block Reason */
+            block_reason?: string | null;
+            /**
+             * Blocked
+             * @default false
+             */
+            blocked: boolean;
+            /** Compute Ms */
+            compute_ms: number;
+            /** Constraint Breaches */
+            constraint_breaches?: components["schemas"]["ConstraintBreach"][];
+            /** Constraints Version */
+            constraints_version: string;
+            /** Health Score */
+            health_score: number;
+            /** Indicator Provenance */
+            indicator_provenance: {
+                [key: string]: components["schemas"]["DataProvenance"];
+            };
+            /** Indicators */
+            indicators: {
+                [key: string]: number | string | boolean | null;
+            };
+            /** Inputs Used */
+            inputs_used: {
+                [key: string]: number | string | null;
+            };
+            /** Module Version */
+            module_version: string;
+            /** Notes */
+            notes?: string[];
+            risk_level: components["schemas"]["RiskLevel"];
+            /** Risk Ordinal */
+            risk_ordinal: number;
+            /** Sequence Index */
+            sequence_index: number;
+            stage_name: components["schemas"]["StageName"];
+            substate: components["schemas"]["StageSubstate"];
+            upstream_in: components["schemas"]["UpstreamContext"];
+            upstream_out: components["schemas"]["UpstreamContext"];
+        };
+        /** StageShare */
+        StageShare: {
+            /** Share */
+            share: number;
+            stage: components["schemas"]["StageName"];
+        };
+        /**
+         * StageSubstate
+         * @enum {string}
+         */
+        StageSubstate: "PENDING" | "RUNNING" | "COMPLETED" | "BLOCKED";
         /** StartRequest */
         StartRequest: {
             /**
@@ -1029,6 +1458,37 @@ export interface components {
         Submodels: {
             /** Enabled */
             enabled: boolean;
+        };
+        /** Uncertainty */
+        Uncertainty: {
+            /**
+             * Method
+             * @default none
+             * @enum {string}
+             */
+            method: "none" | "ensemble_spread";
+            /** Value */
+            value?: number | null;
+        };
+        /**
+         * UpstreamContext
+         * @description Every key is optional; each stage may only add the keys it owns (7.8).
+         */
+        UpstreamContext: {
+            /** Cavity Pressure Estimate Bar */
+            cavity_pressure_estimate_bar?: number | null;
+            /** Effective Melt Temp C */
+            effective_melt_temp_c?: number | null;
+            /** Fill Completion Proxy */
+            fill_completion_proxy?: number | null;
+            /** Moisture Flag */
+            moisture_flag?: boolean | null;
+            /** Residual Stress Proxy */
+            residual_stress_proxy?: number | null;
+            /** Viscosity Class */
+            viscosity_class?: ("LOW" | "NOMINAL" | "HIGH") | null;
+            /** Viscosity Proxy */
+            viscosity_proxy?: number | null;
         };
         /** ValidationError */
         ValidationError: {
@@ -1195,6 +1655,136 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Envelope_MaterialLotOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    all_models_api_v1_models_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-api-key"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Envelope_list_ModelVersionOut__"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    active_models_api_v1_models_active_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-api-key"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Envelope_ActiveModelsOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    predict_api_v1_predict_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-api-key"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PredictRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Envelope_PredictResponse_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    explain_api_v1_predict__prediction_id__explain_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-api-key"?: string | null;
+            };
+            path: {
+                prediction_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Envelope_LocalExplanation_"];
                 };
             };
             /** @description Validation Error */
