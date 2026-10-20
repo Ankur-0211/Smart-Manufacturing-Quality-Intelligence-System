@@ -1,0 +1,515 @@
+registry_version: constraints-1.0.0
+units_allowed: [c, bar, s, h, mm, mm_s, pct, ton, g, cm2, days, rpm, g_10min, dimensionless]
+
+resin_grades:
+  PP-H:
+    name: "Polypropylene Homopolymer"
+    melt_window_c: [200, 260]
+    degradation_ceiling_c: 285
+    moisture_spec_max_pct: 0.10
+    moisture_critical_factor: 2.0
+    mfi_nominal: 12.0
+    density_g_cm3: 0.905
+    provenance: specification_derived
+    citation: "ISO 1873-1 / Technical Data Sheet PP-H"
+  PP-C:
+    name: "Polypropylene Impact Copolymer"
+    melt_window_c: [190, 250]
+    degradation_ceiling_c: 275
+    moisture_spec_max_pct: 0.12
+    moisture_critical_factor: 2.0
+    mfi_nominal: 15.0
+    density_g_cm3: 0.900
+    provenance: specification_derived
+    citation: "ISO 1873-1 / Technical Data Sheet PP-C"
+
+parameters:
+  # Material Conditioning (S1)
+  drying_time_h:
+    kind: setpoint
+    stage: MATERIAL_CONDITIONING
+    unit: h
+    dtype: float
+    min: 0.0
+    max: 6.0
+    nominal: 1.5
+    step: 0.25
+    tolerance: 0.5
+    actionable: true
+    change_cost: 0.2
+    max_step_change: 1.0
+    display_name: "Drying Time"
+    provenance: heuristic
+    citation: "Plastics Processing Handbook"
+  dryer_temp_c:
+    kind: setpoint
+    stage: MATERIAL_CONDITIONING
+    unit: c
+    dtype: float
+    min: 60.0
+    max: 100.0
+    nominal: 80.0
+    step: 1.0
+    tolerance: 5.0
+    actionable: true
+    change_cost: 0.2
+    max_step_change: 10.0
+    display_name: "Dryer Temperature"
+    provenance: heuristic
+    citation: "Polypropylene Technology Manual"
+
+  # Plasticizing / Thermal (S2)
+  barrel_temp_rear_c:
+    kind: setpoint
+    stage: PLASTICIZING
+    unit: c
+    dtype: float
+    min: 170.0
+    max: 240.0
+    nominal: 200.0
+    step: 1.0
+    tolerance: 10.0
+    actionable: true
+    change_cost: 0.6
+    max_step_change: 15.0
+    display_name: "Barrel Temp (Rear Zone)"
+    provenance: specification_derived
+    citation: "Moldflow Design Principles"
+  barrel_temp_mid_c:
+    kind: setpoint
+    stage: PLASTICIZING
+    unit: c
+    dtype: float
+    min: 180.0
+    max: 255.0
+    nominal: 215.0
+    step: 1.0
+    tolerance: 10.0
+    actionable: true
+    change_cost: 0.6
+    max_step_change: 15.0
+    display_name: "Barrel Temp (Middle Zone)"
+    provenance: specification_derived
+    citation: "Moldflow Design Principles"
+  barrel_temp_front_c:
+    kind: setpoint
+    stage: PLASTICIZING
+    unit: c
+    dtype: float
+    min: 190.0
+    max: 265.0
+    nominal: 225.0
+    step: 1.0
+    tolerance: 10.0
+    actionable: true
+    change_cost: 0.6
+    max_step_change: 15.0
+    display_name: "Barrel Temp (Front Zone)"
+    provenance: specification_derived
+    citation: "Moldflow Design Principles"
+  nozzle_temp_c:
+    kind: setpoint
+    stage: PLASTICIZING
+    unit: c
+    dtype: float
+    min: 195.0
+    max: 270.0
+    nominal: 230.0
+    step: 1.0
+    tolerance: 10.0
+    actionable: true
+    change_cost: 0.5
+    max_step_change: 15.0
+    display_name: "Nozzle Temperature"
+    provenance: specification_derived
+    citation: "Moldflow Design Principles"
+  melt_temp_c:
+    kind: setpoint
+    stage: PLASTICIZING
+    unit: c
+    dtype: float
+    min: 180.0
+    max: 295.0
+    nominal: 230.0
+    step: 1.0
+    tolerance: 10.0
+    actionable: true
+    change_cost: 0.6
+    max_step_change: 20.0
+    display_name: "Melt Temperature"
+    provenance: specification_derived
+    citation: "Polypropylene Processing Guidelines"
+  screw_rpm:
+    kind: setpoint
+    stage: PLASTICIZING
+    unit: rpm
+    dtype: float
+    min: 30.0
+    max: 220.0
+    nominal: 100.0
+    step: 5.0
+    tolerance: 15.0
+    actionable: true
+    change_cost: 0.3
+    max_step_change: 30.0
+    display_name: "Screw Speed"
+    provenance: specification_derived
+    citation: "Standard Screw Recovery Protocol"
+  back_pressure_bar:
+    kind: setpoint
+    stage: PLASTICIZING
+    unit: bar
+    dtype: float
+    min: 15.0
+    max: 160.0
+    nominal: 60.0
+    step: 5.0
+    tolerance: 10.0
+    actionable: true
+    change_cost: 0.3
+    max_step_change: 25.0
+    display_name: "Back Pressure"
+    provenance: specification_derived
+    citation: "Injection Molding Machine Operating Standard"
+  residence_time_s:
+    kind: setpoint
+    stage: PLASTICIZING
+    unit: s
+    dtype: float
+    min: 10.0
+    max: 180.0
+    nominal: 35.0
+    step: 1.0
+    tolerance: 15.0
+    actionable: true
+    change_cost: 0.8
+    max_step_change: 20.0
+    display_name: "Melt Residence Time"
+    provenance: heuristic
+    citation: "Thermal Degradation Control Rules"
+
+  # Injection / Fill (S3)
+  inj_velocity_mm_s:
+    kind: setpoint
+    stage: INJECTION
+    unit: mm_s
+    dtype: float
+    min: 15.0
+    max: 220.0
+    nominal: 95.0
+    step: 5.0
+    tolerance: 15.0
+    actionable: true
+    change_cost: 0.3
+    max_step_change: 30.0
+    display_name: "Injection Velocity"
+    provenance: specification_derived
+    citation: "Cavity Fill Velocity Dynamics"
+  inj_pressure_bar:
+    kind: setpoint
+    stage: INJECTION
+    unit: bar
+    dtype: float
+    min: 350.0
+    max: 1850.0
+    nominal: 850.0
+    step: 25.0
+    tolerance: 100.0
+    actionable: true
+    change_cost: 0.4
+    max_step_change: 150.0
+    display_name: "Injection Pressure"
+    provenance: specification_derived
+    citation: "Hydraulic System Operating Limits"
+  fill_time_s:
+    kind: setpoint
+    stage: INJECTION
+    unit: s
+    dtype: float
+    min: 0.4
+    max: 4.5
+    nominal: 1.2
+    step: 0.1
+    tolerance: 0.3
+    actionable: true
+    change_cost: 0.4
+    max_step_change: 0.5
+    display_name: "Fill Time"
+    provenance: heuristic
+    citation: "Empirical Mold Filling Studies"
+  shot_size_mm:
+    kind: setpoint
+    stage: INJECTION
+    unit: mm
+    dtype: float
+    min: 20.0
+    max: 85.0
+    nominal: 48.0
+    step: 0.5
+    tolerance: 3.0
+    actionable: true
+    change_cost: 0.5
+    max_step_change: 5.0
+    display_name: "Shot Size (Dosing Stroke)"
+    provenance: specification_derived
+    citation: "Barrel Volumetric Calibration"
+  switchover_position_mm:
+    kind: setpoint
+    stage: INJECTION
+    unit: mm
+    dtype: float
+    min: 3.0
+    max: 25.0
+    nominal: 10.0
+    step: 0.5
+    tolerance: 1.5
+    actionable: true
+    change_cost: 0.5
+    max_step_change: 3.0
+    display_name: "V/P Switchover Position"
+    provenance: specification_derived
+    citation: "Cavity 95-98% Volumetric Fill Criterion"
+  clamp_force_ton:
+    kind: setpoint
+    stage: INJECTION
+    unit: ton
+    dtype: float
+    min: 40.0
+    max: 220.0
+    nominal: 120.0
+    step: 5.0
+    tolerance: 15.0
+    actionable: true
+    change_cost: 0.4
+    max_step_change: 25.0
+    display_name: "Clamping Force"
+    provenance: specification_derived
+    citation: "Projected Area & Tonnage Safety Rules"
+
+  # Packing / Holding (S4)
+  hold_pressure_bar:
+    kind: setpoint
+    stage: PACKING
+    unit: bar
+    dtype: float
+    min: 200.0
+    max: 1400.0
+    nominal: 550.0
+    step: 20.0
+    tolerance: 60.0
+    actionable: true
+    change_cost: 0.4
+    max_step_change: 100.0
+    display_name: "Holding Pressure"
+    provenance: specification_derived
+    citation: "Compensation Shrinkage Handbook"
+  hold_time_s:
+    kind: setpoint
+    stage: PACKING
+    unit: s
+    dtype: float
+    min: 1.0
+    max: 15.0
+    nominal: 4.5
+    step: 0.25
+    tolerance: 0.8
+    actionable: true
+    change_cost: 0.3
+    max_step_change: 2.0
+    display_name: "Holding Time"
+    provenance: specification_derived
+    citation: "Gate Freeze Study Standards"
+  cushion_mm:
+    kind: setpoint
+    stage: PACKING
+    unit: mm
+    dtype: float
+    min: 1.0
+    max: 20.0
+    nominal: 5.0
+    step: 0.5
+    tolerance: 1.5
+    actionable: true
+    change_cost: 0.4
+    max_step_change: 2.5
+    display_name: "Cushion Position"
+    provenance: specification_derived
+    citation: "Quality Assurance Cushion Consistency Spec"
+  mold_temp_c:
+    kind: setpoint
+    stage: PACKING
+    unit: c
+    dtype: float
+    min: 15.0
+    max: 85.0
+    nominal: 40.0
+    step: 1.0
+    tolerance: 5.0
+    actionable: true
+    change_cost: 0.5
+    max_step_change: 10.0
+    display_name: "Mold Temperature"
+    provenance: specification_derived
+    citation: "Cooling Circuit Calibration Standards"
+
+  # Cooling / Ejection (S5)
+  cooling_time_s:
+    kind: setpoint
+    stage: COOLING
+    unit: s
+    dtype: float
+    min: 3.0
+    max: 30.0
+    nominal: 11.0
+    step: 0.5
+    tolerance: 1.5
+    actionable: true
+    change_cost: 0.2
+    max_step_change: 3.0
+    display_name: "Cooling Time"
+    provenance: specification_derived
+    citation: "Heat Diffusion Solidification Model"
+  cycle_time_s:
+    kind: setpoint
+    stage: COOLING
+    unit: s
+    dtype: float
+    min: 8.0
+    max: 60.0
+    nominal: 20.0
+    step: 0.5
+    tolerance: 2.0
+    actionable: false
+    change_cost: 0.1
+    max_step_change: 5.0
+    display_name: "Overall Cycle Time"
+    provenance: heuristic
+    citation: "Production Rhythm & Sum-of-Stages Rule"
+  ejection_force_proxy:
+    kind: setpoint
+    stage: COOLING
+    unit: dimensionless
+    dtype: float
+    min: 0.1
+    max: 5.0
+    nominal: 1.0
+    step: 0.1
+    tolerance: 0.3
+    actionable: false
+    change_cost: 0.0
+    max_step_change: 0.5
+    display_name: "Ejection Force Proxy"
+    provenance: heuristic
+    citation: "Hydraulic Ejector Pin Sensor Telemetry"
+
+coupling_rules:
+  - id: CPL-001
+    description: "hold_pressure_bar <= inj_pressure_bar"
+    params: [hold_pressure_bar, inj_pressure_bar]
+    severity: CRITICAL
+    message: "Holding pressure cannot exceed injection pressure"
+  - id: CPL-002
+    description: "melt_temp_c >= mold_temp_c + 120"
+    params: [melt_temp_c, mold_temp_c]
+    constants: {melt_mold_delta_min_c: 120.0}
+    severity: CRITICAL
+    message: "Melt temperature must exceed mold temperature by at least 120 °C to prevent premature freezing"
+  - id: CPL-003
+    description: "clamp_force_ton <= max_clamp_force_ton"
+    params: [clamp_force_ton]
+    severity: CRITICAL
+    message: "Requested clamp force exceeds the machine's maximum rated tonnage"
+  - id: CPL-004
+    description: "inj_pressure_bar <= max_inj_pressure_bar"
+    params: [inj_pressure_bar]
+    severity: CRITICAL
+    message: "Requested injection pressure exceeds the machine's maximum hydraulic limit"
+
+hard_constraints:
+  - id: HC-001
+    stage: PLASTICIZING
+    blocks_stage: true
+    severity_in_simulation: CRITICAL
+    enforced_in_guard: true
+    description: "Melt temperature above resin degradation ceiling (PP-H: 285 °C) causes polymer chain scission"
+  - id: HC-002
+    stage: INJECTION
+    blocks_stage: true
+    severity_in_simulation: CRITICAL
+    enforced_in_guard: true
+    description: "Clamping force must be >= required clamping force calculated from cavity pressure and projected area"
+  - id: HC-003
+    stage: INJECTION
+    blocks_stage: false
+    severity_in_simulation: WARNING
+    enforced_in_guard: true
+    description: "Injection pressure should remain <= 90% of maximum machine injection pressure for safety headroom"
+  - id: HC-004
+    stage: COOLING
+    blocks_stage: false
+    severity_in_simulation: WARNING
+    enforced_in_guard: true
+    description: "Cooling time must meet minimum required cooling estimate to prevent part warping during ejection"
+  - id: HC-005
+    stage: PACKING
+    blocks_stage: false
+    severity_in_simulation: WARNING
+    enforced_in_guard: true
+    description: "Cushion position must be within 2.0 mm and 15.0 mm to ensure packing pressure transfer"
+  - id: HC-006
+    stage: MATERIAL_CONDITIONING
+    blocks_stage: true
+    severity_in_simulation: CRITICAL
+    enforced_in_guard: true
+    description: "Moisture content above 2x specification limit causes severe splay marks and hydrolytic degradation"
+
+stage_checks:
+  MATERIAL_CONDITIONING:
+    - {check_id: S1-MOIST, type: range, target: moisture_pct, weight: 0.40, provenance: heuristic}
+    - {check_id: S1-MFIZ, type: zscore, target: mfi, weight: 0.25, provenance: heuristic}
+    - {check_id: S1-DRYING, type: range, target: drying_time_h, weight: 0.20, provenance: heuristic}
+    - {check_id: S1-REGRIND, type: range, target: regrind_pct, weight: 0.15, provenance: heuristic}
+  PLASTICIZING:
+    - {check_id: S2-MELT, type: range, target: melt_temp_c, weight: 0.35, provenance: heuristic}
+    - {check_id: S2-GRADIENT, type: profile, target: barrel_temp_rear_c, weight: 0.25, provenance: heuristic}
+    - {check_id: S2-BACKPRESS, type: range, target: back_pressure_bar, weight: 0.20, provenance: heuristic}
+    - {check_id: S2-RPM, type: range, target: screw_rpm, weight: 0.20, provenance: heuristic}
+  INJECTION:
+    - {check_id: S3-VELOCITY, type: range, target: inj_velocity_mm_s, weight: 0.30, provenance: heuristic}
+    - {check_id: S3-PRESSURE, type: range, target: inj_pressure_bar, weight: 0.35, provenance: heuristic}
+    - {check_id: S3-CLAMP, type: safety, target: clamp_force_ton, weight: 0.35, provenance: heuristic}
+  PACKING:
+    - {check_id: S4-HOLD_P, type: range, target: hold_pressure_bar, weight: 0.35, provenance: heuristic}
+    - {check_id: S4-HOLD_T, type: range, target: hold_time_s, weight: 0.30, provenance: heuristic}
+    - {check_id: S4-CUSHION, type: range, target: cushion_mm, weight: 0.35, provenance: heuristic}
+  COOLING:
+    - {check_id: S5-COOL_T, type: range, target: cooling_time_s, weight: 0.45, provenance: heuristic}
+    - {check_id: S5-MOLD_T, type: range, target: mold_temp_c, weight: 0.35, provenance: heuristic}
+    - {check_id: S5-CYCLE_BAL, type: balance, target: cycle_time_s, weight: 0.20, provenance: heuristic}
+
+risk_bands:
+  stage_health:
+    NORMAL: 0.90
+    LOW: 0.70
+    MEDIUM: 0.50
+    HIGH: 0.30
+  p_fail:
+    LOW: 0.10
+    MEDIUM: 0.30
+    HIGH: 0.50
+    CRITICAL: 0.85
+
+recommendation:
+  default_max_changes: 3
+  coordinate_levels: 7
+  pairwise_top_k: 3
+  stability_trials: 20
+  stability_noise_fraction_of_step: 0.5
+  max_unstable_flip_rate: 0.20
+  weights:
+    w1_improvement: 1.0
+    w2_change_cost: 0.15
+    w3_instability: 0.5
+    w4_extrapolation: 0.5
+    w5_cycle_time: 0.2
+  cycle_time_follows_stage_times: true

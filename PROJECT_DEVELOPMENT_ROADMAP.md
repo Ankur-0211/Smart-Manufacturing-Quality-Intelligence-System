@@ -6,7 +6,7 @@
 |---|---|
 | Document | `PROJECT_DEVELOPMENT_ROADMAP.md`, the single source of truth for role allocation, shared contracts, phase-wise development and integration |
 | Source of truth for design intent | `Smart_Manufacturing_Quality_Intelligence_Project_Plan.pdf` (38 pages, "Design baseline, pre-implementation"), referred to below as **"the Plan"** |
-| Roadmap version | 1.0.1 (Appendix A decisions UD-01 to UD-20 approved 2026-10-15) |
+| Roadmap version | 1.0.0 (draft for team approval) |
 | Date | 2026-10-14 |
 | Team | 2 members: **Role 1** (AI/ML, Manufacturing Intelligence & Recommendation) and **Role 2** (Backend, Simulation, Database & Frontend) |
 | Schedule basis | 12 weeks (Plan §22.1), expressed as **W1–W12** relative to kickoff |
@@ -38,7 +38,7 @@
 18. [Technical risks and mitigation](#18-technical-risks-and-mitigation)
 19. [Final acceptance checklist](#19-final-acceptance-checklist)
 20. [Definition of done](#20-definition-of-done)
-- [Appendix A: Decisions (approved)](#appendix-a-decisions-approved)
+- [Appendix A: Unresolved decisions requiring approval](#appendix-a-unresolved-decisions-requiring-approval)
 - [Appendix B: Phase completion report template](#appendix-b-phase-completion-report-template)
 - [Appendix C: Glossary](#appendix-c-glossary)
 
@@ -244,9 +244,9 @@ The Plan (§21.3) assumed four roles. This roadmap maps them onto two:
 | A-08 | Risk band thresholds start from the [PROPOSED] values in Section 8.6 and are re-derived from empirical failure rates per probability decile in R1-P6 (Plan R13) | Registry minor-version bump |
 | A-09 | API and contract identifiers for reference entities are their **codes** (`machine_id = "MC-03"`, `product_id = "PP-JBOX-42"`, `material_lot_id = "A-771"`). Integer surrogate keys stay internal to the DB | — |
 
-### 2.5 Architectural decisions (summary; full list in Appendix A)
+### 2.5 Unresolved decisions (summary; full list in Appendix A)
 
-**All of UD-01 to UD-20 were approved on 2026-10-15**, as recommended in Appendix A. The highest-impact approved items:
+The highest-impact items to approve **before implementation**:
 - **UD-01** Python 3.12 pin.
 - **UD-02** Repository hosting and artifact transfer.
 - **UD-07** How an overridden critical breach is displayed.
@@ -3109,11 +3109,7 @@ A phase is **done** only when:
 
 ---
 
-## Appendix A: Decisions (approved)
-
-> **Status: APPROVED on 2026-10-15.** The user approved all recommendations UD-01 to UD-20 as written. They are now binding decisions, and every **[PROPOSED]** item they cover (Sections 2–9, incl. the UD-17 contract additions and the UD-06 placeholder bands) is part of the agreed baseline.
->
-> Approval does not settle the *outcome* of UD-03, UD-04 and UD-05. Role 1 still determines the cited values, the dataset choice and the final threshold in R1-P1/R1-P6, following the approved procedure. Any further change to these decisions goes through a CCR (Section 10.4).
+## Appendix A: Unresolved decisions requiring approval
 
 | ID | Decision | Recommendation | Needed by |
 |---|---|---|---|
