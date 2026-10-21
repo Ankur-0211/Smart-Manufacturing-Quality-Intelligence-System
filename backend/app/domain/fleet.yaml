@@ -1,24 +1,114 @@
-# BOOTSTRAP v0.1.0 by Role 2 (CCR-002) — owner: Role 1
-# Minimal DEMO fleet (PROJECT_DEVELOPMENT_ROADMAP.md §8.1, docs/database.md "Seed" format).
-# All entities are SYNTHETIC (no real machines or lots). Values come from roadmap §5 examples and the
-# §8.3 nominals. Role 1 extends this to the 6-10 machines its generator needs (keep MC-01..MC-04,
-# PP-JBOX-42 and A-771: the Role 2 seed, fixtures and demo use them). Extra keys are ignored by the
-# seed, so generator-only fields (e.g. bias vectors) may be added. `demo: false` entries are not seeded.
-
-fleet_version: fleet-0.1.0
-provenance: synthetic
+fleet_version: fleet-1.0.0
 
 machines:
-  - {machine_id: MC-01, machine_type: HYDRAULIC, tonnage_ton: 150, max_inj_pressure_bar: 1800, max_clamp_force_ton: 150, installed_on: 2014-03-01, last_maintenance_on: 2026-07-15}
-  - {machine_id: MC-02, machine_type: HYDRAULIC, tonnage_ton: 180, max_inj_pressure_bar: 2000, max_clamp_force_ton: 180, installed_on: 2017-06-01, last_maintenance_on: 2026-08-01}
-  - {machine_id: MC-03, machine_type: ELECTRIC,  tonnage_ton: 180, max_inj_pressure_bar: 2000, max_clamp_force_ton: 180, installed_on: 2020-01-01, last_maintenance_on: 2026-09-01}
-  - {machine_id: MC-04, machine_type: ELECTRIC,  tonnage_ton: 220, max_inj_pressure_bar: 2200, max_clamp_force_ton: 220, installed_on: 2022-09-01, last_maintenance_on: 2026-09-20}
+  - machine_id: "MC-01"
+    name: "Engel e-victory 120"
+    machine_type: "ELECTRIC"
+    tonnage_ton: 120.0
+    max_inj_pressure_bar: 2000.0
+    max_clamp_force_ton: 130.0
+    machine_age_days: 420
+    days_since_maintenance: 28
+    installed_on: "2025-08-20"
+    last_maintenance_on: "2026-09-18"
+    active: true
+    demo: true
+
+  - machine_id: "MC-02"
+    name: "KraussMaffei CX 160"
+    machine_type: "HYDRAULIC"
+    tonnage_ton: 160.0
+    max_inj_pressure_bar: 1800.0
+    max_clamp_force_ton: 175.0
+    machine_age_days: 980
+    days_since_maintenance: 14
+    installed_on: "2024-02-10"
+    last_maintenance_on: "2026-10-02"
+    active: true
+    demo: true
+
+  - machine_id: "MC-03"
+    name: "Arburg Allrounder 470 A"
+    machine_type: "ELECTRIC"
+    tonnage_ton: 100.0
+    max_inj_pressure_bar: 2200.0
+    max_clamp_force_ton: 110.0
+    machine_age_days: 210
+    days_since_maintenance: 7
+    installed_on: "2026-03-20"
+    last_maintenance_on: "2026-10-09"
+    active: true
+    demo: true
+
+  - machine_id: "MC-04"
+    name: "Sumitomo Demag Systec 160"
+    machine_type: "HYBRID"
+    tonnage_ton: 160.0
+    max_inj_pressure_bar: 1950.0
+    max_clamp_force_ton: 170.0
+    machine_age_days: 640
+    days_since_maintenance: 45
+    installed_on: "2025-01-15"
+    last_maintenance_on: "2026-09-01"
+    active: true
+    demo: true
 
 products:
-  - {product_id: PP-JBOX-42, name: "PP electrical junction-box housing", cavity_count: 4, nominal_shot_weight_g: 42, wall_thickness_mm: 2.5, projected_area_cm2: 100}
+  - product_id: "PP-JBOX-42"
+    name: "Electrical Junction Box Housing (42g)"
+    cavity_count: 1
+    nominal_shot_weight_g: 42.0
+    wall_thickness_mm: 2.2
+    projected_area_cm2: 125.0
+    active: true
+    demo: true
+
+  - product_id: "PP-JBOX-42-4C"
+    name: "Electrical Junction Box Housing (4-Cavity)"
+    cavity_count: 4
+    nominal_shot_weight_g: 168.0
+    wall_thickness_mm: 2.2
+    projected_area_cm2: 125.0
+    active: true
+    demo: true
 
 material_lots:
-  - {material_lot_id: A-771, resin_grade: PP-H, mfi: 12.0, moisture_pct: 0.04, regrind_pct: 15, colourant_pct: 2.0, received_on: 2026-09-01}
-  - {material_lot_id: A-772, resin_grade: PP-H, mfi: 11.4, moisture_pct: 0.03, regrind_pct: 10, colourant_pct: 2.0, received_on: 2026-09-12}
-  - {material_lot_id: B-310, resin_grade: PP-C, mfi: 18.0, moisture_pct: 0.05, regrind_pct: 20, colourant_pct: 1.5, received_on: 2026-09-20}
-  - {material_lot_id: A-790, resin_grade: PP-H, mfi: 12.6, moisture_pct: 0.25, regrind_pct: 15, colourant_pct: 2.0, received_on: 2026-10-01, notes: "Wet lot used by the high-moisture demo"}
+  - material_lot_id: "A-771"
+    resin_grade: "PP-H"
+    mfi: 12.0
+    moisture_pct: 0.04
+    regrind_pct: 10.0
+    colourant_pct: 1.5
+    received_on: "2026-10-01"
+    notes: "Prime virgin lot with 10% certified regrind"
+    demo: true
+
+  - material_lot_id: "B-812"
+    resin_grade: "PP-H"
+    mfi: 14.5
+    moisture_pct: 0.12
+    regrind_pct: 25.0
+    colourant_pct: 2.0
+    received_on: "2026-10-05"
+    notes: "High regrind ratio lot, elevated moisture"
+    demo: true
+
+  - material_lot_id: "C-904"
+    resin_grade: "PP-C"
+    mfi: 15.2
+    moisture_pct: 0.03
+    regrind_pct: 0.0
+    colourant_pct: 1.0
+    received_on: "2026-10-08"
+    notes: "Impact copolymer grade for cold-temperature drop resistance"
+    demo: true
+
+  - material_lot_id: "D-105"
+    resin_grade: "PP-H"
+    mfi: 9.8
+    moisture_pct: 0.22
+    regrind_pct: 15.0
+    colourant_pct: 1.5
+    received_on: "2026-10-12"
+    notes: "Moisture critical test lot (>2x spec, blocks conditioning)"
+    demo: true

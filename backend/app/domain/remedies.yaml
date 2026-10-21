@@ -1,85 +1,98 @@
-# BOOTSTRAP v0.1.0 by Role 2 (CCR-002) — owner: Role 1
-# Rule-guided remedy table for recommendation funnel Stage 1 (PROJECT_DEVELOPMENT_ROADMAP.md §14.3,
-# R1-P1 task 7). Rules propose DIRECTIONS only; magnitudes are bounded by each parameter's
-# max_step_change and admissible window in constraints.yaml, and every candidate still passes the
-# six-check feasibility guard. All rules are heuristic (provenance: unvalidated) until Role 1 cites them.
-#
-# when:    {stage, indicator, op, threshold}  — fires when the stage indicator satisfies op/threshold
-#          or {breach: <rule_id>}             — fires when that coupling/hard-constraint breach is present
-# actions: parameter + direction (increase | decrease); step_fractions are fractions of max_step_change
-
-remedies_version: remedies-0.1.0
-default_step_fractions: [0.5, 1.0]
+remedies_version: remedies-1.0.0
 
 rules:
-  - id: RM-COOL-ADEQ
-    when: {stage: COOLING, indicator: cooling_adequacy, op: "<", threshold: 1.0}
+  - id: REM-001
+    defect_target: short_shot
+    stage: INJECTION
+    condition: "fill_time_s < 0.8 or inj_pressure_bar < 600 or melt_temp_c < 210"
     actions:
-      - {parameter: cooling_time_s, direction: increase}
-      - {parameter: mold_temp_c, direction: decrease}
-    rationale: "Cooling time below the thickness-based requirement -> warp/dimensional risk."
-    provenance: unvalidated
+      - parameter: inj_velocity_mm_s
+        direction: increase
+        step_fraction: 0.5
+        rationale: "Increase injection velocity to reduce melt cooling before cavity filling is complete"
+      - parameter: inj_pressure_bar
+        direction: increase
+        step_fraction: 0.5
+        rationale: "Increase available injection pressure to overcome flow resistance"
+      - parameter: melt_temp_c
+        direction: increase
+        step_fraction: 0.3
+        rationale: "Higher melt temperature reduces viscosity and flow resistance"
 
-  - id: RM-THERM-DEGR
-    when: {stage: PLASTICIZING, indicator: degradation_exposure, op: ">=", threshold: 0.5}
+  - id: REM-002
+    defect_target: flash
+    stage: INJECTION
+    condition: "inj_pressure_bar > 1400 or clamp_force_ton < 90"
     actions:
-      - {parameter: melt_temp_c, direction: decrease}
-      - {parameter: residence_time_s, direction: decrease}
-    rationale: "Time-at-temperature drives thermal degradation (burn marks, brittleness)."
-    provenance: unvalidated
+      - parameter: clamp_force_ton
+        direction: increase
+        step_fraction: 0.5
+        rationale: "Increase clamping force to counteract cavity pressure pushing parting line open"
+      - parameter: hold_pressure_bar
+        direction: decrease
+        step_fraction: 0.4
+        rationale: "Reduce holding pressure to prevent over-packing the parting line"
+      - parameter: switchover_position_mm
+        direction: increase
+        step_fraction: 0.3
+        rationale: "Switch to pressure control earlier to avoid pressure spikes"
 
-  - id: RM-PACK-SINK
-    when: {stage: PACKING, indicator: sink_void_risk, op: ">=", threshold: 0.5}
+  - id: REM-003
+    defect_target: sink_marks_voids
+    stage: PACKING
+    condition: "hold_pressure_bar < 450 or hold_time_s < 3.0"
     actions:
-      - {parameter: hold_pressure_bar, direction: increase}
-      - {parameter: hold_time_s, direction: increase}
-    rationale: "Insufficient packing integral before gate freeze -> sink marks / voids."
-    provenance: unvalidated
+      - parameter: hold_pressure_bar
+        direction: increase
+        step_fraction: 0.5
+        rationale: "Increase holding pressure to pack additional melt into thick sections"
+      - parameter: hold_time_s
+        direction: increase
+        step_fraction: 0.5
+        rationale: "Extend holding time until gate freeze occurs"
+      - parameter: cushion_mm
+        direction: increase
+        step_fraction: 0.3
+        rationale: "Ensure sufficient cushion remains so screw doesn't bottom out"
 
-  - id: RM-PACK-OVER
-    when: {stage: PACKING, indicator: over_pack_risk, op: ">=", threshold: 0.5}
+  - id: REM-004
+    defect_target: warpage
+    stage: COOLING
+    condition: "cooling_time_s < 8.0 or mold_temp_c > 55"
     actions:
-      - {parameter: hold_pressure_bar, direction: decrease}
-      - {parameter: hold_time_s, direction: decrease}
-    rationale: "Over-packing raises residual stress, flash and ejection difficulty."
-    provenance: unvalidated
+      - parameter: cooling_time_s
+        direction: increase
+        step_fraction: 0.6
+        rationale: "Allow part to cool further below glass transition/ejection temperature in mold"
+      - parameter: mold_temp_c
+        direction: decrease
+        step_fraction: 0.4
+        rationale: "Lower mold temperature speeds up core solidification and reduces thermal gradient"
 
-  - id: RM-INJ-FLASH
-    when: {stage: INJECTION, indicator: flash_risk, op: ">=", threshold: 0.5}
+  - id: REM-005
+    defect_target: splay_silver_streaks
+    stage: MATERIAL_CONDITIONING
+    condition: "moisture_pct > 0.08"
     actions:
-      - {parameter: inj_pressure_bar, direction: decrease}
-      - {parameter: hold_pressure_bar, direction: decrease}
-      - {parameter: clamp_force_ton, direction: increase}
-    rationale: "Cavity pressure exceeds clamp capacity -> material escapes the parting line."
-    provenance: unvalidated
+      - parameter: drying_time_h
+        direction: increase
+        step_fraction: 0.5
+        rationale: "Increase desiccant drying duration to remove residual moisture"
+      - parameter: dryer_temp_c
+        direction: increase
+        step_fraction: 0.3
+        rationale: "Elevate drying hopper temperature closer to polymer recommended drying band"
 
-  - id: RM-INJ-SHORT
-    when: {stage: INJECTION, indicator: short_shot_risk, op: ">=", threshold: 0.5}
+  - id: REM-006
+    defect_target: thermal_degradation
+    stage: PLASTICIZING
+    condition: "melt_temp_c > 260 or residence_time_s > 60"
     actions:
-      - {parameter: melt_temp_c, direction: increase}
-      - {parameter: inj_pressure_bar, direction: increase}
-      - {parameter: inj_velocity_mm_s, direction: increase}
-    rationale: "Cold, viscous melt with too little pressure/velocity -> incomplete fill."
-    provenance: unvalidated
-
-  - id: RM-MAT-MOIST
-    when: {stage: MATERIAL_CONDITIONING, indicator: moisture_flag, op: "==", threshold: true}
-    actions:
-      - {parameter: drying_time_h, direction: increase}
-    rationale: "Moisture above spec becomes splay at elevated melt temperature; drying is the actionable lever."
-    provenance: unvalidated
-
-  - id: RM-HC-HEADROOM
-    when: {breach: HC-003}
-    actions:
-      - {parameter: inj_pressure_bar, direction: decrease}
-      - {parameter: melt_temp_c, direction: increase}
-    rationale: "Restore injection-pressure headroom below 90% of machine maximum."
-    provenance: unvalidated
-
-  - id: RM-HC-CLAMP
-    when: {breach: HC-002}
-    actions:
-      - {parameter: clamp_force_ton, direction: increase}
-    rationale: "Clamp force must cover the cavity-pressure load (machine-safety guard)."
-    provenance: unvalidated
+      - parameter: melt_temp_c
+        direction: decrease
+        step_fraction: 0.5
+        rationale: "Lower barrel and melt temperatures to prevent molecular weight reduction"
+      - parameter: back_pressure_bar
+        direction: decrease
+        step_fraction: 0.4
+        rationale: "Reduce back pressure to decrease viscous shear heating"

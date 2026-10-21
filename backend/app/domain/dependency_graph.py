@@ -1,53 +1,72 @@
-"""BOOTSTRAP v0.1.0 by Role 2 (CCR-002) — owner: Role 1.
+"""Process stage dependency graph and partial re-simulation invalidation (roadmap Section 8.4)."""
+from typing import Iterable
+from ..contracts.enums import STAGE_ORDER, StageName
 
-Stage dependency graph (roadmap 8.4, 13.2 what-if invalidation). Pure; built only from the
-registry's ``stage_inputs`` block, so no field-to-stage mapping is hand-written anywhere else.
+# Mapping of every recipe / context knob to its earliest consuming stage
+PARAM_TO_STAGE: dict[str, StageName] = {
+    # S1 Material Conditioning
+    "drying_time_h": StageName.MATERIAL_CONDITIONING,
+    "dryer_temp_c": StageName.MATERIAL_CONDITIONING,
+    "moisture_pct": StageName.MATERIAL_CONDITIONING,
+    "mfi": StageName.MATERIAL_CONDITIONING,
+    "regrind_pct": StageName.MATERIAL_CONDITIONING,
+    "colourant_pct": StageName.MATERIAL_CONDITIONING,
+    "resin_grade": StageName.MATERIAL_CONDITIONING,
+    # S2 Plasticizing / Thermal
+    "barrel_temp_rear_c": StageName.PLASTICIZING,
+    "barrel_temp_mid_c": StageName.PLASTICIZING,
+    "barrel_temp_front_c": StageName.PLASTICIZING,
+    "nozzle_temp_c": StageName.PLASTICIZING,
+    "melt_temp_c": StageName.PLASTICIZING,
+    "screw_rpm": StageName.PLASTICIZING,
+    "back_pressure_bar": StageName.PLASTICIZING,
+    "residence_time_s": StageName.PLASTICIZING,
+    # S3 Injection / Fill
+    "inj_velocity_mm_s": StageName.INJECTION,
+    "inj_pressure_bar": StageName.INJECTION,
+    "fill_time_s": StageName.INJECTION,
+    "shot_size_mm": StageName.INJECTION,
+    "switchover_position_mm": StageName.INJECTION,
+    "clamp_force_ton": StageName.INJECTION,
+    # S4 Packing / Holding (Note: mold_temp_c is first consumed in S4 gate-freeze heuristic)
+    "hold_pressure_bar": StageName.PACKING,
+    "hold_time_s": StageName.PACKING,
+    "cushion_mm": StageName.PACKING,
+    "mold_temp_c": StageName.PACKING,
+    # S5 Cooling / Ejection
+    "cooling_time_s": StageName.COOLING,
+    "cycle_time_s": StageName.COOLING,
+    "ejection_force_proxy": StageName.COOLING,
+    # Context changes trigger S1 recomputation
+    "machine_id": StageName.MATERIAL_CONDITIONING,
+    "product_id": StageName.MATERIAL_CONDITIONING,
+    "material_lot_id": StageName.MATERIAL_CONDITIONING,
+    "wall_thickness_mm": StageName.PACKING,  # thick section packing and cooling
+}
 
-Changing a field invalidates the EARLIEST stage whose raw slice reads it, plus every downstream
-stage (upstream context propagates forward). A field read by no stage module (e.g. machine_id,
-tonnage_ton) feeds only the fusion model: it invalidates no stage, only the prediction.
-"""
 
-from __future__ import annotations
+def get_earliest_stage(changed_params: Iterable[str]) -> StageName | None:
+    """Find the earliest stage in the physical sequence affected by the changes."""
+    earliest_idx = len(STAGE_ORDER)
+    found_stage: StageName | None = None
 
-from collections.abc import Iterable, Mapping, Sequence
+    for param in changed_params:
+        stage = PARAM_TO_STAGE.get(param)
+        if stage is not None:
+            idx = STAGE_ORDER.index(stage)
+            if idx < earliest_idx:
+                earliest_idx = idx
+                found_stage = stage
 
-from app.contracts.enums import INTELLIGENCE_STAGES, StageName
+    return found_stage
 
 
-class StageDependencyGraph:
-    def __init__(self, stage_inputs: Mapping[StageName, Sequence[str]]) -> None:
-        missing = [s for s in INTELLIGENCE_STAGES if s not in stage_inputs]
-        if missing:
-            raise ValueError(f"stage_inputs missing stages: {', '.join(missing)}")
-        self._inputs: dict[StageName, tuple[str, ...]] = {
-            s: tuple(stage_inputs[s]) for s in INTELLIGENCE_STAGES
-        }
-        first: dict[str, StageName] = {}
-        for stage in INTELLIGENCE_STAGES:  # canonical order, so the first hit is the earliest
-            for field in self._inputs[stage]:
-                first.setdefault(field, stage)
-        self._first_stage = first
+def invalidated_stages(changed_params: Iterable[str]) -> list[StageName]:
+    """Return all stages from the earliest invalidated stage through S5 and S6."""
+    earliest = get_earliest_stage(changed_params)
+    if earliest is None:
+        return [StageName.QUALITY_INSPECTION]
 
-    def stage_inputs(self, stage: StageName) -> list[str]:
-        if stage not in self._inputs:
-            raise ValueError(f"{stage} has no raw input slice (S1-S5 only)")
-        return list(self._inputs[stage])
-
-    def first_stage(self, field: str) -> StageName | None:
-        """Earliest stage reading ``field``; None if only the fusion model uses it."""
-        return self._first_stage.get(field)
-
-    def fields(self) -> frozenset[str]:
-        return frozenset(self._first_stage)
-
-    def invalidated_stages(self, changed: Iterable[str]) -> list[StageName]:
-        """Earliest affected stage and everything downstream, in canonical order."""
-        indices = [
-            INTELLIGENCE_STAGES.index(stage)
-            for field in changed
-            if (stage := self._first_stage.get(field)) is not None
-        ]
-        if not indices:
-            return []
-        return list(INTELLIGENCE_STAGES[min(indices) :])
+    start_idx = STAGE_ORDER.index(earliest)
+    # Recompute from earliest stage up to and including QUALITY_INSPECTION
+    return list(STAGE_ORDER[start_idx:])
