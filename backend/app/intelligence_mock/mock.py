@@ -1,12 +1,12 @@
 """MockQualityIntelligence (roadmap 9.2, R2-P1 task 8).
 
 Rules this module follows:
-- It implements the full ``QualityIntelligence`` Protocol and builds every output through the
-  contract constructors, so any schema drift fails here first.
+- It implements Role 1's ``QualityIntelligence`` Protocol (``app.contracts.interface``) and builds
+  every output through the contract constructors, so any schema drift fails here first.
 - Every number is a PLACEHOLDER derived from a SHA-256 of the canonical input. Nothing imitates
   real model or process behaviour; there is deliberately no hand-written physics.
-- The BLOCKED path is driven only by ``ConstraintRegistry.check_hard_constraints``; no rule is
-  re-implemented here.
+- The BLOCKED path is driven only by Role 1's ``ConstraintRegistry.check_hard_constraints``;
+  recommendation guards use its ``check_box`` and ``check_couplings``. No rule is re-implemented.
 - Every prediction carries ``inference_backend="mock"``, ``is_mock=true``,
   ``model_version="mock-0.0.0"`` and the ``MOCK_INFERENCE`` caveat.
 
@@ -19,10 +19,8 @@ import hashlib
 import json
 import time
 from collections.abc import Mapping, Sequence
-from pathlib import Path
 from typing import Any, Literal
 
-from app.contracts.anomaly import AnomalyResult, SpcAlert, SpcSeries
 from app.contracts.context import ProcessInput
 from app.contracts.enums import (
     INTELLIGENCE_STAGES,
@@ -31,65 +29,114 @@ from app.contracts.enums import (
     ConstraintSeverity,
     DataProvenance,
     InferenceBackend,
-    ParameterKind,
     PredictionLabel,
     RiskLevel,
     StageName,
     StageSubstate,
 )
 from app.contracts.errors import (
-    CapabilityUnavailableError,
     InvalidInputError,
     LockedParameterError,
     StageResultsIncompleteError,
+    UnknownParameterError,
     UpstreamMissingError,
 )
 from app.contracts.explanation import (
-    Attribution,
+    FeatureAttribution,
+    GlobalAttributionItem,
     GlobalExplanation,
-    GlobalImportance,
     GroupedAttribution,
     LocalExplanation,
-    StageShare,
+    StageRiskShare,
 )
-from app.contracts.interface import CAPABILITY_NAMES, IntelligenceVersionInfo
-from app.contracts.prediction import (
-    Caveat,
-    FeatureVector,
-    PipelineResult,
-    PredictionResult,
-    RiskDriver,
-)
+from app.contracts.interface import IntelligenceVersionInfo, PipelineResult
+from app.contracts.prediction import CaveatItem, PredictionResult, RiskDriver
 from app.contracts.recommendation import (
     GuardCheck,
-    GuardCheckName,
     ParameterChange,
     RecommendationCandidate,
     RecommendationRequest,
     RecommendationResponse,
-    Stability,
+    StabilityReport,
     StageHealthAfter,
 )
 from app.contracts.sensitivity import SensitivityPoint, SensitivityResult
-from app.contracts.stage import (
-    AnomalyContributor,
-    ConstraintBreach,
-    StageAnomaly,
-    StageResult,
-    UpstreamContext,
-)
+from app.contracts.stage import ConstraintBreach, StageAnomaly, StageResult, UpstreamContext
 from app.contracts.version import CONTRACTS_VERSION
-from app.domain.constraint_loader import ConstraintRegistry, ParameterSpec
+from app.domain.constraint_loader import ConstraintRegistry, load_constraint_registry
 
 MOCK_VERSION = "mock-0.0.0"
 MOCK_THRESHOLD = 0.5  # stands in for a bundle's metadata.json threshold
 MOCK_ANOMALY_CUTOFF = 0.95  # stage anomaly flag when the placeholder score reaches this
-MOCK_GLOBAL_ANOMALY_CUTOFF = 0.98
 FEATURE_SCHEMA_HASH = hashlib.sha256(b"mock-feature-schema-0.0.0").hexdigest()
 MOCK_NOTE = "MOCK: placeholder output, not a model or rule evaluation."
-DEFAULT_REGISTRY = Path(__file__).resolve().parents[1] / "domain" / "constraints.yaml"
+# Capability keys as reported by Role 1's RealQualityIntelligence.capabilities().
+CAPABILITIES: dict[str, bool] = {
+    "run_stage": True,
+    "predict": True,
+    "explain": True,
+    "global_explanation": True,
+    "evaluate": True,
+    "recommend": True,
+    "sensitivity": True,
+    "spc_check": False,  # P1; not part of Role 1's Protocol yet (CCR-004)
+}
 
 S = StageName
+# Raw input slice each stage reads (roadmap 7.10). Only seeds the placeholders and fills
+# ``inputs_used``; no limit or rule lives here.
+STAGE_SLICE: dict[StageName, tuple[str, ...]] = {
+    S.MATERIAL_CONDITIONING: (
+        "moisture_pct",
+        "mfi",
+        "regrind_pct",
+        "drying_time_h",
+        "dryer_temp_c",
+        "resin_grade",
+        "colourant_pct",
+    ),
+    S.PLASTICIZING: (
+        "barrel_temp_rear_c",
+        "barrel_temp_mid_c",
+        "barrel_temp_front_c",
+        "nozzle_temp_c",
+        "melt_temp_c",
+        "screw_rpm",
+        "back_pressure_bar",
+        "residence_time_s",
+        "mfi",
+        "moisture_pct",
+        "resin_grade",
+    ),
+    S.INJECTION: (
+        "inj_velocity_mm_s",
+        "inj_pressure_bar",
+        "fill_time_s",
+        "shot_size_mm",
+        "switchover_position_mm",
+        "clamp_force_ton",
+        "max_inj_pressure_bar",
+        "max_clamp_force_ton",
+        "projected_area_cm2",
+        "cavity_count",
+    ),
+    S.PACKING: (
+        "hold_pressure_bar",
+        "hold_time_s",
+        "cushion_mm",
+        "wall_thickness_mm",
+        "mold_temp_c",
+    ),
+    S.COOLING: (
+        "mold_temp_c",
+        "cooling_time_s",
+        "wall_thickness_mm",
+        "cycle_time_s",
+        "ejection_force_proxy",
+        "fill_time_s",
+        "hold_time_s",
+    ),
+}
 # Upstream keys each stage needs (roadmap 7.10 "Upstream in").
 REQUIRED_UPSTREAM: dict[StageName, tuple[str, ...]] = {
     S.MATERIAL_CONDITIONING: (),
@@ -149,7 +196,12 @@ INDICATOR_KEYS: dict[StageName, tuple[str, ...]] = {
 }
 _BOOL_INDICATORS = frozenset({"profile_monotonic", "cushion_ok"})
 _NULL_INDICATORS = frozenset({"melt_consistency"})  # learned, P1: null in the MVP
+# Indicators the registry's hard-constraint check computes itself (Role 1 heuristics).
+_REGISTRY_INDICATORS = frozenset({"required_clamp_force_ton", "required_cooling_estimate_s"})
 _CYCLE_FOLLOWS = ("fill_time_s", "hold_time_s", "cooling_time_s")  # UD-09
+GuardName = Literal[
+    "box", "hard_constraints", "couplings", "distribution", "step_size", "stability"
+]
 OptionLabel = Literal["Minimal change", "Balanced", "Aggressive"]
 _OPTION_LABELS: tuple[OptionLabel, OptionLabel, OptionLabel] = (
     "Minimal change",
@@ -178,25 +230,42 @@ class MockQualityIntelligence:
 
     @classmethod
     def for_tests(cls) -> MockQualityIntelligence:
-        return cls(ConstraintRegistry.load(DEFAULT_REGISTRY))
+        return cls(load_constraint_registry())
 
     # ------------------------------------------------------------------ meta
     def capabilities(self) -> dict[str, bool]:
-        return {name: name != "spc" for name in CAPABILITY_NAMES}  # SPC is P1
+        return dict(CAPABILITIES)
 
     def version_info(self) -> IntelligenceVersionInfo:
         return IntelligenceVersionInfo(
             contracts_version=CONTRACTS_VERSION,
             constraints_version=self.registry.version,
-            module_versions={s: MOCK_VERSION for s in INTELLIGENCE_STAGES},
-            fusion_model_version=MOCK_VERSION,
-            anomaly_model_version=MOCK_VERSION,
-            stage_stats_version=None,
-            feature_schema_hash=FEATURE_SCHEMA_HASH,
-            inference_backend=InferenceBackend.MOCK,
+            model_version=MOCK_VERSION,
             is_mock=True,
             capabilities=self.capabilities(),
         )
+
+    # ------------------------------------------------------------------ registry helpers
+    def _spec(self, name: str) -> dict[str, Any]:
+        spec = self.registry.get_parameter(name)
+        if spec is None:
+            raise UnknownParameterError(f"unknown parameter {name!r}", field=name)
+        return spec
+
+    def _health_band(self, health: float) -> RiskLevel:
+        bands = self.registry.risk_bands.get("stage_health", {})
+        for level in (RiskLevel.NORMAL, RiskLevel.LOW, RiskLevel.MEDIUM, RiskLevel.HIGH):
+            if health >= float(bands.get(level.value, 2.0)):
+                return level
+        return RiskLevel.CRITICAL
+
+    def _p_fail_band(self, p_fail: float) -> RiskLevel:
+        bands = self.registry.risk_bands.get("p_fail", {})
+        band = RiskLevel.NORMAL
+        for level in (RiskLevel.LOW, RiskLevel.MEDIUM, RiskLevel.HIGH, RiskLevel.CRITICAL):
+            if p_fail >= float(bands.get(level.value, 2.0)):
+                band = level
+        return band
 
     # ------------------------------------------------------------------ stages
     def run_stage(
@@ -211,14 +280,15 @@ class MockQualityIntelligence:
                 f"{stage} needs upstream keys {', '.join(missing)}", details=missing
             )
         flat = inp.flat()
-        inputs_used = {k: flat.get(k) for k in self.registry.stage_inputs(stage)}
-        upstream_in = upstream.model_dump(mode="json")
-        seed = (stage.value, inputs_used, upstream_in)
+        inputs_used = {k: flat.get(k) for k in STAGE_SLICE[stage]}
+        seed = (stage.value, inputs_used, upstream.model_dump(mode="json"))
 
         upstream_out = self._upstream_out(stage, upstream, flat, seed)
         out_json = upstream_out.model_dump(mode="json")
-        indicators: dict[str, float | str | bool | None] = {}
+        indicators: dict[str, Any] = {}
         for key in INDICATOR_KEYS[stage]:
+            if key in _REGISTRY_INDICATORS:
+                continue
             if key in out_json:
                 indicators[key] = out_json[key]
             elif key in _NULL_INDICATORS:
@@ -228,13 +298,14 @@ class MockQualityIntelligence:
             else:
                 indicators[key] = round(_unit(seed, key), 4)
 
-        breaches = self.registry.check_hard_constraints(flat, stage=stage)
-        blocking = [
-            b
-            for b in breaches
-            if b.severity is ConstraintSeverity.CRITICAL
-            and self.registry.hard_constraint(b.rule_id).blocks_stage
-        ]
+        # Role 1's registry decides breaches and blocking. It reads/adds indicators of its own
+        # (e.g. required clamp force); the mock's placeholder cavity pressure is not passed in.
+        registry_indicators: dict[str, Any] = {}
+        breaches, blocked, block_reason = self.registry.check_hard_constraints(
+            stage, inp, registry_indicators
+        )
+        indicators.update(registry_indicators)
+
         health = round(0.35 + 0.65 * _unit(seed, "health"), 4)
         risk = self._health_band(health)
         if any(b.severity is ConstraintSeverity.CRITICAL for b in breaches):
@@ -243,14 +314,14 @@ class MockQualityIntelligence:
         flagged = score >= MOCK_ANOMALY_CUTOFF
         numeric_inputs = [k for k, v in inputs_used.items() if _numeric(v) is not None]
         contributors = (
-            [AnomalyContributor(feature=numeric_inputs[0], deviation=round(4 * score, 3))]
+            [{"feature": numeric_inputs[0], "deviation": round(4 * score, 3)}]
             if flagged and numeric_inputs
             else []
         )
         return StageResult(
             stage_name=stage,
             sequence_index=stage.sequence_index,
-            substate=StageSubstate.BLOCKED if blocking else StageSubstate.COMPLETED,
+            substate=StageSubstate.BLOCKED if blocked else StageSubstate.COMPLETED,
             inputs_used=inputs_used,
             upstream_in=upstream,
             upstream_out=upstream_out,
@@ -268,8 +339,8 @@ class MockQualityIntelligence:
             indicator_provenance={k: DataProvenance.UNVALIDATED for k in indicators},
             notes=[MOCK_NOTE],
             constraint_breaches=breaches,
-            blocked=bool(blocking),
-            block_reason=blocking[0].message if blocking else None,
+            blocked=blocked,
+            block_reason=block_reason,
             module_version=MOCK_VERSION,
             constraints_version=self.registry.version,
             compute_ms=round((time.perf_counter() - t0) * 1000, 3),
@@ -279,7 +350,7 @@ class MockQualityIntelligence:
         self, stage: StageName, upstream: UpstreamContext, flat: Mapping[str, Any], seed: Any
     ) -> UpstreamContext:
         """Cumulative upstream: this stage adds only the keys it owns (7.8). Values are
-        placeholders; the two temperatures/pressures pass a raw setpoint through unchanged."""
+        placeholders; the melt temperature passes the raw setpoint through unchanged."""
         add: dict[str, Any] = {}
         if stage is S.MATERIAL_CONDITIONING:
             add = {
@@ -302,22 +373,7 @@ class MockQualityIntelligence:
             add = {"residual_stress_proxy": round(_unit(seed, "stress"), 4)}
         return upstream.model_copy(update=add)
 
-    def _health_band(self, health: float) -> RiskLevel:
-        bands = self.registry.document.risk_bands.stage_health
-        for level in (RiskLevel.NORMAL, RiskLevel.LOW, RiskLevel.MEDIUM, RiskLevel.HIGH):
-            if health >= bands[level]:
-                return level
-        return RiskLevel.CRITICAL
-
-    def _p_fail_band(self, p_fail: float) -> RiskLevel:
-        bands = self.registry.document.risk_bands.p_fail
-        band = RiskLevel.NORMAL
-        for level in (RiskLevel.LOW, RiskLevel.MEDIUM, RiskLevel.HIGH, RiskLevel.CRITICAL):
-            if p_fail >= bands[level]:
-                band = level
-        return band
-
-    def run_all_stages(self, inp: ProcessInput) -> list[StageResult]:
+    def _run_all_stages(self, inp: ProcessInput) -> list[StageResult]:
         results: list[StageResult] = []
         upstream = UpstreamContext()
         for stage in INTELLIGENCE_STAGES:
@@ -335,28 +391,14 @@ class MockQualityIntelligence:
                 details=[r.stage_name.value for r in stage_results],
             )
 
-    def build_features(
-        self, inp: ProcessInput, stage_results: Sequence[StageResult]
-    ) -> FeatureVector:
-        self._require_complete(stage_results)
-        flat = inp.flat()
-        names = [
-            p.name for p in self.registry.parameters() if _numeric(flat.get(p.name)) is not None
-        ]
-        values: list[float | None] = [_numeric(flat[n]) for n in names]
-        for r in stage_results:
-            names.append(f"{r.stage_name.value.lower()}_health")
-            values.append(r.health_score)
-        return FeatureVector(names=names, values=values, feature_schema_hash=FEATURE_SCHEMA_HASH)
-
     @staticmethod
-    def _stage_shares(stage_results: Sequence[StageResult]) -> list[StageShare]:
+    def _stage_shares(stage_results: Sequence[StageResult]) -> list[StageRiskShare]:
         weights = [(1.0 - r.health_score) + 1e-3 for r in stage_results]
         total = sum(weights)
         shares = [w / total for w in weights]
         shares[-1] = max(0.0, 1.0 - sum(shares[:-1]))
         return [
-            StageShare(stage=r.stage_name, share=s)
+            StageRiskShare(stage=r.stage_name, share=s)
             for r, s in zip(stage_results, shares, strict=True)
         ]
 
@@ -368,8 +410,9 @@ class MockQualityIntelligence:
     ) -> PredictionResult:
         t0 = time.perf_counter()
         self._require_complete(stage_results)
-        features = self.build_features(inp, stage_results)
-        p_fail = round(_unit("predict", features.names, features.values), 4)
+        flat = inp.flat()
+        healths = [r.health_score for r in stage_results]
+        p_fail = round(_unit("predict", flat, healths), 4)
         label = PredictionLabel.FAIL if p_fail >= MOCK_THRESHOLD else PredictionLabel.PASS
 
         critical: list[ConstraintBreach] = [
@@ -385,10 +428,10 @@ class MockQualityIntelligence:
             RiskDriver(source="constraint", detail=f"{b.rule_id}: {b.message}", weight=1.0)
             for b in critical
         ]
-        caveats = [Caveat(code="MOCK_INFERENCE", message="Placeholder output, not a model")]
+        caveats = [CaveatItem(code="MOCK_INFERENCE", message="Placeholder output, not a model")]
         if critical:
             caveats.append(
-                Caveat(
+                CaveatItem(
                     code="CRITICAL_CONSTRAINT_OVERRIDDEN",
                     message="NOT RELEASABLE: a critical constraint was breached",
                     features=sorted({p for b in critical for p in b.parameters}),
@@ -397,7 +440,9 @@ class MockQualityIntelligence:
         flagged = [r.stage_name.value for r in stage_results if r.anomaly.flag]
         if flagged:
             caveats.append(
-                Caveat(code="ANOMALY_DETECTED", message="Stage anomaly flagged", features=flagged)
+                CaveatItem(
+                    code="ANOMALY_DETECTED", message="Stage anomaly flagged", features=flagged
+                )
             )
         return PredictionResult(
             label=label,
@@ -408,7 +453,7 @@ class MockQualityIntelligence:
             risk_level=risk,
             risk_drivers=drivers,
             stage_risk_mass=self._stage_shares(stage_results),
-            explanation=self.explain(inp, stage_results) if include_explanation else None,
+            explanation=self._explain(inp, stage_results) if include_explanation else None,
             caveats=caveats,
             constraint_override_applied=overridden,
             inference_backend=InferenceBackend.MOCK,
@@ -419,34 +464,30 @@ class MockQualityIntelligence:
         )
 
     @staticmethod
-    def _group(spec: ParameterSpec) -> str:
-        if spec.kind is ParameterKind.LOT_ATTRIBUTE:
-            return "material"
-        if spec.kind is not ParameterKind.SETPOINT:
-            return "context"
+    def _group(spec: Mapping[str, Any]) -> str:
         return {"c": "temperature", "bar": "pressure", "s": "time", "h": "time"}.get(
-            spec.unit or "", "other"
+            str(spec.get("unit") or ""), "other"
         )
 
-    def explain(
+    def _explain(
         self, inp: ProcessInput, stage_results: Sequence[StageResult], top_k: int = 10
     ) -> LocalExplanation:
         self._require_complete(stage_results)
         flat = inp.flat()
-        rows: list[Attribution] = []
-        for spec in self.registry.parameters():
-            value = flat.get(spec.name)
+        rows: list[FeatureAttribution] = []
+        for name, spec in self.registry.parameters.items():
+            value = flat.get(name)
             if value is None:
                 continue
-            shap = round(_unit("shap", spec.name, flat) - 0.5, 4)
+            shap = round(_unit("shap", name, flat) - 0.5, 4)
             rows.append(
-                Attribution(
-                    feature=spec.name,
-                    display_name=spec.display_name,
+                FeatureAttribution(
+                    feature=name,
+                    display_name=str(spec.get("display_name", name)),
                     value=value,
                     shap_value=shap,
                     direction="toward_fail" if shap >= 0 else "toward_pass",
-                    stage=spec.stage or "CONTEXT",
+                    stage=str(spec.get("stage") or "CONTEXT"),
                     group=self._group(spec),
                 )
             )
@@ -466,80 +507,74 @@ class MockQualityIntelligence:
             show_caveat_banner=any(r.anomaly.flag for r in stage_results),
         )
 
+    def explain(
+        self,
+        inp: ProcessInput,
+        stage_results: Sequence[StageResult],
+        prediction: PredictionResult,
+    ) -> LocalExplanation:
+        return self._explain(inp, stage_results)
+
     def global_explanation(self) -> GlobalExplanation:
         return GlobalExplanation(
             model_version=MOCK_VERSION,
             mean_abs_shap=[
-                GlobalImportance(
-                    feature=p.name,
-                    value=round(_unit("global", p.name), 4),
-                    stage=p.stage or "CONTEXT",
+                GlobalAttributionItem(
+                    feature=name,
+                    value=round(_unit("global", name), 4),
+                    stage=str(spec.get("stage") or "CONTEXT"),
                 )
-                for p in self.registry.parameters()
+                for name, spec in self.registry.parameters.items()
             ],
             computed_on="mock (no training data)",
             n_rows=0,
         )
 
-    def detect_anomaly(
-        self, inp: ProcessInput, stage_results: Sequence[StageResult]
-    ) -> AnomalyResult:
-        self._require_complete(stage_results)
-        score = round(_unit("global-anomaly", inp.flat()), 4)
-        return AnomalyResult(
-            scope="global",
-            method=AnomalyMethod.ISOLATION_FOREST,
-            score=score,
-            is_anomaly=score >= MOCK_GLOBAL_ANOMALY_CUTOFF,
-            threshold=MOCK_GLOBAL_ANOMALY_CUTOFF,
-            note=MOCK_NOTE,
-            model_version=MOCK_VERSION,
-        )
-
     def evaluate(self, inp: ProcessInput, include_explanation: bool = False) -> PipelineResult:
-        stages = self.run_all_stages(inp)
+        stages = self._run_all_stages(inp)
         return PipelineResult(
             stage_results=stages,
             prediction=self.predict(inp, stages, include_explanation=include_explanation),
         )
 
     # ------------------------------------------------------------------ decision support
+    def _settings(self) -> dict[str, Any]:
+        return dict(self.registry.recommendation_cfg)
+
     def _with_recipe(self, inp: ProcessInput, updates: Mapping[str, float]) -> ProcessInput:
         recipe = inp.recipe.model_dump()
         old = dict(recipe)
         recipe.update(updates)
-        if self.registry.document.recommendation.cycle_time_follows_stage_times:
+        if self._settings().get("cycle_time_follows_stage_times", False):
             recipe["cycle_time_s"] = old["cycle_time_s"] + sum(
                 recipe[k] - old[k] for k in _CYCLE_FOLLOWS
             )
-        return ProcessInput.model_validate({"context": inp.context, "recipe": recipe})
+        return ProcessInput.model_validate({"context": inp.context.model_dump(), "recipe": recipe})
 
-    def _guard(self, candidate: ProcessInput) -> tuple[GuardCheckName | None, list[GuardCheck]]:
+    def _guard(self, candidate: ProcessInput) -> tuple[GuardName | None, list[GuardCheck]]:
         """Registry checks a candidate must pass. Returns the first failing check, if any."""
-        flat = candidate.flat()
-        checks: list[tuple[GuardCheckName, list[ConstraintBreach]]] = [
-            ("box", self.registry.check_box(flat)),
-            ("couplings", self.registry.check_couplings(flat)),
-            ("hard_constraints", self.registry.check_hard_constraints(flat)),
-        ]
         out: list[GuardCheck] = []
-        for name, breaches in checks:
-            if breaches:
-                return name, out
-            out.append(GuardCheck(check=name, passed=True, detail="registry check passed"))
+        recipe = candidate.recipe.model_dump()
+        if not all(self.registry.check_box(k, float(v))[0] for k, v in recipe.items()):
+            return "box", out
+        out.append(GuardCheck(check="box", passed=True, detail="registry box check passed"))
+        if self.registry.check_couplings(candidate.recipe, candidate.context):
+            return "couplings", out
+        out.append(GuardCheck(check="couplings", passed=True, detail="registry couplings passed"))
         return None, out
 
-    @staticmethod
-    def _step_toward_nominal(spec: ParameterSpec, value: float) -> float:
-        assert spec.step is not None and spec.min is not None and spec.max is not None
-        nominal = float(spec.nominal) if isinstance(spec.nominal, (int, float)) else value
+    def _step_toward_nominal(self, name: str, value: float) -> float:
+        spec = self._spec(name)
+        step, lo, hi = float(spec["step"]), float(spec["min"]), float(spec["max"])
+        nominal = _numeric(spec.get("nominal"))
+        nominal = value if nominal is None else nominal
         if value < nominal:
-            target = value + spec.step
+            target = value + step
         elif value > nominal:
-            target = value - spec.step
+            target = value - step
         else:
-            target = value + spec.step if value + spec.step <= spec.max else value - spec.step
-        return round(min(spec.max, max(spec.min, target)), 6)
+            target = value + step if value + step <= hi else value - step
+        return round(min(hi, max(lo, target)), 6)
 
     def recommend(
         self,
@@ -551,31 +586,34 @@ class MockQualityIntelligence:
         t0 = time.perf_counter()
         self._require_complete(stage_results)
         locked = set(request.locked)
-        unknown = [n for n in locked if n not in self.registry.document.parameters]
+        unknown = [n for n in locked if self.registry.get_parameter(n) is None]
         if unknown:
             raise InvalidInputError(f"unknown locked parameters {unknown}", field="locked")
         recipe = inp.recipe.model_dump()
         knobs = sorted(
             (
-                p
-                for p in self.registry.parameters(ParameterKind.SETPOINT)
-                if p.actionable and p.name not in locked
+                name
+                for name, spec in self.registry.parameters.items()
+                if spec.get("kind") == "setpoint"
+                and spec.get("actionable")
+                and name not in locked
+                and name in recipe
             ),
-            key=lambda p: _unit("knob", p.name, recipe),
+            key=lambda name: _unit("knob", name, recipe),
         )
-        combos: list[list[ParameterSpec]] = [
+        combos = [
             knobs[offset : offset + k]
             for k in range(1, request.max_changes + 1)
             for offset in range(len(knobs))
             if offset + k <= len(knobs)
         ]
         pool: list[dict[str, Any]] = []
-        rejected: dict[GuardCheckName, int] = {}
+        rejected: dict[str, int] = {}
         evaluated = 0
         for combo in combos:
             if time.perf_counter() - t0 > request.time_budget_s:
                 break
-            updates = {p.name: self._step_toward_nominal(p, float(recipe[p.name])) for p in combo}
+            updates = {n: self._step_toward_nominal(n, float(recipe[n])) for n in combo}
             updates = {k: v for k, v in updates.items() if v != recipe[k]}
             if not updates:
                 continue
@@ -584,11 +622,18 @@ class MockQualityIntelligence:
             failed, guards = self._guard(candidate)
             if failed is None:
                 result = self.evaluate(candidate)
-                if any(r.blocked for r in result.stage_results):
+                if any(
+                    b.severity is ConstraintSeverity.CRITICAL
+                    for r in result.stage_results
+                    for b in r.constraint_breaches
+                ):
                     failed = "hard_constraints"
             if failed is not None:
                 rejected[failed] = rejected.get(failed, 0) + 1
                 continue
+            guards.append(
+                GuardCheck(check="hard_constraints", passed=True, detail="no critical breach")
+            )
             if result.prediction.p_fail >= prediction.p_fail:
                 continue  # no improvement: never offered
             pool.append(
@@ -642,7 +687,11 @@ class MockQualityIntelligence:
         label: OptionLabel,
         seed: int,
     ) -> RecommendationCandidate:
-        settings = self.registry.document.recommendation
+        settings = self._settings()
+        trials = int(settings.get("stability_trials", 20))
+        noise = float(settings.get("stability_noise_fraction_of_step", 0.5))
+        max_flip_rate = float(settings.get("max_unstable_flip_rate", 0.2))
+        weights: dict[str, float] = dict(settings.get("weights", {}))
         result: PipelineResult = c["result"]
         new_p = result.prediction.p_fail
         old_recipe, new_recipe = base.recipe.model_dump(), c["input"].recipe.model_dump()
@@ -652,29 +701,28 @@ class MockQualityIntelligence:
                 from_value=old_recipe[name],
                 to_value=value,
                 delta=round(value - old_recipe[name], 6),
-                unit=self.registry.parameter(name).unit,
+                unit=str(self._spec(name).get("unit") or ""),
             )
             for name, value in c["updates"].items()
         ]
         flips = 0
-        for trial in range(settings.stability_trials):
+        for trial in range(trials):
             noisy = {}
             for name, value in c["updates"].items():
-                step = self.registry.parameter(name).step or 0.0
+                step = float(self._spec(name).get("step") or 0.0)
                 jitter = (2 * _unit("stability", seed, trial, name) - 1) * step
-                noisy[name] = value + jitter * settings.stability_noise_fraction_of_step
+                noisy[name] = value + jitter * noise
             trial_label = self.evaluate(self._with_recipe(base, noisy)).prediction.label
             flips += int(trial_label is not result.prediction.label)
-        stable = flips / settings.stability_trials <= settings.max_unstable_flip_rate
+        stable = trials == 0 or flips / trials <= max_flip_rate
         cycle_delta = new_recipe["cycle_time_s"] - old_recipe["cycle_time_s"]
         cycle_pct = 100.0 * cycle_delta / old_recipe["cycle_time_s"]
-        cost = sum(self.registry.parameter(ch.parameter).change_cost or 0.0 for ch in changes)
-        w = settings.weights
+        cost = sum(float(self._spec(ch.parameter).get("change_cost") or 0.0) for ch in changes)
         score = (
-            w.get("w1_improvement", 1.0) * (prediction.p_fail - new_p)
-            - w.get("w2_change_cost", 0.0) * cost
-            - w.get("w3_instability", 0.0) * flips / settings.stability_trials
-            - w.get("w5_cycle_time", 0.0) * abs(cycle_pct) / 100.0
+            weights.get("w1_improvement", 1.0) * (prediction.p_fail - new_p)
+            - weights.get("w2_change_cost", 0.0) * cost
+            - weights.get("w3_instability", 0.0) * (flips / trials if trials else 0.0)
+            - weights.get("w5_cycle_time", 0.0) * abs(cycle_pct) / 100.0
         )
         return RecommendationCandidate(
             option_rank=1,
@@ -695,10 +743,10 @@ class MockQualityIntelligence:
                 GuardCheck(
                     check="stability",
                     passed=stable,
-                    detail=f"{flips}/{settings.stability_trials} label flips under step noise",
+                    detail=f"{flips}/{trials} label flips under step noise",
                 ),
             ],
-            stability=Stability(trials=settings.stability_trials, flips=flips, stable=stable),
+            stability=StabilityReport(trials=trials, flips=flips, stable=stable),
             in_distribution=True,  # the mock has no training distribution to compare against
             flags=[] if stable else [CandidateFlag.UNSTABLE],
             cycle_time_delta_s=round(cycle_delta, 6),
@@ -710,38 +758,35 @@ class MockQualityIntelligence:
         )
 
     def sensitivity(self, inp: ProcessInput, parameter: str, steps: int = 40) -> SensitivityResult:
-        spec = self.registry.parameter(parameter)  # UnknownParameterError for unknown names
-        if not spec.actionable:
+        spec = self._spec(parameter)
+        if not spec.get("actionable"):
             raise LockedParameterError(f"{parameter} is not actionable", field=parameter)
         if steps < 2:
             raise InvalidInputError("steps must be at least 2", field="steps")
-        assert spec.min is not None and spec.max is not None
+        lo, hi = float(spec["min"]), float(spec["max"])
         current = float(inp.recipe.model_dump()[parameter])
 
         def p_at(value: float) -> tuple[float, PredictionLabel]:
             pred = self.evaluate(self._with_recipe(inp, {parameter: value})).prediction
             return pred.p_fail, pred.label
 
-        span = spec.max - spec.min
-        values = [round(spec.min + span * i / (steps - 1), 6) for i in range(steps)]
+        span = hi - lo
+        values = [round(lo + span * i / (steps - 1), 6) for i in range(steps)]
         points = [
             SensitivityPoint(value=v, p_fail=p, label=lbl) for v in values for p, lbl in [p_at(v)]
         ]
-        h = spec.step or span / (steps - 1)
-        lo, hi = max(spec.min, current - h), min(spec.max, current + h)
-        gradient = (p_at(hi)[0] - p_at(lo)[0]) / (hi - lo) if hi > lo else 0.0
+        h = float(spec.get("step") or span / (steps - 1))
+        a, b = max(lo, current - h), min(hi, current + h)
+        gradient = (p_at(b)[0] - p_at(a)[0]) / (b - a) if b > a else 0.0
         current_label = p_at(current)[1]
         flips = [pt.value for pt in points if pt.label is not current_label]
         p_values = [pt.p_fail for pt in points]
         return SensitivityResult(
             parameter=parameter,
-            unit=spec.unit,
+            unit=str(spec.get("unit") or ""),
             current_value=current,
             points=points,
             local_gradient=round(gradient, 6),
             range_swing=round(max(p_values) - min(p_values), 6),
             flip_point=min(flips, key=lambda v: abs(v - current)) if flips else None,
         )
-
-    def spc_check(self, series: SpcSeries) -> list[SpcAlert]:
-        raise CapabilityUnavailableError("SPC is a P1 capability; the mock does not provide it")

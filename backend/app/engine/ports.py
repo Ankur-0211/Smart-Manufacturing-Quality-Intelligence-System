@@ -5,10 +5,10 @@ only the fields roadmap R2-P4 allows it to rely on: ``StageResult.blocked``, ``b
 ``upstream_out``, ``anomaly.flag`` and ``constraint_breaches``; everything else is stored and
 streamed unchanged.
 
-This is NOT a second definition of the contracts. Once ``app.contracts`` is available, an adapter
-(R2-P5) implements this port by delegating to ``QualityIntelligence.run_stage`` / ``predict`` and to
-``ConstraintRegistry.stage_inputs``; until then no executor is bound and simulation commands answer
-501 ``CAPABILITY_UNAVAILABLE``.
+This is NOT a second definition of the contracts. ``IntelligenceStageExecutor``
+(``app/services/intelligence_executor.py``) implements this port by delegating to
+``QualityIntelligence.run_stage`` / ``predict`` and to ``ConstraintRegistry.stage_inputs``; with no
+executor bound, simulation commands answer 501 ``CAPABILITY_UNAVAILABLE``.
 """
 
 from __future__ import annotations
@@ -27,7 +27,8 @@ class StageExecutor(Protocol):
         ...
 
     def stage_inputs(self, stage: str) -> Sequence[str]:
-        """Field names of the raw input slice for ``stage`` (registry ``stage_inputs``)."""
+        """Fields shown as the stage's inputs in ``stage.started`` (display only; the stage
+        cache keys on the full input)."""
         ...
 
     def run_stage(

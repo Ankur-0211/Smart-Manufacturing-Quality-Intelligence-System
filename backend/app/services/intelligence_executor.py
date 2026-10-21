@@ -30,6 +30,11 @@ def stage_result_from_json(payload: Mapping[str, Any]) -> StageResult:
     return StageResult.model_validate(data)
 
 
+def inference_backend_of(intelligence: QualityIntelligence) -> str:
+    """ "mock" whenever any mock output may be produced (mock or hybrid), else "real"."""
+    return "mock" if intelligence.version_info().is_mock else "real"
+
+
 class IntelligenceStageExecutor:
     """Implements ``app.engine.ports.StageExecutor`` by delegating to the intelligence layer."""
 
@@ -37,14 +42,17 @@ class IntelligenceStageExecutor:
         self.intelligence = intelligence
         self.registry = registry
         info = intelligence.version_info()
-        self.inference_backend: str = info.inference_backend.value
+        self.inference_backend: str = inference_backend_of(intelligence)
         self.constraints_version: str = registry.version
-        self._module_versions = {s.value: v for s, v in info.module_versions.items()}
+        # Role 1's version info carries one model_version, no per-stage module versions
+        # (CCR-004); it versions every stage's cache entries.
+        self._module_version = info.model_version
 
     def module_version(self, stage: str) -> str:
-        return self._module_versions.get(stage, "unknown")
+        return self._module_version
 
     def stage_inputs(self, stage: str) -> Sequence[str]:
+        """Parameters first consumed by ``stage`` (Role 1's ``stage_inputs``), for display."""
         return self.registry.stage_inputs(StageName(stage))
 
     def run_stage(

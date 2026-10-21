@@ -14,15 +14,14 @@ from typing import Any
 
 from app.contracts.context import ProcessInput
 from app.contracts.explanation import LocalExplanation
-from app.contracts.interface import QualityIntelligence
-from app.contracts.prediction import PipelineResult
+from app.contracts.interface import PipelineResult, QualityIntelligence
 from app.db.base import utcnow
 from app.db.errors import NotFoundError
 from app.db.repositories import PredictionRepository, ReferenceRepository, context_snapshot
 from app.db.session import Database
 from app.services.predictions import persist_prediction
 
-#: (recipe, flat machine/product/lot context) -> validated recipe; raises on violation.
+#: (recipe, RunContext JSON snapshot) -> validated recipe; raises on violation.
 ParameterValidator = Callable[[Mapping[str, float], Mapping[str, Any]], Mapping[str, float]]
 
 
@@ -55,8 +54,7 @@ class InferenceService:
             if not product.active:
                 raise NotFoundError("product", product_id)
             snapshot = context_snapshot(machine, product, lot, today=today or utcnow().date())
-        flat_context = {**snapshot["machine"], **snapshot["product"], **snapshot["material_lot"]}
-        recipe = validate_parameters(parameters, flat_context)
+        recipe = validate_parameters(parameters, snapshot)
         return ProcessInput.model_validate({"context": snapshot, "recipe": recipe})
 
     def predict(self, inp: ProcessInput, *, include_explanation: bool) -> dict[str, Any]:
@@ -96,13 +94,13 @@ class InferenceService:
         if stored is not None:
             return LocalExplanation.model_validate(stored)
         info = self.intelligence.version_info()
-        if snapshot is None or info.fusion_model_version != model_version:
+        if snapshot is None or info.model_version != model_version:
             raise ExplanationUnavailableError(
                 f"prediction {prediction_id} has no stored explanation and model {model_version} "
-                f"is not loaded (current: {info.fusion_model_version})"
+                f"is not loaded (current: {info.model_version})"
             )
+        # Deterministic pipeline (roadmap 9.1 #1): re-evaluating the stored input reproduces the
+        # stage results and prediction the explanation refers to.
         inp = ProcessInput.model_validate(snapshot)
-        # Deterministic pipeline (roadmap 9.1 #1): recomputing the stages reproduces the inputs
-        # the prediction was made from.
-        stages = self.intelligence.run_all_stages(inp)
-        return self.intelligence.explain(inp, stages)
+        result = self.intelligence.evaluate(inp, include_explanation=False)
+        return self.intelligence.explain(inp, result.stage_results, result.prediction)

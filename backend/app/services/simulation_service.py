@@ -66,7 +66,7 @@ SPEED_MULTIPLIER: dict[str, float] = {"0.5x": 2.0, "1x": 1.0, "2x": 0.5, "instan
 EventSpec = tuple[str, str | None, Mapping[str, Any]]
 
 
-#: (recipe, flat machine/product/lot context) -> validated recipe; raises on violation.
+#: (recipe, RunContext JSON snapshot) -> validated recipe; raises on violation.
 ParameterValidator = Callable[[Mapping[str, float], Mapping[str, Any]], Mapping[str, float]]
 
 
@@ -300,9 +300,11 @@ class SimulationService:
                     )
                 ],
             )
+            # Keyed on the full input, not the display slice: a stage may read fields that
+            # Role 1's stage_inputs() attributes to an earlier stage (e.g. S2 reads moisture).
             key = stage_cache_key(
                 stage,
-                inputs,
+                flat,
                 upstream,
                 executor.module_version(stage),
                 executor.constraints_version,
@@ -676,7 +678,7 @@ class SimulationService:
     ) -> str:
         """Create an INITIALIZED run with a frozen context snapshot (roadmap R2-P4 task 5).
 
-        ``validate_parameters(recipe, flat_context)`` is the registry check (tiers 1-2) supplied
+        ``validate_parameters(recipe, context_snapshot)`` is the registry check (tiers 1-2) supplied
         by the API layer; it runs after the references resolve so machine-dependent couplings
         (CPL-003/CPL-004) see this machine's limits. Raises ``NotFoundError`` for an unknown or
         inactive machine/product/lot.
@@ -692,12 +694,7 @@ class SimulationService:
                 raise NotFoundError("product", product_id)
             day = today or utcnow().date()
             snapshot = context_snapshot(machine, product, lot, today=day)
-            flat_context = {
-                **snapshot["machine"],
-                **snapshot["product"],
-                **snapshot["material_lot"],
-            }
-            recipe = validate_parameters(parameters, flat_context)
+            recipe = validate_parameters(parameters, snapshot)
             run = RunRepository(s).create(
                 machine=machine,
                 product=product,

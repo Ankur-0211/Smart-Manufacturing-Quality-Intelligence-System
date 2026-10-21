@@ -13,7 +13,7 @@ from fastapi import APIRouter, Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api import routes_meta, routes_prediction, routes_reference, routes_simulation
-from app.api.deps import build_intelligence, require_api_key
+from app.api.deps import build_intelligence, load_registry, require_api_key
 from app.api.errors import register_exception_handlers
 from app.api.middleware import RequestContextMiddleware
 from app.api.rate_limit import TokenBucketLimiter
@@ -21,7 +21,6 @@ from app.core.config import Settings, get_settings
 from app.core.logging import configure_logging, get_logger
 from app.db.repositories import ModelVersionRepository
 from app.db.session import Database
-from app.domain.constraint_loader import ConstraintRegistry
 from app.engine.cache import StageCache
 from app.engine.events import EventBus
 from app.services.intelligence_executor import IntelligenceStageExecutor
@@ -37,7 +36,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     # Startup order (roadmap R2-P1 task 3): settings -> registry -> intelligence -> DB.
     # An invalid registry or an unavailable `real` backend raises here, so the app never starts.
-    registry = ConstraintRegistry.load(settings.constraints_path)
+    registry = load_registry(settings)
     intelligence = build_intelligence(settings, registry)
     executor = IntelligenceStageExecutor(intelligence, registry)
     database = Database(settings.database_url)
@@ -57,7 +56,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             "startup",
             env=settings.env.value,
             intelligence_backend=settings.intelligence_backend.value,
-            inference_backend=info.inference_backend.value,
+            model_version=info.model_version,
             is_mock=info.is_mock,
             constraints_version=registry.version,
             constraints_hash=registry.content_hash[:12],

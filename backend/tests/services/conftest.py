@@ -9,21 +9,22 @@ from pathlib import Path
 from typing import Any
 
 import pytest
-import yaml
 
+from app.contracts.enums import StageName
 from app.db.models import Machine, MaterialLot, Product
 from app.db.repositories import RunRepository
 from app.db.session import Database
 from app.db.vocab import RECIPE_FIELDS, STAGE_NAMES
+from app.domain.constraint_loader import load_constraint_registry
 from app.engine.cache import StageCache
 from app.engine.events import EventBus
 from app.services.simulation_service import SimulationService
 from tests.db.conftest import migrate
 
-REGISTRY = Path(__file__).resolve().parents[2] / "app" / "domain" / "constraints.yaml"
-STAGE_INPUTS: dict[str, list[str]] = yaml.safe_load(REGISTRY.read_text(encoding="utf-8"))[
-    "stage_inputs"
-]
+_REGISTRY = load_constraint_registry()
+STAGE_INPUTS: dict[str, list[str]] = {
+    stage: _REGISTRY.stage_inputs(StageName(stage)) for stage in STAGE_NAMES
+}
 UPSTREAM_KEYS = {
     "MATERIAL_CONDITIONING": {"viscosity_class": "NOMINAL", "moisture_flag": False},
     "PLASTICIZING": {"effective_melt_temp_c": 232.5, "viscosity_proxy": 1.0},

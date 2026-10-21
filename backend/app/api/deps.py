@@ -14,24 +14,32 @@ from fastapi import Depends, Header, Request
 
 from app.api.errors import ApiError, ErrorCode
 from app.contracts.errors import CapabilityUnavailableError
-from app.contracts.interface import P0_CAPABILITIES, QualityIntelligence
+from app.contracts.interface import QualityIntelligence
 from app.core.config import Environment, IntelligenceBackendMode, Settings
 from app.core.logging import get_logger
 from app.db.session import Database
-from app.domain.constraint_loader import ConstraintRegistry
+from app.domain.constraint_loader import ConstraintRegistry, load_constraint_registry
 from app.intelligence_mock.hybrid import HybridQualityIntelligence
 from app.intelligence_mock.mock import MockQualityIntelligence
 
 log = get_logger("app.intelligence")
 
+# Capabilities `real` mode must provide at startup (roadmap 9.1 factory table).
+P0_CAPABILITIES: tuple[str, ...] = ("run_stage", "predict", "explain", "recommend")
 
-def _load_real(settings: Settings, registry: ConstraintRegistry) -> QualityIntelligence | None:
-    """The Role 1 facade, or None while it does not exist yet (R1-P5)."""
+
+def load_registry(settings: Settings) -> ConstraintRegistry:
+    """Role 1's registry from ``SMQI_CONSTRAINTS_PATH``; raises ``RegistryInvalidError``."""
+    return load_constraint_registry(settings.constraints_path)
+
+
+def _load_real(registry: ConstraintRegistry) -> QualityIntelligence | None:
+    """Role 1's facade (constructed as documented in aboutrole1.md), or None if absent."""
     try:
         from app.intelligence.facade import RealQualityIntelligence
     except ModuleNotFoundError:
         return None
-    real: QualityIntelligence = RealQualityIntelligence.from_settings(settings, registry)
+    real: QualityIntelligence = RealQualityIntelligence(registry=registry)
     return real
 
 
@@ -44,7 +52,7 @@ def build_intelligence(settings: Settings, registry: ConstraintRegistry) -> Qual
     if mode is IntelligenceBackendMode.MOCK:
         return MockQualityIntelligence(registry)
 
-    real = _load_real(settings, registry)
+    real = _load_real(registry)
     if mode is IntelligenceBackendMode.HYBRID:
         mock = MockQualityIntelligence(registry)
         if real is None:

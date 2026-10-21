@@ -15,7 +15,7 @@ from app.api.deps import DatabaseDep, RegistryDep
 from app.api.errors import ApiError, ErrorCode, build_meta
 from app.api.validation import validate_lot_attributes
 from app.db.errors import DuplicateError
-from app.schemas.constraints import ConstraintsOut
+from app.schemas.constraints import ConstraintsOut, public_constraints
 from app.schemas.envelope import Envelope
 from app.schemas.reference import (
     CODE_PATTERN,
@@ -46,7 +46,7 @@ def get_constraints(
         return Response(status_code=304, headers={"ETag": etag})
     response.headers["ETag"] = etag
     response.headers["Cache-Control"] = "no-cache"  # revalidate; the registry changes per deploy
-    data = ConstraintsOut.model_validate(registry.to_public_dict())
+    data = public_constraints(registry)
     return Envelope(data=data, meta=build_meta(request))
 
 

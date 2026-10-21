@@ -76,19 +76,22 @@ addopts = "-ra"
 [tool.ruff]
 line-length = 100
 target-version = "py312"
-extend-exclude = ["frontend", "backend/alembic/versions"]
+# Role 1-owned code (CODEOWNERS) follows Role 1's own conventions; Role 2 does not lint or
+# reformat it (CCR-003, CCR-004).
+extend-exclude = [
+    "frontend",
+    "backend/alembic/versions",
+    "backend/app/contracts",
+    "backend/app/domain/*.py",
+    "backend/app/intelligence",
+    "backend/verify_ml.py",
+    "backend/tests/contract/test_contracts_part1.py",
+    "backend/tests/domain/test_parameter_dictionary.py",
+]
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "B", "UP", "SIM", "RUF"]
 ignore = ["B008"]  # FastAPI Depends() in defaults
-
-[tool.ruff.lint.per-file-ignores]
-# TEMPORARY (CCR-003): Role 1 part-1 contract files arrived unformatted (no final newline). Role 2
-# must not edit them; drop this entry and the format exclude below once Role 1 runs `ruff format`.
-"backend/app/contracts/{context,enums,errors,recipe,version}.py" = ["W292"]
-
-[tool.ruff.format]
-exclude = ["backend/app/contracts/{context,enums,errors,recipe,version}.py"]
 
 [tool.ruff.lint.isort]
 known-first-party = ["app", "ml_pipeline", "tests"]
@@ -104,5 +107,11 @@ plugins = ["pydantic.mypy"]
 ignore_missing_imports = true
 warn_unused_ignores = true
 # Scoped strictness (roadmap R2-P1 task 2): Role 2 application packages.
-files = ["backend/app/core", "backend/app/api", "backend/app/schemas", "backend/app/db", "backend/app/engine", "backend/app/services", "backend/app/contracts", "backend/app/domain", "backend/app/intelligence_mock", "backend/app/main.py"]
+files = ["backend/app/core", "backend/app/api", "backend/app/schemas", "backend/app/db", "backend/app/engine", "backend/app/services", "backend/app/intelligence_mock", "backend/app/main.py"]
 strict = true
+
+[[tool.mypy.overrides]]
+# Role 1-owned modules: their types are used (and checked at every Role 2 call site), but errors
+# inside them are Role 1's to fix (CCR-004).
+module = ["app.contracts.*", "app.domain.*", "app.intelligence.*"]
+ignore_errors = true

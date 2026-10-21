@@ -1,8 +1,8 @@
 """Registry-driven request validation (roadmap 8.5, 9.3.3; R2-P1 task 9).
 
-Tier 1 (box): Pydantic models whose field bounds are generated from the registry with
+Tier 1 (box): Pydantic models whose field bounds are generated from Role 1's registry with
 ``create_model`` — the registry stays the single source of every limit (rule B6).
-Tier 2 (couplings): ``ConstraintRegistry.check_couplings`` on the validated values plus the run
+Tier 2 (couplings): Role 1's ``ConstraintRegistry.check_couplings(recipe, context)`` with the run
 context (machine maxima). Both tiers answer HTTP 422 with per-field ``details``.
 Hard constraints are NOT checked here: they are runtime domain rules (BLOCKED, not rejected).
 """
@@ -17,59 +17,62 @@ from pydantic import BaseModel, ConfigDict, Field, ValidationError, create_model
 from pydantic.config import JsonDict
 
 from app.api.errors import ApiError, ErrorCode, validation_error_to_api_error
-from app.contracts.enums import ParameterKind
-from app.domain.constraint_loader import ConstraintRegistry, ParameterSpec
+from app.contracts.context import RunContext
+from app.contracts.recipe import ProcessRecipe
+from app.domain.constraint_loader import ConstraintRegistry
 from app.schemas.envelope import ErrorDetail
 
-_MODEL_NAMES = {
-    ParameterKind.SETPOINT: "ProcessRecipeIn",
-    ParameterKind.LOT_ATTRIBUTE: "MaterialLotAttributesIn",
-    ParameterKind.PRODUCT_CONTEXT: "ProductContextIn",
-    ParameterKind.MACHINE_CONTEXT: "MachineContextIn",
-}
+_STRICT = ConfigDict(extra="forbid", allow_inf_nan=False, frozen=True)
+# MaterialLot attributes (contract fields). Role 1's registry has no windows for them yet
+# (CCR-004); they get bounds automatically once registry entries exist.
+LOT_ATTRIBUTES = ("mfi", "moisture_pct", "regrind_pct", "colourant_pct")
 
 
-def _field(spec: ParameterSpec) -> tuple[Any, Any]:
-    unit = f" [{spec.unit}]" if spec.unit else ""
-    description = f"{spec.display_name}{unit}"
-    if spec.allowed_values is not None:
-        literal = Literal[tuple(spec.allowed_values)]  # type: ignore[valid-type]
-        return literal, Field(title=spec.display_name, description=description)
-    py_type: type = int if spec.dtype == "int" else float
-    extra: JsonDict | None = {"step": spec.step} if spec.step is not None else None
+def _bounded_field(name: str, spec: Mapping[str, Any]) -> tuple[Any, Any]:
+    display = str(spec.get("display_name", name))
+    unit = f" [{spec['unit']}]" if spec.get("unit") else ""
+    py_type: type = int if spec.get("dtype") == "int" else float
+    extra: JsonDict | None = {"step": spec["step"]} if spec.get("step") is not None else None
     return py_type, Field(
-        ge=spec.min,
-        le=spec.max,
-        title=spec.display_name,
-        description=description,
+        ge=spec.get("min"),
+        le=spec.get("max"),
+        title=display,
+        description=f"{display}{unit}",
         json_schema_extra=extra,
     )
 
 
 @lru_cache(maxsize=16)
-def bounded_model(registry: ConstraintRegistry, kind: ParameterKind) -> type[BaseModel]:
-    """A closed model with one bounded field per registry parameter of ``kind``.
-
-    Cached per registry instance (the registry is immutable after load).
-    """
-    fields: dict[str, Any] = {spec.name: _field(spec) for spec in registry.parameters(kind)}
-    model: type[BaseModel] = create_model(
-        _MODEL_NAMES[kind],
-        __config__=ConfigDict(extra="forbid", allow_inf_nan=False, frozen=True),
-        **fields,
-    )
+def recipe_model(registry: ConstraintRegistry) -> type[BaseModel]:
+    """A closed model with one bounded field per registry setpoint (cached per registry)."""
+    fields: dict[str, Any] = {
+        name: _bounded_field(name, spec)
+        for name, spec in registry.parameters.items()
+        if spec.get("kind", "setpoint") == "setpoint"
+    }
+    model: type[BaseModel] = create_model("ProcessRecipeIn", __config__=_STRICT, **fields)
     return model
 
 
-def recipe_model(registry: ConstraintRegistry) -> type[BaseModel]:
-    return bounded_model(registry, ParameterKind.SETPOINT)
+@lru_cache(maxsize=16)
+def lot_model(registry: ConstraintRegistry) -> type[BaseModel]:
+    """MaterialLot attributes: resin grade from the registry's grades, windows where defined."""
+    grades = tuple(registry.resin_grades)
+    fields: dict[str, Any] = {
+        "resin_grade": (Literal[grades], Field(description="Key of the registry resin_grades")),
+    }
+    for name in LOT_ATTRIBUTES:
+        spec = registry.get_parameter(name)
+        fields[name] = _bounded_field(name, spec) if spec is not None else (float, Field())
+    model: type[BaseModel] = create_model("MaterialLotAttributesIn", __config__=_STRICT, **fields)
+    return model
 
 
 def _validate(
-    registry: ConstraintRegistry, kind: ParameterKind, raw: Mapping[str, Any], loc: str
+    registry: ConstraintRegistry, model: type[BaseModel], raw: Mapping[str, Any], loc: str
 ) -> dict[str, Any]:
     try:
-        validated = bounded_model(registry, kind).model_validate(dict(raw))
+        validated = model.model_validate(dict(raw))
     except ValidationError as exc:
         prefix = (loc,) if loc else ()
         errors = [
@@ -84,10 +87,15 @@ def _validate(
 
 
 def coupling_error(
-    registry: ConstraintRegistry, values: Mapping[str, Any], loc: str
+    registry: ConstraintRegistry,
+    recipe: Mapping[str, float],
+    context: Mapping[str, Any],
+    loc: str,
 ) -> ApiError | None:
-    """Tier 2: one detail per violated coupling rule, attributed to its left-hand field."""
-    breaches = registry.check_couplings(values)
+    """Tier 2: one detail per violated coupling rule, attributed to its first parameter."""
+    breaches = registry.check_couplings(
+        ProcessRecipe.model_validate(dict(recipe)), RunContext.model_validate(dict(context))
+    )
     if not breaches:
         return None
     details = [
@@ -107,7 +115,8 @@ def coupling_error(
         field=first.field,
         details=details,
         constraint_version=registry.version,
-        hint="Adjust the named parameters so every coupling rule in GET /constraints holds.",
+        hint=breaches[0].hint
+        or "Adjust the named parameters so every coupling rule in GET /constraints holds.",
     )
 
 
@@ -115,16 +124,16 @@ def validate_recipe(
     registry: ConstraintRegistry,
     raw: Mapping[str, Any],
     *,
-    context: Mapping[str, Any] | None = None,
+    context: Mapping[str, Any],
     loc: str = "parameters",
 ) -> dict[str, float]:
     """Validate a full ProcessRecipe: box bounds, then couplings with the run context.
 
-    ``context`` carries the flat machine/product/lot values (e.g. ``max_inj_pressure_bar``)
-    needed by couplings such as CPL-003/CPL-004. Raises ``ApiError`` (422) on any violation.
+    ``context`` is the run's RunContext JSON (machine/product/material_lot snapshot); couplings
+    such as CPL-003/CPL-004 read the machine's limits from it. Raises ``ApiError`` (422).
     """
-    values = _validate(registry, ParameterKind.SETPOINT, raw, loc)
-    error = coupling_error(registry, {**(context or {}), **values}, loc)
+    values = _validate(registry, recipe_model(registry), raw, loc)
+    error = coupling_error(registry, values, context, loc)
     if error is not None:
         raise error
     return values
@@ -133,5 +142,5 @@ def validate_recipe(
 def validate_lot_attributes(
     registry: ConstraintRegistry, raw: Mapping[str, Any], *, loc: str = ""
 ) -> dict[str, Any]:
-    """Box-validate material lot attributes (``POST /materials``, R2-P3)."""
-    return _validate(registry, ParameterKind.LOT_ATTRIBUTE, raw, loc)
+    """Validate material lot attributes (``POST /materials``, R2-P3)."""
+    return _validate(registry, lot_model(registry), raw, loc)

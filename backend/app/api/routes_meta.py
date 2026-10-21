@@ -57,7 +57,7 @@ def health(
             detail=(
                 "MOCK intelligence: outputs are placeholders, not model predictions"
                 if info.is_mock
-                else f"Real intelligence ({info.fusion_model_version})"
+                else f"Real intelligence ({info.model_version})"
             ),
         ),
         ComponentStatus(
