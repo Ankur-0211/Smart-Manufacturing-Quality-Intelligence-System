@@ -515,6 +515,39 @@
         "title": "Envelope[ConstraintsOut]",
         "type": "object"
       },
+      "Envelope_GlobalExplanation_": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/GlobalExplanation"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "error": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ErrorBody"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "meta": {
+            "$ref": "#/components/schemas/Meta"
+          }
+        },
+        "required": [
+          "meta"
+        ],
+        "title": "Envelope[GlobalExplanation]",
+        "type": "object"
+      },
       "Envelope_HealthData_": {
         "additionalProperties": false,
         "properties": {
@@ -1149,6 +1182,61 @@
           "group"
         ],
         "title": "FeatureAttribution",
+        "type": "object"
+      },
+      "GlobalAttributionItem": {
+        "additionalProperties": false,
+        "properties": {
+          "feature": {
+            "title": "Feature",
+            "type": "string"
+          },
+          "stage": {
+            "title": "Stage",
+            "type": "string"
+          },
+          "value": {
+            "title": "Value",
+            "type": "number"
+          }
+        },
+        "required": [
+          "feature",
+          "value",
+          "stage"
+        ],
+        "title": "GlobalAttributionItem",
+        "type": "object"
+      },
+      "GlobalExplanation": {
+        "additionalProperties": false,
+        "properties": {
+          "computed_on": {
+            "title": "Computed On",
+            "type": "string"
+          },
+          "mean_abs_shap": {
+            "items": {
+              "$ref": "#/components/schemas/GlobalAttributionItem"
+            },
+            "title": "Mean Abs Shap",
+            "type": "array"
+          },
+          "model_version": {
+            "title": "Model Version",
+            "type": "string"
+          },
+          "n_rows": {
+            "title": "N Rows",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "model_version",
+          "computed_on",
+          "n_rows"
+        ],
+        "title": "GlobalExplanation",
         "type": "object"
       },
       "GroupedAttribution": {
@@ -3563,6 +3651,55 @@
           }
         },
         "summary": "Models serving predictions",
+        "tags": [
+          "prediction"
+        ]
+      }
+    },
+    "/api/v1/models/active/global-explanation": {
+      "get": {
+        "operationId": "global_explanation_api_v1_models_active_global_explanation_get",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "x-api-key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Envelope_GlobalExplanation_"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Global feature importance of the active model",
         "tags": [
           "prediction"
         ]

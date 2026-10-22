@@ -12,7 +12,8 @@ from typing import Any
 
 from sqlalchemy.orm import Session
 
-from app.db.models import Prediction, ProcessRun
+from app.contracts.interface import IntelligenceVersionInfo
+from app.db.models import ModelVersion, Prediction, ProcessRun
 from app.db.repositories import ModelVersionRepository, PredictionRepository
 from app.db.vocab import MODEL_NAMES
 
@@ -42,6 +43,31 @@ def split_model_version(value: str) -> tuple[str, str]:
     if name not in MODEL_NAMES or not semver:
         raise ValueError(f"unrecognised model_version {value!r} (expected '<name>-<semver>')")
     return name, semver
+
+
+def register_serving_model(session: Session, info: IntelligenceVersionInfo) -> ModelVersion:
+    """Record the model serving predictions as the single active ``model_versions`` row.
+
+    Roadmap R2-P5 task 1: registration reads ``version_info()`` only (never a model artifact).
+    Every other row is deactivated, so ``/models/active`` stays truthful when one database is
+    used with mock and real intelligence in turn. Metadata the interface does not report
+    (training date, metrics, threshold) stays empty rather than guessed.
+    """
+    name, semver = split_model_version(info.model_version)
+    algorithm = "mock" if info.is_mock else "role1-facade"
+    row = ModelVersionRepository(session).upsert(
+        name,
+        semver,
+        algorithm=algorithm,
+        is_active=True,
+        constraints_version=info.constraints_version,
+    )
+    for other in session.query(ModelVersion).filter(
+        ModelVersion.id != row.id, ModelVersion.is_active.is_(True)
+    ):
+        other.is_active = False
+    session.flush()
+    return row
 
 
 def persist_prediction(

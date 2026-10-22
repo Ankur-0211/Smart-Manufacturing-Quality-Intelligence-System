@@ -3,7 +3,7 @@
 Both roles update this file (roadmap §10.1). A capability counts as **REAL** only when
 `QualityIntelligence.capabilities()` reports it **and** this table says so.
 
-_Last updated: 2026-10-22 by Role 2 (Role 1's 1a22d7b merged and integrated; CCR-004)._
+_Last updated: 2026-10-22 by Role 2 (R2-P5 part 1: real model registration, demo profile)._
 
 ## Capability matrix
 
@@ -43,6 +43,7 @@ Status values: `NOT AVAILABLE` → `MOCK` → `HYBRID` → `REAL`.
 | R2-P2 | Done |
 | R2-P3 | Done: reference endpoints, `POST /simulation/runs`, `/predict` (persists `run_id=NULL` rows), explain, `/models`; `npm run check:api` fails on stale TS types |
 | R2-P4 | Done; runs on the mock or Role 1's real facade |
+| R2-P5 | Part 1 done: serving model registered at startup from `version_info()` (one active `model_versions` row), `/models/active/global-explanation`, real mode never falls back to mock, demo profile + `scripts/seed_demo_runs.py` verified live. Open: `/whatif` (+compare, sensitivity), `/recommend`, lineage endpoint |
 | R2-P6 | Visual components and live run viewing done; parameter sliders next (they use `GET /constraints`) |
 
 ## Milestones

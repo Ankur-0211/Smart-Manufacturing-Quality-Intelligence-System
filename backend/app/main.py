@@ -19,11 +19,11 @@ from app.api.middleware import RequestContextMiddleware
 from app.api.rate_limit import TokenBucketLimiter
 from app.core.config import Settings, get_settings
 from app.core.logging import configure_logging, get_logger
-from app.db.repositories import ModelVersionRepository
 from app.db.session import Database
 from app.engine.cache import StageCache
 from app.engine.events import EventBus
 from app.services.intelligence_executor import IntelligenceStageExecutor
+from app.services.predictions import register_serving_model
 from app.services.simulation_service import SimulationService
 
 API_PREFIX = "/api/v1"
@@ -66,10 +66,10 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             db_head=db_status.head,
         )
         if db_status.migrated:
-            if info.is_mock:
-                # Mock predictions reference a model_versions row like real ones (roadmap 9.4).
-                with database.session() as s:
-                    ModelVersionRepository(s).ensure_mock()
+            # Every prediction references a model_versions row (roadmap 9.4, R2-P5 task 1).
+            with database.session() as s:
+                served = register_serving_model(s, info)
+                log.info("model_registered", model=f"{served.name}-{served.semver}")
             recovered = simulation.recover_interrupted()
             if recovered:
                 log.warning("runs_aborted_after_restart", run_ids=recovered)

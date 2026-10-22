@@ -11,7 +11,7 @@ from fastapi.concurrency import run_in_threadpool
 from app.api.deps import DatabaseDep, IntelligenceDep, RegistryDep
 from app.api.errors import ApiError, ErrorCode, build_meta
 from app.api.validation import validate_recipe
-from app.contracts.explanation import LocalExplanation
+from app.contracts.explanation import GlobalExplanation, LocalExplanation
 from app.db.errors import NotFoundError
 from app.db.repositories import ModelVersionRepository
 from app.schemas.envelope import Envelope
@@ -139,3 +139,15 @@ async def all_models(request: Request, database: DatabaseDep) -> Envelope[list[M
     return Envelope(
         data=[ModelVersionOut.model_validate(r) for r in rows], meta=build_meta(request)
     )
+
+
+@router.get(
+    "/models/active/global-explanation",
+    response_model=Envelope[GlobalExplanation],
+    summary="Global feature importance of the active model",
+)
+async def global_explanation(
+    request: Request, intelligence: IntelligenceDep
+) -> Envelope[GlobalExplanation]:
+    data = await run_in_threadpool(intelligence.global_explanation)
+    return Envelope(data=data, meta=build_meta(request))

@@ -107,6 +107,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/models/active/global-explanation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Global feature importance of the active model */
+        get: operations["global_explanation_api_v1_models_active_global_explanation_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/predict": {
         parameters: {
             query?: never;
@@ -550,6 +567,12 @@ export interface components {
             error?: components["schemas"]["ErrorBody"] | null;
             meta: components["schemas"]["Meta"];
         };
+        /** Envelope[GlobalExplanation] */
+        Envelope_GlobalExplanation_: {
+            data?: components["schemas"]["GlobalExplanation"] | null;
+            error?: components["schemas"]["ErrorBody"] | null;
+            meta: components["schemas"]["Meta"];
+        };
         /** Envelope[HealthData] */
         Envelope_HealthData_: {
             data?: components["schemas"]["HealthData"] | null;
@@ -697,6 +720,26 @@ export interface components {
             stage: string;
             /** Value */
             value: number | string | null;
+        };
+        /** GlobalAttributionItem */
+        GlobalAttributionItem: {
+            /** Feature */
+            feature: string;
+            /** Stage */
+            stage: string;
+            /** Value */
+            value: number;
+        };
+        /** GlobalExplanation */
+        GlobalExplanation: {
+            /** Computed On */
+            computed_on: string;
+            /** Mean Abs Shap */
+            mean_abs_shap?: components["schemas"]["GlobalAttributionItem"][];
+            /** Model Version */
+            model_version: string;
+            /** N Rows */
+            n_rows: number;
         };
         /** GroupedAttribution */
         GroupedAttribution: {
@@ -1659,6 +1702,37 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Envelope_ActiveModelsOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    global_explanation_api_v1_models_active_global_explanation_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-api-key"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Envelope_GlobalExplanation_"];
                 };
             };
             /** @description Validation Error */

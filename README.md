@@ -78,6 +78,36 @@ of these and commit `docs/openapi.json` together with
 sh scripts/gen_api_types.sh          # or: powershell -File scripts/gen_api_types.ps1
 ```
 
+## Demo profile (roadmap §16.2)
+
+The demo runs on Role 1's real intelligence only; `SMQI_ENV=demo` refuses `mock` and `hybrid`.
+
+```bash
+# bash; in PowerShell set $env:SMQI_ENV = "demo" etc.
+export SMQI_ENV=demo SMQI_INTELLIGENCE_BACKEND=real
+uv run alembic -c backend/alembic.ini upgrade head
+(cd backend && uv run python -m app.db.seed)
+uv run uvicorn app.main:app --app-dir backend --port 8000
+```
+
+In a second terminal, while the API is running:
+
+```bash
+uv run python scripts/seed_demo_runs.py
+```
+
+This creates three runs **through the API**, using the contract-fixture recipes on MC-02 / PP-JBOX-42:
+
+| Scenario | Lot | Outcome |
+|---|---|---|
+| Nominal recipe | A-771 | PASS |
+| Short cooling | A-771 | PASS, with an HC-004 warning |
+| Melt above ceiling | A-771 | Left **BLOCKED** at Plasticizing (HC-001), so the override can be shown live; the result is then NOT RELEASABLE |
+
+Re-running the script skips scenarios that already exist.
+
+The `D-105` lot is wet: any run on it blocks at Material Conditioning (HC-006). MC-03 can't run the nominal recipe, because its 110 t clamp rating is below the nominal 120 t (coupling rule CPL-003).
+
 ## Branches (roadmap §14)
 
 | Branch | Purpose |
