@@ -26,11 +26,8 @@ export function healthPayload(overrides: Partial<Schemas['HealthData']> = {}): S
     model_loaded: false,
     intelligence: {
       contracts_version: '0.1.0',
-      constraints_version: 'constraints-0.1.0',
-      module_versions: {},
-      fusion_model_version: 'mock-0.0.0',
-      feature_schema_hash: null,
-      inference_backend: 'mock',
+      constraints_version: 'constraints-1.0.0',
+      model_version: 'mock-0.0.0',
       is_mock: true,
       capabilities: { run_stage: true, predict: true },
     },

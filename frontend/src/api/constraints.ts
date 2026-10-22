@@ -7,7 +7,7 @@ import { useQuery } from '@tanstack/react-query'
 import { apiGet, type Schemas } from './client'
 
 export type Constraints = Schemas['ConstraintsOut']
-export type ParameterSpec = Schemas['ParameterSpec']
+export type ParameterSpec = Schemas['ParameterSpecOut']
 
 export function useConstraints() {
   return useQuery({

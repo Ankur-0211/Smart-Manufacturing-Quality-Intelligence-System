@@ -3,19 +3,22 @@
 Both roles update this file (roadmap §10.1). A capability counts as **REAL** only when
 `QualityIntelligence.capabilities()` reports it **and** this table says so.
 
-_Last updated: 2026-10-20 by Role 2 (R2-P3 complete: /predict, explain, /models)._
+_Last updated: 2026-10-22 by Role 2 (Role 1's 1a22d7b merged and integrated; CCR-004)._
 
 ## Capability matrix
 
 | Capability | Status | Since | Notes |
 |---|---|---|---|
-| `run_stage` (S1–S5) | MOCK | 2026-10-16 | `MockQualityIntelligence`; BLOCKED driven by `check_hard_constraints`. HC-002/HC-004 need derived values only real stage modules produce, so the mock never fires them |
-| `predict` | MOCK | 2026-10-16 | Hash-derived placeholder `p_fail`, threshold 0.5, `MOCK_INFERENCE` caveat; real from `fusion-0.1.0` (R1-P4) |
-| `explain` / `global_explanation` | MOCK | 2026-10-16 | Placeholder attributions; real in R1-P7 |
-| `anomaly_global` | MOCK | 2026-10-16 | `detect_anomaly` placeholder; `PredictionResult.anomaly_global` stays null (MVP); real R1-P7 (P1) |
-| `recommend` | MOCK | 2026-10-16 | Registry-guarded one-step candidates scored through the same mock pipeline; real R1-P8. UI gated on the "guard tested" statement |
-| `sensitivity` | MOCK | 2026-10-16 | Real R1-P8 (P1) |
-| `spc` | NOT AVAILABLE | — | Mock raises `CAPABILITY_UNAVAILABLE`; R1-P7 (P1) |
+| `run_stage` (S1–S5) | REAL | 2026-10-21 | Role 1's `RealQualityIntelligence` (heuristic stage modules, `fusion-1.0.0`). Selected with `SMQI_INTELLIGENCE_BACKEND=real`; dev/test default stays `mock` |
+| `predict` | REAL | 2026-10-21 | Threshold 0.35 (in code). Open defects: label forced to FAIL on critical breaches, risk-mass sum ([CCR-004](contract_changes/CCR-004-role1-integration-findings.md) #2-#3) |
+| `explain` / `global_explanation` | REAL | 2026-10-21 | Signature `explain(inp, stage_results, prediction)` (CCR-004 #8) |
+| `anomaly_global` | NOT AVAILABLE | — | Not in Role 1's Protocol (CCR-004 #8) |
+| `recommend` | REAL | 2026-10-21 | Role 2 endpoint pending (R2-P7). UI gated on the "guard tested" statement |
+| `sensitivity` | REAL | 2026-10-21 | Role 2 endpoint pending (R2-P7, P1) |
+| `spc` | NOT AVAILABLE | — | Reported as `spc_check: true` but not implemented (CCR-004 #10) |
+
+The mock (`app/intelligence_mock`) remains available for every capability above except SPC and is the
+default backend in `dev`/`test`.
 
 Status values: `NOT AVAILABLE` → `MOCK` → `HYBRID` → `REAL`.
 
@@ -23,10 +26,10 @@ Status values: `NOT AVAILABLE` → `MOCK` → `HYBRID` → `REAL`.
 
 | Artifact | Version | Status |
 |---|---|---|
-| `backend/app/contracts` | 0.1.0 | Part 1 by Role 1 (committed unchanged, review in [CCR-003](contract_changes/CCR-003-part1-review-notes.md)). Remainder (`stage`, `anomaly`, `prediction`, `explanation`, `recommendation`, `sensitivity`, `interface`) bootstrapped by Role 2 (CCR-002); Role 1 to adopt |
-| `backend/app/domain/constraints.yaml`, `remedies.yaml` | constraints-0.1.0 / remedies-0.1.0 | Bootstrapped by Role 2 (CCR-002); all values `unvalidated`; Role 1 to adopt. `constraint_loader.py` + `dependency_graph.py` bootstrapped (CCR-002) with tests |
-| `fleet.yaml` | fleet-0.1.0 | Bootstrapped (CCR-002): MC-01…04, PP-JBOX-42, 4 lots. Seed verified with it |
-| Contract fixtures (`backend/tests/contract/fixtures`) | v0.1.0 | 5 `recipe_*.json` bootstrapped (CCR-002). All validate against `ProcessInput`; the harness runs them against the mock (determinism + equivalence) |
+| `backend/app/contracts` | 0.1.0 | Role 1's complete set (1a22d7b), replacing the CCR-002 bootstrap. Gaps vs §9.1 in CCR-004 |
+| `backend/app/domain/constraints.yaml`, `remedies.yaml` | constraints-1.0.0 / remedies-1.0.0 | Role 1. Loader `load_constraint_registry()`; limits partly in code and no lot windows (CCR-004 #5-#6) |
+| `fleet.yaml` | fleet-1.0.0 | Role 1: MC-01…04, PP-JBOX-42 and PP-JBOX-42-4C, lots A-771, B-812, C-904, D-105 (wet). Seed reads it |
+| Contract fixtures (`backend/tests/contract/fixtures`) | v0.2.0 | Rebuilt by Role 2 from Role 1's fleet; harness runs mock **and** real facade |
 | API (`docs/openapi.json`) | api_version 1 | `/health` (with `IntelligenceVersionInfo`), `/constraints` (ETag), `/machines`, `/products`, `/materials` (GET + POST), `POST /simulation/runs`, `POST /predict`, `GET /predict/{id}/explain`, `/models`, `/models/active`, simulation queries/commands, SSE, scenario label |
 | Event catalogue (`docs/events.md`) | EVENTS_VERSION 1 | Implemented and tested (R2-P4). Freeze at M4 once a real/mock executor runs end-to-end |
 | DB schema | Alembic `0001` | Done (R2-P2): 10 tables, immutability guards, seed |
@@ -39,14 +42,14 @@ Status values: `NOT AVAILABLE` → `MOCK` → `HYBRID` → `REAL`.
 | R2-P1 | Tasks 1-12 done. Completion gate waits on M1 (Role 1 approves contracts v0.1.0 + CCR-003) |
 | R2-P2 | Done |
 | R2-P3 | Done: reference endpoints, `POST /simulation/runs`, `/predict` (persists `run_id=NULL` rows), explain, `/models`; `npm run check:api` fails on stale TS types |
-| R2-P4 | Engine, SSE, recovery and `create_run` done, all running on the mock |
+| R2-P4 | Done; runs on the mock or Role 1's real facade |
 | R2-P6 | Visual components and live run viewing done; parameter sliders next (they use `GET /constraints`) |
 
 ## Milestones
 
 | # | Milestone | Status |
 |---|---|---|
-| M1 | Contracts approved | Open. v0.1.0 complete on `role-2-application`; awaiting Role 1 review of the bootstrap + CCR-003 answers |
+| M1 | Contracts approved | Open. Role 1's contracts are integrated; waiting on CCR-003/CCR-004 answers |
 | M2 | Dataset feasibility & canonical schema | Open (Role 1) |
 | M3 | Mock inference operational | **Reached 2026-10-16.** Mock passes the contract harness on all 5 fixtures; simulation runs end to end (auto, stepwise, BLOCKED + override) |
 
@@ -55,8 +58,9 @@ Status values: `NOT AVAILABLE` → `MOCK` → `HYBRID` → `REAL`.
 | CCR | Title | Status |
 |---|---|---|
 | [CCR-001](contract_changes/CCR-001-route-error-codes.md) | Add `ROUTE_NOT_FOUND`, `METHOD_NOT_ALLOWED` error codes | proposed |
-| [CCR-002](contract_changes/CCR-002-role2-bootstraps-contracts.md) | Role 2 bootstraps the contracts remainder / registry / fixtures | approved for the remainder; delivered (data 72e06e0; code on 2026-10-16) |
+| [CCR-002](contract_changes/CCR-002-role2-bootstraps-contracts.md) | Role 2 bootstraps the contracts remainder / registry / fixtures | closed: superseded by Role 1's files (merged 2026-10-21) |
 | [CCR-003](contract_changes/CCR-003-part1-review-notes.md) | Review notes on contracts part 1 (`flat()` keys, missing files, formatting) | proposed (questions for Role 1) |
+| [CCR-004](contract_changes/CCR-004-role1-integration-findings.md) | Findings from integrating Role 1's deliverables (defects, §9.1 gaps, roadmap revert on `main`) | proposed (for Role 1) |
 
 ## Environments
 
@@ -67,8 +71,4 @@ Status values: `NOT AVAILABLE` → `MOCK` → `HYBRID` → `REAL`.
 
 ## Blockers
 
-- None for Role 2. **Role 1, please:**
-  - answer the CCR-003 questions;
-  - run `ruff format` on the part-1 files;
-  - send `tests/contract/test_contracts_part1.py`;
-  - review the bootstrapped contracts, loader and dependency graph.
+- None for Role 2. Role 1: please work through CCR-003 and CCR-004, and restore roadmap 1.0.1 on `main`.

@@ -413,33 +413,10 @@ export interface components {
             /** Top Contributors */
             top_contributors?: components["schemas"]["AnomalyContributor"][];
         };
-        /** Attribution */
-        Attribution: {
-            /**
-             * Direction
-             * @enum {string}
-             */
-            direction: "toward_fail" | "toward_pass";
-            /** Display Name */
-            display_name: string;
-            /** Feature */
-            feature: string;
-            /** Group */
-            group: string;
-            /** Shap Value */
-            shap_value: number;
-            /** Stage */
-            stage: components["schemas"]["StageName"] | "CONTEXT";
-            /** Value */
-            value: number | string | null;
-        };
-        /** Caveat */
-        Caveat: {
-            /**
-             * Code
-             * @enum {string}
-             */
-            code: "OUT_OF_DISTRIBUTION" | "ANOMALY_DETECTED" | "CRITICAL_CONSTRAINT_OVERRIDDEN" | "MOCK_INFERENCE" | "CONSTRAINTS_VERSION_MISMATCH" | "STAGE_SUBMODEL_DISABLED";
+        /** CaveatItem */
+        CaveatItem: {
+            /** Code */
+            code: string;
             /** Features */
             features?: string[];
             /** Message */
@@ -454,9 +431,15 @@ export interface components {
             /** Name */
             name: string;
         };
-        /** ConstraintBreach */
+        /**
+         * ConstraintBreach
+         * @description Record of a single breached parameter range, coupling rule or hard constraint.
+         */
         ConstraintBreach: {
-            /** Constraints Version */
+            /**
+             * Constraints Version
+             * @default constraints-1.0.0
+             */
             constraints_version: string;
             /** Hint */
             hint?: string | null;
@@ -466,6 +449,7 @@ export interface components {
             message: string;
             /** Parameters */
             parameters: string[];
+            /** @default unvalidated */
             provenance: components["schemas"]["DataProvenance"];
             /** Rule Id */
             rule_id: string;
@@ -483,54 +467,37 @@ export interface components {
             /** Content Hash */
             content_hash: string;
             /** Coupling Rules */
-            coupling_rules: components["schemas"]["CouplingRule"][];
+            coupling_rules: components["schemas"]["CouplingRuleOut"][];
             /** Hard Constraints */
-            hard_constraints: components["schemas"]["HardConstraint"][];
+            hard_constraints: components["schemas"]["HardConstraintOut"][];
             /** Parameters */
-            parameters: components["schemas"]["ParameterSpec"][];
-            recommendation: components["schemas"]["RecommendationSettings"];
+            parameters: components["schemas"]["ParameterSpecOut"][];
+            /** Registry Version */
+            registry_version: string;
             /** Resin Grades */
             resin_grades: {
-                [key: string]: components["schemas"]["ResinGradeSpec"];
+                [key: string]: components["schemas"]["ResinGradeOut"];
             };
-            risk_bands: components["schemas"]["RiskBands"];
-            /** Stage Checks */
-            stage_checks: {
-                [key: string]: components["schemas"]["StageCheck"][];
-            };
-            /** Stage Inputs */
-            stage_inputs: {
-                [key: string]: string[];
-            };
-            submodels: components["schemas"]["Submodels"];
-            /** Units Allowed */
-            units_allowed: string[];
+            risk_bands: components["schemas"]["RiskBandsOut"];
             /** Version */
             version: string;
+        } & {
+            [key: string]: unknown;
         };
-        /** CouplingRule */
-        CouplingRule: {
+        /** CouplingRuleOut */
+        CouplingRuleOut: {
             /** Description */
             description: string;
             /** Id */
             id: string;
-            /**
-             * Kind
-             * @enum {string}
-             */
-            kind: "le" | "ge_offset";
-            /** Left */
-            left: string;
-            /**
-             * Offset
-             * @default 0
-             */
-            offset: number;
-            /** @default unvalidated */
-            provenance: components["schemas"]["DataProvenance"];
-            /** Right */
-            right: string;
-            severity: components["schemas"]["ConstraintSeverity"];
+            /** Message */
+            message?: string | null;
+            /** Params */
+            params: string[];
+            /** Severity */
+            severity: string;
+        } & {
+            [key: string]: unknown;
         };
         /**
          * CreateRunRequest
@@ -711,6 +678,26 @@ export interface components {
             /** Type */
             type: string;
         };
+        /** FeatureAttribution */
+        FeatureAttribution: {
+            /**
+             * Direction
+             * @enum {string}
+             */
+            direction: "toward_fail" | "toward_pass";
+            /** Display Name */
+            display_name: string;
+            /** Feature */
+            feature: string;
+            /** Group */
+            group: string;
+            /** Shap Value */
+            shap_value: number;
+            /** Stage */
+            stage: string;
+            /** Value */
+            value: number | string | null;
+        };
         /** GroupedAttribution */
         GroupedAttribution: {
             /** Group */
@@ -723,43 +710,22 @@ export interface components {
             /** Detail */
             detail?: components["schemas"]["ValidationError"][];
         };
-        /** HardConstraint */
-        HardConstraint: {
+        /** HardConstraintOut */
+        HardConstraintOut: {
             /** Blocks Stage */
             blocks_stage: boolean;
-            /** Derived */
-            derived?: string | null;
             /** Description */
             description: string;
             /** Enforced In Guard */
             enforced_in_guard: boolean;
-            /** Factor */
-            factor?: number | null;
-            /** Factor Field */
-            factor_field?: string | null;
-            /** Grade Field */
-            grade_field?: string | null;
-            /** Hint */
-            hint?: string | null;
             /** Id */
             id: string;
-            /**
-             * Kind
-             * @enum {string}
-             */
-            kind: "max_from_grade" | "max_from_grade_factor" | "max_ratio" | "min_derived" | "range";
-            /** Max */
-            max?: number | null;
-            /** Min */
-            min?: number | null;
-            /** Other */
-            other?: string | null;
-            /** Param */
-            param: string;
-            /** @default unvalidated */
-            provenance: components["schemas"]["DataProvenance"];
-            severity_in_simulation: components["schemas"]["ConstraintSeverity"];
-            stage: components["schemas"]["StageName"];
+            /** Severity In Simulation */
+            severity_in_simulation: string;
+            /** Stage */
+            stage: string;
+        } & {
+            [key: string]: unknown;
         };
         /** HealthData */
         HealthData: {
@@ -787,29 +753,18 @@ export interface components {
         InferenceBackend: "real" | "mock";
         /** IntelligenceVersionInfo */
         IntelligenceVersionInfo: {
-            /** Anomaly Model Version */
-            anomaly_model_version?: string | null;
             /** Capabilities */
-            capabilities?: {
+            capabilities: {
                 [key: string]: boolean;
             };
             /** Constraints Version */
             constraints_version: string;
             /** Contracts Version */
             contracts_version: string;
-            /** Feature Schema Hash */
-            feature_schema_hash: string | null;
-            /** Fusion Model Version */
-            fusion_model_version: string | null;
-            inference_backend: components["schemas"]["InferenceBackend"];
             /** Is Mock */
             is_mock: boolean;
-            /** Module Versions */
-            module_versions: {
-                [key: string]: string;
-            };
-            /** Stage Stats Version */
-            stage_stats_version?: string | null;
+            /** Model Version */
+            model_version: string;
         };
         /** LabelRequest */
         LabelRequest: {
@@ -819,8 +774,11 @@ export interface components {
         /** LocalExplanation */
         LocalExplanation: {
             /** Attributions */
-            attributions: components["schemas"]["Attribution"][];
-            /** Background Version */
+            attributions?: components["schemas"]["FeatureAttribution"][];
+            /**
+             * Background Version
+             * @default bg-1.0.0
+             */
             background_version: string;
             /** Base Value */
             base_value: number;
@@ -829,22 +787,20 @@ export interface components {
             /**
              * Method
              * @default tree_shap
-             * @constant
              */
-            method: "tree_shap";
+            method: string;
             /**
              * Output Space
              * @default log_odds
-             * @constant
              */
-            output_space: "log_odds";
+            output_space: string;
             /**
              * Show Caveat Banner
              * @default false
              */
             show_caveat_banner: boolean;
             /** Stage Risk Mass */
-            stage_risk_mass?: components["schemas"]["StageShare"][];
+            stage_risk_mass?: components["schemas"]["StageRiskShare"][];
         };
         /**
          * MachineOut
@@ -979,16 +935,13 @@ export interface components {
             /** P99 */
             p99: number;
             /** Value */
-            value: number;
+            value: number | null;
         };
-        /** OodInfo */
-        OodInfo: {
+        /** OodReport */
+        OodReport: {
             /** Features Outside */
             features_outside?: components["schemas"]["OodFeature"][];
-            /**
-             * Is Out Of Distribution
-             * @default false
-             */
+            /** Is Out Of Distribution */
             is_out_of_distribution: boolean;
         };
         /** OverrideRequest */
@@ -1001,17 +954,13 @@ export interface components {
              */
             stage: "MATERIAL_CONDITIONING" | "PLASTICIZING" | "INJECTION" | "PACKING" | "COOLING";
         };
-        /**
-         * ParameterKind
-         * @enum {string}
-         */
-        ParameterKind: "setpoint" | "lot_attribute" | "product_context" | "machine_context";
-        /** ParameterSpec */
-        ParameterSpec: {
-            /** Actionable */
+        /** ParameterSpecOut */
+        ParameterSpecOut: {
+            /**
+             * Actionable
+             * @default false
+             */
             actionable: boolean;
-            /** Allowed Values */
-            allowed_values?: (string | number)[] | null;
             /** Change Cost */
             change_cost?: number | null;
             /** Citation */
@@ -1020,10 +969,11 @@ export interface components {
             display_name: string;
             /**
              * Dtype
-             * @enum {string}
+             * @default float
              */
-            dtype: "float" | "int" | "category";
-            kind: components["schemas"]["ParameterKind"];
+            dtype: string;
+            /** Kind */
+            kind: string;
             /** Max */
             max?: number | null;
             /** Max Step Change */
@@ -1034,16 +984,18 @@ export interface components {
             name: string;
             /** Nominal */
             nominal?: number | string | null;
-            /** Policy Max */
-            policy_max?: number | null;
-            provenance: components["schemas"]["DataProvenance"];
-            stage: components["schemas"]["StageName"] | null;
+            /** Provenance */
+            provenance?: string | null;
+            /** Stage */
+            stage?: string | null;
             /** Step */
             step?: number | null;
             /** Tolerance */
             tolerance?: number | null;
             /** Unit */
-            unit: string | null;
+            unit?: string | null;
+        } & {
+            [key: string]: unknown;
         };
         /**
          * PredictRequest
@@ -1080,26 +1032,42 @@ export interface components {
         PredictionResult: {
             anomaly_global?: components["schemas"]["AnomalyResult"] | null;
             /** Caveats */
-            caveats?: components["schemas"]["Caveat"][];
-            /** Compute Ms */
+            caveats?: components["schemas"]["CaveatItem"][];
+            /**
+             * Compute Ms
+             * @default 0
+             */
             compute_ms: number;
             /**
              * Constraint Override Applied
              * @default false
              */
             constraint_override_applied: boolean;
-            /** Constraints Version */
+            /**
+             * Constraints Version
+             * @default constraints-1.0.0
+             */
             constraints_version: string;
             explanation?: components["schemas"]["LocalExplanation"] | null;
-            /** Feature Schema Hash */
+            /**
+             * Feature Schema Hash
+             * @default sha256-default
+             */
             feature_schema_hash: string;
+            /** @default real */
             inference_backend: components["schemas"]["InferenceBackend"];
-            /** Is Mock */
+            /**
+             * Is Mock
+             * @default false
+             */
             is_mock: boolean;
             label: components["schemas"]["PredictionLabel"];
-            /** Model Version */
+            /**
+             * Model Version
+             * @default fusion-1.0.0
+             */
             model_version: string;
-            ood?: components["schemas"]["OodInfo"];
+            ood?: components["schemas"]["OodReport"];
             /** P Fail */
             p_fail: number;
             /** P Fail Raw */
@@ -1108,10 +1076,10 @@ export interface components {
             risk_drivers?: components["schemas"]["RiskDriver"][];
             risk_level: components["schemas"]["RiskLevel"];
             /** Stage Risk Mass */
-            stage_risk_mass?: components["schemas"]["StageShare"][];
+            stage_risk_mass?: components["schemas"]["StageRiskShare"][];
             /** Threshold Used */
             threshold_used: number;
-            uncertainty?: components["schemas"]["Uncertainty"];
+            uncertainty?: components["schemas"]["UncertaintyEstimate"];
         };
         /** ProcessRecipe */
         ProcessRecipe: {
@@ -1177,48 +1145,29 @@ export interface components {
             /** Wall Thickness Mm */
             wall_thickness_mm: number;
         };
-        /** RecommendationSettings */
-        RecommendationSettings: {
-            /** Coordinate Levels */
-            coordinate_levels: number;
-            /** Cycle Time Follows Stage Times */
-            cycle_time_follows_stage_times: boolean;
-            /** Default Max Changes */
-            default_max_changes: number;
-            /** Max Unstable Flip Rate */
-            max_unstable_flip_rate: number;
-            /** Pairwise Top K */
-            pairwise_top_k: number;
-            /** Stability Noise Fraction Of Step */
-            stability_noise_fraction_of_step: number;
-            /** Stability Trials */
-            stability_trials: number;
-            /** Weights */
-            weights: {
-                [key: string]: number;
-            };
-        };
-        /** ResinGradeSpec */
-        ResinGradeSpec: {
+        /** ResinGradeOut */
+        ResinGradeOut: {
             /** Citation */
             citation?: string | null;
             /** Degradation Ceiling C */
-            degradation_ceiling_c: number;
+            degradation_ceiling_c?: number | null;
             /** Melt Window C */
-            melt_window_c: [
-                number,
-                number
-            ];
+            melt_window_c?: number[] | null;
             /** Mfi Nominal */
-            mfi_nominal: number;
+            mfi_nominal?: number | null;
             /** Moisture Critical Factor */
-            moisture_critical_factor: number;
+            moisture_critical_factor?: number | null;
             /** Moisture Spec Max Pct */
-            moisture_spec_max_pct: number;
-            provenance: components["schemas"]["DataProvenance"];
+            moisture_spec_max_pct?: number | null;
+            /** Name */
+            name?: string | null;
+            /** Provenance */
+            provenance?: string | null;
+        } & {
+            [key: string]: unknown;
         };
-        /** RiskBands */
-        RiskBands: {
+        /** RiskBandsOut */
+        RiskBandsOut: {
             /** P Fail */
             p_fail: {
                 [key: string]: number;
@@ -1227,6 +1176,8 @@ export interface components {
             stage_health: {
                 [key: string]: number;
             };
+        } & {
+            [key: string]: unknown;
         };
         /** RiskDriver */
         RiskDriver: {
@@ -1349,11 +1300,13 @@ export interface components {
         };
         /**
          * StageAnomaly
-         * @description L1 per-stage anomaly (Plan 12.2).
+         * @description L1 per-stage anomaly output.
          */
         StageAnomaly: {
             /** Contributors */
-            contributors?: components["schemas"]["AnomalyContributor"][];
+            contributors?: {
+                [key: string]: unknown;
+            }[];
             /** Flag */
             flag: boolean;
             method: components["schemas"]["AnomalyMethod"];
@@ -1365,21 +1318,6 @@ export interface components {
             /** Score */
             score: number;
         };
-        /** StageCheck */
-        StageCheck: {
-            /** Check Id */
-            check_id: string;
-            provenance: components["schemas"]["DataProvenance"];
-            /** Target */
-            target: string;
-            /**
-             * Type
-             * @enum {string}
-             */
-            type: "range" | "zscore" | "indicator";
-            /** Weight */
-            weight: number;
-        };
         /**
          * StageName
          * @enum {string}
@@ -1387,7 +1325,7 @@ export interface components {
         StageName: "MATERIAL_CONDITIONING" | "PLASTICIZING" | "INJECTION" | "PACKING" | "COOLING" | "QUALITY_INSPECTION";
         /**
          * StageResult
-         * @description Output of ``run_stage()`` for S1-S5 (7.9).
+         * @description Execution output from a single stage intelligence module (S1-S5).
          */
         StageResult: {
             anomaly: components["schemas"]["StageAnomaly"];
@@ -1398,27 +1336,36 @@ export interface components {
              * @default false
              */
             blocked: boolean;
-            /** Compute Ms */
+            /**
+             * Compute Ms
+             * @default 0
+             */
             compute_ms: number;
             /** Constraint Breaches */
             constraint_breaches?: components["schemas"]["ConstraintBreach"][];
-            /** Constraints Version */
+            /**
+             * Constraints Version
+             * @default constraints-1.0.0
+             */
             constraints_version: string;
             /** Health Score */
             health_score: number;
             /** Indicator Provenance */
-            indicator_provenance: {
+            indicator_provenance?: {
                 [key: string]: components["schemas"]["DataProvenance"];
             };
             /** Indicators */
             indicators: {
-                [key: string]: number | string | boolean | null;
+                [key: string]: unknown;
             };
             /** Inputs Used */
             inputs_used: {
-                [key: string]: number | string | null;
+                [key: string]: unknown;
             };
-            /** Module Version */
+            /**
+             * Module Version
+             * @default 1.0.0
+             */
             module_version: string;
             /** Notes */
             notes?: string[];
@@ -1432,8 +1379,8 @@ export interface components {
             upstream_in: components["schemas"]["UpstreamContext"];
             upstream_out: components["schemas"]["UpstreamContext"];
         };
-        /** StageShare */
-        StageShare: {
+        /** StageRiskShare */
+        StageRiskShare: {
             /** Share */
             share: number;
             stage: components["schemas"]["StageName"];
@@ -1454,13 +1401,8 @@ export interface components {
             /** Speed Factor */
             speed_factor?: ("0.5x" | "1x" | "2x" | "instant") | null;
         };
-        /** Submodels */
-        Submodels: {
-            /** Enabled */
-            enabled: boolean;
-        };
-        /** Uncertainty */
-        Uncertainty: {
+        /** UncertaintyEstimate */
+        UncertaintyEstimate: {
             /**
              * Method
              * @default none
@@ -1472,7 +1414,7 @@ export interface components {
         };
         /**
          * UpstreamContext
-         * @description Every key is optional; each stage may only add the keys it owns (7.8).
+         * @description Cumulative state passed forward from earlier stages.
          */
         UpstreamContext: {
             /** Cavity Pressure Estimate Bar */
@@ -1486,7 +1428,7 @@ export interface components {
             /** Residual Stress Proxy */
             residual_stress_proxy?: number | null;
             /** Viscosity Class */
-            viscosity_class?: ("LOW" | "NOMINAL" | "HIGH") | null;
+            viscosity_class?: string | null;
             /** Viscosity Proxy */
             viscosity_proxy?: number | null;
         };

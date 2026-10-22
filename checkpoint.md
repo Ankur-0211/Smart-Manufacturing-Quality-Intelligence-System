@@ -145,37 +145,35 @@ Written after three Role 2 phases were complete (R2-P2, R2-P3, R2-P4), per the
 
 ---
 
-## Role 1: status as reported
+## Role 1: delivered and integrated (updated 2026-10-22)
 
-**Source:** `aboutrole1.md`, added 2026-10-20. None of this code is in the repository yet: `role-1-ai-ml` has only the initial commit.
+**Delivered:** Role 1 pushed `1a22d7b` (author `lucky-ai03`, merged to `main` as PR #1). It contains:
+- the complete contracts;
+- `constraints.yaml` (constraints-1.0.0), `remedies.yaml` and `fleet.yaml`;
+- `constraint_loader.py` and `dependency_graph.py`;
+- `app/intelligence/stages.py` and `facade.py` (`RealQualityIntelligence`, pure Python, threshold 0.35);
+- `verify_ml.py`, `test_contracts_part1.py`, `test_parameter_dictionary.py` and `docs/parameter_dictionary.md`.
 
-**In the repository:** contracts part 1 (`version`, `enums`, `recipe`, `context`, `errors`), committed in `dbbc5db`.
+**Integrated into `role-2-application`** (merge `ea53a34`, then follow-up commits):
+- Role 1's files are kept as owner and replace the CCR-002 bootstrap.
+- Role 2's config, `pyproject.toml`, `uv.lock`, `.python-version` and roadmap 1.0.1 are kept.
+- Role 2 code now runs on Role 1's interface: the mock, hybrid, factory, executor, validation, `/constraints` and `/predict`.
+- `SMQI_INTELLIGENCE_BACKEND=real` serves Role 1's facade. The contract harness runs mock and real.
 
-**Reported as built:**
-- `constraints.yaml` (constraints-1.0.0), `remedies.yaml` (remedies-1.0.0) and `fleet.yaml`.
-- `constraint_loader.py` and `dependency_graph.py`.
-- All contract modules.
-- `app/intelligence/stages.py` and `facade.py` (`RealQualityIntelligence`).
-- `verify_ml.py`, `test_contracts_part1.py` and `test_parameter_dictionary.py`.
-
-**Known differences from Role 2's bootstrap, to reconcile when the code arrives:**
-- Loader API:
-  - Role 1 uses `check_box(param, value)` returning a tuple and `check_couplings(recipe, context)`;
-  - Role 2's bootstrap uses `check_box(values)` and `check_couplings(values)`, both returning `ConstraintBreach` lists as in roadmap §8.4;
-  - Role 1 adds `load_constraint_registry()`.
-- Facade construction: Role 1 uses `RealQualityIntelligence(registry=…)`; Role 2's factory calls `RealQualityIntelligence.from_settings(settings, registry)`.
-- Contract class names: Role 1 uses `CaveatItem`, `OodReport`, `FeatureAttribution`, `StageRiskShare`; Role 2's bootstrap uses `Caveat`, `OodInfo`, `Attribution`, `StageShare`.
-- Fleet:
-  - Role 1 has lots B-812, C-904, D-105 and product PP-JBOX-42-4C;
-  - Role 2's demo data and tests use lots A-772, B-310 and A-790 (the wet-lot demo).
-- Registry version: constraints-1.0.0 (Role 1) vs constraints-0.1.0 (Role 2 bootstrap).
-- Fusion threshold: Role 1 reports 0.35; the mock uses 0.5.
+**Findings for Role 1:** [CCR-004](docs/contract_changes/CCR-004-role1-integration-findings.md). The main items:
+- the 4-cavity product is always blocked;
+- the label is forced to FAIL on critical breaches;
+- stage risk mass doesn't sum to 1;
+- limits are written into the loader code;
+- lot attributes have no windows;
+- §9.1 interface gaps;
+- `main` carries a reverted roadmap (1.0.0 draft).
 
 ---
 
 ## Next
 
-1. **Bring in Role 1's code.** Push it to `role-1-ai-ml`, or drop the files in, then reconcile the differences above (CCR-004).
-2. **R2-P5:** bind `RealQualityIntelligence` through `build_intelligence`, then switch to hybrid and real mode.
+1. **Role 1:** work through CCR-003 and CCR-004, and restore roadmap 1.0.1 on `main`.
+2. **R2-P5:** real intelligence end to end. This is unblocked: register `fusion-1.0.0` in `model_versions` at startup in real mode, and do the demo-profile run-through.
 3. **R2-P6:** run setup screen with parameter sliders from `GET /constraints`.
-4. **R2-P7:** what-if and recommendations.
+4. **R2-P7:** what-if (using Role 1's `invalidated_stages`) and recommendations.

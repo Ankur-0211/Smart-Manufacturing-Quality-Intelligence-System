@@ -50,8 +50,7 @@ describe('App shell', () => {
               intelligence_backend: 'real',
               intelligence: {
                 ...healthPayload().intelligence,
-                fusion_model_version: 'fusion-1.0.0',
-                inference_backend: 'real',
+                model_version: 'fusion-1.0.0',
                 is_mock: false,
               },
             }),

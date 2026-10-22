@@ -44,7 +44,7 @@ IMPLEMENTATIONS = [
 REAL_INVARIANT_GAPS = pytest.mark.xfail(
     strict=True,
     reason=(
-        "CCR-004 #6-#7: INJECTION reports required_clamp_force_ton without indicator_provenance; "
+        "CCR-004 #3-#4: INJECTION reports required_clamp_force_ton without indicator_provenance; "
         "stage_risk_mass does not always sum to 1"
     ),
 )
