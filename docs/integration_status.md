@@ -3,7 +3,7 @@
 Both roles update this file (roadmap §10.1). A capability counts as **REAL** only when
 `QualityIntelligence.capabilities()` reports it **and** this table says so.
 
-_Last updated: 2026-10-22 by Role 2 (R2-P7: what-if workbench and recommendations screens)._
+_Last updated: 2026-10-22 by Role 2 (R2-P7 P0 done: what-if, recommendations, explainability)._
 
 ## Capability matrix
 
@@ -45,7 +45,7 @@ Status values: `NOT AVAILABLE` → `MOCK` → `HYBRID` → `REAL`.
 | R2-P4 | Done; runs on the mock or Role 1's real facade |
 | R2-P5 | Done. Serving-model registration, global explanation, `POST /whatif` (partial re-sim via Role 1's `invalidated_stages`, diff, persisted child runs; property-tested equal to full runs), `/whatif/compare`, `/whatif/sensitivity` (rate limited), `POST /recommend` (rows per candidate with `request_id` + model version), `GET /simulation/runs/{id}/lineage`. Dev default backend is now `real`. N/A with Role 1's artifact-free facade: tiny-bundle CI and missing-bundle 503 |
 | R2-P6 | Done. Run setup (pickers, registry-driven sliders, Create lot dialog, 422 mapping), RUN creates + starts + follows runs; SSE with polling fallback (hook + screen tests); pipeline, stage panel, timeline, override, result card. Handoff: `docs/screenshots/` (stepwise, real intelligence) and `docs/coordination/UI_COPY_FOR_ROLE1.md` |
-| R2-P7 | In progress. Done: What-If workbench (fork a finished run, edit, Evaluate / Save as scenario, Reset to parent, §7.16 diff view) and Recommendations (locked params, max changes, option cards with guard stamp, stability, EXTRAPOLATED, cycle time, `empty_reason`, permanent disclaimer, registry step-limit cross-check, Send to What-If). Open: explainability panel (P0), live slider / A-B compare / sensitivity strip / Model Info (P1) |
+| R2-P7 | Done (P0). What-If workbench (fork a finished run, edit, Evaluate / Save as scenario, Reset to parent, §7.16 diff view) and Recommendations (locked params, max changes, option cards with guard stamp, stability, EXTRAPOLATED, cycle time, `empty_reason`, permanent disclaimer, registry step-limit cross-check, Send to What-If). Explainability panel: signed SHAP bars + table, Features/Groups toggle, stage risk mass donut + share list, caveat banner, method note, permanent DISCLAIMER_SHAP; falls back to `GET /predict/{id}/explain`. Open (P1): live slider, A/B compare page, sensitivity strip, Model Info |
 
 ## Milestones
 

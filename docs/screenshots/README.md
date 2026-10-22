@@ -30,4 +30,11 @@ Captured on 2026-10-22 with the **demo profile** (`SMQI_ENV=demo`, real intellig
 | `09-recommendation-card.jpg` | Role 1's option (P(fail) 0.53 → 0.24), its guard checks as reported, stability/cost, and Role 2's warning that the steps exceed the registry's `max_step_change` (CCR-004 #7b) |
 | `10-whatif-diff.jpg` | The same option sent to What-If and evaluated: P(fail) 0.53 → 0.24 FLIPPED, operational risk CRITICAL → LOW, parameter table incl. the cycle-time rule (UD-09) |
 
+**Explainability**, on the same run `faf0cacf`:
+
+| File | Shows |
+|---|---|
+| `11-explainability-shap.jpg` | Prediction summary, caveat banner (CRITICAL_CONSTRAINT_OVERRIDDEN), signed SHAP bars and table: melt +1.50 toward FAIL |
+| `12-explainability-stage-mass.jpg` | Stage risk mass donut (Plasticizing 93 %), share list, method note and the permanent SHAP disclaimer |
+
 **Note:** the risk origin is split evenly at 20 % per stage. That is Role 1's `stage_risk_mass` for this input; see CCR-004 #3.

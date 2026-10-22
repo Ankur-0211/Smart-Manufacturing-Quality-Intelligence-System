@@ -1,5 +1,6 @@
 import type { RouteObject } from 'react-router-dom'
 
+import { ExplainabilityScreen } from '@/features/explainability/ExplainabilityScreen'
 import { HistoryScreen } from '@/features/history/HistoryScreen'
 import { RunDetailScreen } from '@/features/history/RunDetailScreen'
 import { ProcessControlScreen } from '@/features/process-control/ProcessControlScreen'
@@ -13,6 +14,7 @@ import { SCREENS } from './screens'
 const IMPLEMENTED: Record<string, RouteObject> = {
   '/': { index: true, element: <ProcessControlScreen /> },
   '/history': { path: '/history', element: <HistoryScreen /> },
+  '/explainability': { path: '/explainability', element: <ExplainabilityScreen /> },
   '/what-if': { path: '/what-if', element: <WhatIfScreen /> },
   '/recommendations': { path: '/recommendations', element: <RecommendationsScreen /> },
 }

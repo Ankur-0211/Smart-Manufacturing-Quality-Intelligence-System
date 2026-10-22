@@ -80,6 +80,8 @@ target-version = "py312"
 # reformat it (CCR-003, CCR-004).
 extend-exclude = [
     "frontend",
+    # Markdown holds design pseudocode (roadmap, Role 1 notes), not formatted source.
+    "*.md",
     "backend/alembic/versions",
     "backend/app/contracts",
     "backend/app/domain/*.py",

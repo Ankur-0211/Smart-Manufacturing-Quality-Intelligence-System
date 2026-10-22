@@ -79,6 +79,9 @@ describe('ResultCard', () => {
     )
     expect(screen.getByRole('link', { name: 'Try a what-if' })).toHaveAttribute('href', '/what-if?base=run-1')
     expect(screen.getByRole('link', { name: 'Save scenario' })).toHaveAttribute('href', '/history/run-1')
-    expect(screen.getByRole('button', { name: 'Why this prediction?' })).toBeDisabled()
+    expect(screen.getByRole('link', { name: 'Why this prediction?' })).toHaveAttribute(
+      'href',
+      '/explainability?run=run-1',
+    )
   })
 })

@@ -131,16 +131,14 @@ export function ResultCard({
       )}
 
       <div className="mt-4 flex flex-wrap gap-2">
-        <button
-          type="button"
-          disabled
-          title="Explainability panel: next step of R2-P7"
-          className="rounded border border-border px-3 py-1 text-xs uppercase opacity-40"
-        >
-          Why this prediction?
-        </button>
         {runId ? (
           <>
+            <Link
+              to={`/explainability?run=${runId}`}
+              className="rounded border border-border px-3 py-1 text-xs uppercase hover:bg-panel-raised"
+            >
+              Why this prediction?
+            </Link>
             <Link
               to={`/recommendations?run=${runId}`}
               className="rounded border border-border px-3 py-1 text-xs uppercase hover:bg-panel-raised"
