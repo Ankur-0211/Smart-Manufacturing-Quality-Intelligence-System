@@ -75,6 +75,7 @@ The shared contract harness (`backend/tests/contract/test_interface_contract.py`
 10. **`capabilities()` uses different keys.**
     - It returns `evaluate` and `spc_check`; §9.1 uses `spc` and has no `evaluate`.
     - `spc_check` is reported as `true`, but no such method exists.
+    - R2-P8 needs it: `GET /analytics/spc` returns the stored series with `spc.available=false` until there is an `spc_check(SpcSeries) -> list[SpcAlert]` method and `SpcSeries`/`SpcAlert` contracts (roadmap §9.1, R2-P8 §15). Role 2 will not implement SPC rules itself (screenshot `docs/screenshots/20-analytics-spc.jpg`).
 11. **`stage_inputs(stage)` returns parameters *first* consumed by a stage.**
     - §8.4 / §7.10 define it as the stage's full input slice. For example, PLASTICIZING also reads `mfi` and `moisture_pct`.
     - Role 2 now keys its stage cache on the full input, which is safe either way, and uses `stage_inputs` for display only.

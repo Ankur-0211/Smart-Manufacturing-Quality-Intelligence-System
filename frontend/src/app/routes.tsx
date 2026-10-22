@@ -1,5 +1,6 @@
 import type { RouteObject } from 'react-router-dom'
 
+import { AnalyticsScreen } from '@/features/analytics/AnalyticsScreen'
 import { ExplainabilityScreen } from '@/features/explainability/ExplainabilityScreen'
 import { ModelInfoScreen } from '@/features/model-info/ModelInfoScreen'
 import { HistoryScreen } from '@/features/history/HistoryScreen'
@@ -19,6 +20,7 @@ const IMPLEMENTED: Record<string, RouteObject> = {
   '/explainability': { path: '/explainability', element: <ExplainabilityScreen /> },
   '/what-if': { path: '/what-if', element: <WhatIfScreen /> },
   '/recommendations': { path: '/recommendations', element: <RecommendationsScreen /> },
+  '/analytics': { path: '/analytics', element: <AnalyticsScreen /> },
   '/model-info': { path: '/model-info', element: <ModelInfoScreen /> },
 }
 

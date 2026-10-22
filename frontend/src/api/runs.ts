@@ -9,6 +9,7 @@ import { apiGet, apiPost, apiRequest, type Schemas } from './client'
 export type ScenarioSummary = Schemas['ScenarioSummary']
 export type SimulationState = Schemas['SimulationStateOut']
 export type StartRequest = Schemas['StartRequest']
+export type LineageNode = Schemas['LineageOut']
 export type OverrideRequest = Schemas['OverrideRequest']
 
 export interface RunFilters {
@@ -51,6 +52,30 @@ export function useRunState(runId: string | null) {
   })
 }
 
+/** Longest parent chain followed when looking for a lineage root (guards against bad data). */
+const MAX_LINEAGE_DEPTH = 50
+
+/**
+ * The what-if lineage tree containing `runId` (roadmap R2-P8 task 2): follows parent_run_id up to
+ * the root, then loads GET /simulation/runs/{root}/lineage so siblings and ancestors are shown.
+ */
+export function useLineage(runId: string | null) {
+  return useQuery({
+    queryKey: ['lineage', runId],
+    queryFn: async () => {
+      let rootId = runId!
+      for (let depth = 0; depth < MAX_LINEAGE_DEPTH; depth += 1) {
+        const run = (await apiGet<SimulationState>(`/simulation/runs/${encodeURIComponent(rootId)}`)).data
+        if (!run.parent_run_id) break
+        rootId = run.parent_run_id
+      }
+      const tree = (await apiGet<LineageNode>(`/simulation/runs/${encodeURIComponent(rootId)}/lineage`)).data
+      return { rootId, tree }
+    },
+    enabled: Boolean(runId),
+  })
+}
+
 export function useSetLabel(runId: string) {
   const client = useQueryClient()
   return useMutation({
@@ -64,6 +89,7 @@ export function useSetLabel(runId: string) {
     onSuccess: () => {
       void client.invalidateQueries({ queryKey: ['runs'] })
       void client.invalidateQueries({ queryKey: ['run', runId] })
+      void client.invalidateQueries({ queryKey: ['lineage'] })
     },
   })
 }

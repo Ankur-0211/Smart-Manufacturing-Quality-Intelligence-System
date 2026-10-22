@@ -9,6 +9,8 @@ import { ResultCard } from '@/components/result/ResultCard'
 import type { SimulationSnapshot, StageName } from '@/features/process-control/model'
 import { initialRunState, runReducer } from '@/features/process-control/runReducer'
 
+import { LineageTree } from './LineageTree'
+
 /** The API's SimulationState carries stage results / prediction as JSON objects matching the
  * provisional view types (roadmap §7.9, §7.12). */
 function toSnapshot(state: SimulationState): SimulationSnapshot {
@@ -132,6 +134,13 @@ export function RunDetailScreen() {
           <EventTimeline entries={view.timeline} />
         </div>
       </div>
+
+      <section aria-label="What-if lineage" className="rounded border border-border bg-panel p-4">
+        <h3 className="mb-2 text-xs font-semibold tracking-widest text-text-muted uppercase">
+          What-if lineage
+        </h3>
+        <LineageTree runId={runId} />
+      </section>
     </div>
   )
 }

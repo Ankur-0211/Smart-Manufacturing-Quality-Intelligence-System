@@ -3,7 +3,7 @@
 Both roles update this file (roadmap §10.1). A capability counts as **REAL** only when
 `QualityIntelligence.capabilities()` reports it **and** this table says so.
 
-_Last updated: 2026-10-22 by Role 2 (R2-P7 done incl. P1: live slider, A/B compare, sensitivity strip, Model Info)._
+_Last updated: 2026-10-22 by Role 2 (R2-P8 done: lineage tree, analytics, SPC series)._
 
 ## Capability matrix
 
@@ -46,6 +46,7 @@ Status values: `NOT AVAILABLE` → `MOCK` → `HYBRID` → `REAL`.
 | R2-P5 | Done. Serving-model registration, global explanation, `POST /whatif` (partial re-sim via Role 1's `invalidated_stages`, diff, persisted child runs; property-tested equal to full runs), `/whatif/compare`, `/whatif/sensitivity` (rate limited), `POST /recommend` (rows per candidate with `request_id` + model version), `GET /simulation/runs/{id}/lineage`. Dev default backend is now `real`. N/A with Role 1's artifact-free facade: tiny-bundle CI and missing-bundle 503 |
 | R2-P6 | Done. Run setup (pickers, registry-driven sliders, Create lot dialog, 422 mapping), RUN creates + starts + follows runs; SSE with polling fallback (hook + screen tests); pipeline, stage panel, timeline, override, result card. Handoff: `docs/screenshots/` (stepwise, real intelligence) and `docs/coordination/UI_COPY_FOR_ROLE1.md` |
 | R2-P7 | Done. What-If workbench (fork a finished run, edit, Evaluate / Save as scenario, Reset to parent, §7.16 diff view) and Recommendations (locked params, max changes, option cards with guard stamp, stability, EXTRAPOLATED, cycle time, `empty_reason`, permanent disclaimer, registry step-limit cross-check, Send to What-If). Explainability panel: signed SHAP bars + table, Features/Groups toggle, stage risk mass donut + share list, caveat banner, method note, permanent DISCLAIMER_SHAP; falls back to `GET /predict/{id}/explain`. P1 done: live slider (150 ms debounce, `persist=false`, superseded requests aborted), A/B compare page (`/what-if/compare`), sensitivity strip (curve with current / flip / threshold markers, parameter ranking by `range_swing`, sensitivity ≠ SHAP note), Model Info (version, provenance, metrics, calibration, threshold policy, global importance, STATEMENT_SYNTHETIC_DATA; missing fields shown as "not reported", CCR-004 #7d). Not built: dependence plot (P1, needs a per-feature SHAP-vs-value endpoint), 2-D response surface (P2) |
+| R2-P8 | Done (P0 + P1). History list, filters, run detail, scenario label; lineage tree on run detail (climbs to the root, links each scenario and "Compare with parent"); `/analytics/summary`, `/by-machine`, `/by-material`, `/by-parameter` (registry-window buckets), `/spc` (stored series; alerts wait on Role 1's `spc_check`, CCR-004 #10); Analytics screen with stated exclusions, toggles, date range, empty and few-runs states. Definitions in `docs/api.md`. Model metrics are on Model Info (R2-P7). Not built: batch CSV scoring (P2) |
 
 ## Milestones
 

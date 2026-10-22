@@ -4,6 +4,91 @@
  */
 
 export interface paths {
+    "/api/v1/analytics/by-machine": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Outcomes per machine */
+        get: operations["by_machine_api_v1_analytics_by_machine_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/analytics/by-material": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Outcomes per material lot or resin grade */
+        get: operations["by_material_api_v1_analytics_by_material_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/analytics/by-parameter": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Outcomes per equal-width bucket of a parameter's registry window */
+        get: operations["by_parameter_api_v1_analytics_by_parameter_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/analytics/spc": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** A parameter's stored series on one machine */
+        get: operations["spc_api_v1_analytics_spc_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/analytics/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Run counts, predicted FAIL share, stage risk frequency */
+        get: operations["summary_api_v1_analytics_summary_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/constraints": {
         parameters: {
             query?: never;
@@ -482,6 +567,50 @@ export interface components {
             /** Models */
             models: components["schemas"]["ModelVersionOut"][];
         };
+        /**
+         * AnalyticsFiltersOut
+         * @description The exclusions and range that produced the numbers (stated on screen, Plan §13.7).
+         */
+        AnalyticsFiltersOut: {
+            /** Created From */
+            created_from: string | null;
+            /** Created To */
+            created_to: string | null;
+            /** Include Mock */
+            include_mock: boolean;
+            /** Include Unfinished */
+            include_unfinished: boolean;
+            /** Include Whatif */
+            include_whatif: boolean;
+        };
+        /** AnalyticsSummary */
+        AnalyticsSummary: {
+            /** Excluded */
+            excluded: {
+                [key: string]: number;
+            };
+            filters: components["schemas"]["AnalyticsFiltersOut"];
+            /** Mean P Fail */
+            mean_p_fail: number | null;
+            /** Not Releasable */
+            not_releasable: number;
+            /** Predicted Fail */
+            predicted_fail: number;
+            /** Predicted Fail Rate */
+            predicted_fail_rate: number | null;
+            /** Risk Levels */
+            risk_levels: {
+                [key: string]: number;
+            };
+            /** Runs */
+            runs: number;
+            /** Runs Over Time */
+            runs_over_time: components["schemas"]["DayOutcome"][];
+            /** Stage Risk Frequency */
+            stage_risk_frequency: components["schemas"]["StageRiskFrequency"][];
+            /** With Prediction */
+            with_prediction: number;
+        };
         /** AnomalyContributor */
         AnomalyContributor: {
             /** Deviation */
@@ -514,6 +643,23 @@ export interface components {
             threshold: number;
             /** Top Contributors */
             top_contributors?: components["schemas"]["AnomalyContributor"][];
+        };
+        /** BucketOutcome */
+        BucketOutcome: {
+            /** Hi */
+            hi: number;
+            /** Lo */
+            lo: number;
+            /** Mean P Fail */
+            mean_p_fail: number | null;
+            /** Predicted Fail */
+            predicted_fail: number;
+            /** Predicted Fail Rate */
+            predicted_fail_rate: number | null;
+            /** Runs */
+            runs: number;
+            /** With Prediction */
+            with_prediction: number;
         };
         /**
          * CandidateFlag
@@ -674,9 +820,33 @@ export interface components {
          * @enum {string}
          */
         DataProvenance: "dataset_derived" | "specification_derived" | "heuristic" | "learned" | "synthetic" | "unvalidated";
+        /** DayOutcome */
+        DayOutcome: {
+            /**
+             * Day
+             * Format: date
+             */
+            day: string;
+            /** Mean P Fail */
+            mean_p_fail: number | null;
+            /** Predicted Fail */
+            predicted_fail: number;
+            /** Predicted Fail Rate */
+            predicted_fail_rate: number | null;
+            /** Runs */
+            runs: number;
+            /** With Prediction */
+            with_prediction: number;
+        };
         /** Envelope[ActiveModelsOut] */
         Envelope_ActiveModelsOut_: {
             data?: components["schemas"]["ActiveModelsOut"] | null;
+            error?: components["schemas"]["ErrorBody"] | null;
+            meta: components["schemas"]["Meta"];
+        };
+        /** Envelope[AnalyticsSummary] */
+        Envelope_AnalyticsSummary_: {
+            data?: components["schemas"]["AnalyticsSummary"] | null;
             error?: components["schemas"]["ErrorBody"] | null;
             meta: components["schemas"]["Meta"];
         };
@@ -689,6 +859,12 @@ export interface components {
         /** Envelope[GlobalExplanation] */
         Envelope_GlobalExplanation_: {
             data?: components["schemas"]["GlobalExplanation"] | null;
+            error?: components["schemas"]["ErrorBody"] | null;
+            meta: components["schemas"]["Meta"];
+        };
+        /** Envelope[GroupedAnalytics] */
+        Envelope_GroupedAnalytics_: {
+            data?: components["schemas"]["GroupedAnalytics"] | null;
             error?: components["schemas"]["ErrorBody"] | null;
             meta: components["schemas"]["Meta"];
         };
@@ -710,9 +886,21 @@ export interface components {
             error?: components["schemas"]["ErrorBody"] | null;
             meta: components["schemas"]["Meta"];
         };
+        /** Envelope[MaterialAnalytics] */
+        Envelope_MaterialAnalytics_: {
+            data?: components["schemas"]["MaterialAnalytics"] | null;
+            error?: components["schemas"]["ErrorBody"] | null;
+            meta: components["schemas"]["Meta"];
+        };
         /** Envelope[MaterialLotOut] */
         Envelope_MaterialLotOut_: {
             data?: components["schemas"]["MaterialLotOut"] | null;
+            error?: components["schemas"]["ErrorBody"] | null;
+            meta: components["schemas"]["Meta"];
+        };
+        /** Envelope[ParameterAnalytics] */
+        Envelope_ParameterAnalytics_: {
+            data?: components["schemas"]["ParameterAnalytics"] | null;
             error?: components["schemas"]["ErrorBody"] | null;
             meta: components["schemas"]["Meta"];
         };
@@ -749,6 +937,12 @@ export interface components {
         /** Envelope[SimulationStateOut] */
         Envelope_SimulationStateOut_: {
             data?: components["schemas"]["SimulationStateOut"] | null;
+            error?: components["schemas"]["ErrorBody"] | null;
+            meta: components["schemas"]["Meta"];
+        };
+        /** Envelope[SpcOut] */
+        Envelope_SpcOut_: {
+            data?: components["schemas"]["SpcOut"] | null;
             error?: components["schemas"]["ErrorBody"] | null;
             meta: components["schemas"]["Meta"];
         };
@@ -889,6 +1083,27 @@ export interface components {
             model_version: string;
             /** N Rows */
             n_rows: number;
+        };
+        /** GroupOutcome */
+        GroupOutcome: {
+            /** Key */
+            key: string;
+            /** Mean P Fail */
+            mean_p_fail: number | null;
+            /** Predicted Fail */
+            predicted_fail: number;
+            /** Predicted Fail Rate */
+            predicted_fail_rate: number | null;
+            /** Runs */
+            runs: number;
+            /** With Prediction */
+            with_prediction: number;
+        };
+        /** GroupedAnalytics */
+        GroupedAnalytics: {
+            filters: components["schemas"]["AnalyticsFiltersOut"];
+            /** Rows */
+            rows: components["schemas"]["GroupOutcome"][];
         };
         /** GroupedAttribution */
         GroupedAttribution: {
@@ -1046,6 +1261,14 @@ export interface components {
          * @enum {string}
          */
         MachineType: "HYDRAULIC" | "ELECTRIC" | "HYBRID";
+        /** MaterialAnalytics */
+        MaterialAnalytics: {
+            filters: components["schemas"]["AnalyticsFiltersOut"];
+            /** Group */
+            group: string;
+            /** Rows */
+            rows: components["schemas"]["GroupOutcome"][];
+        };
         /**
          * MaterialLotCreate
          * @description ``POST /materials`` body. The code format and registry windows are checked on create.
@@ -1170,6 +1393,17 @@ export interface components {
              */
             stage: "MATERIAL_CONDITIONING" | "PLASTICIZING" | "INJECTION" | "PACKING" | "COOLING";
         };
+        /** ParameterAnalytics */
+        ParameterAnalytics: {
+            filters: components["schemas"]["AnalyticsFiltersOut"];
+            /** Parameter */
+            parameter: string;
+            /** Rows */
+            rows: components["schemas"]["BucketOutcome"][];
+            /** Unit */
+            unit: string | null;
+            window: components["schemas"]["ParameterWindow"];
+        };
         /** ParameterChange */
         ParameterChange: {
             /** Delta */
@@ -1236,6 +1470,13 @@ export interface components {
             unit?: string | null;
         } & {
             [key: string]: unknown;
+        };
+        /** ParameterWindow */
+        ParameterWindow: {
+            /** Max */
+            max: number;
+            /** Min */
+            min: number;
         };
         /**
          * PredictRequest
@@ -1751,6 +1992,46 @@ export interface components {
              */
             updated_at: string;
         };
+        /**
+         * SpcOut
+         * @description The stored series, and SPC alerts only when the intelligence layer provides them
+         *     (Role 2 never implements SPC rules, roadmap R2-P8 §15).
+         */
+        SpcOut: {
+            /** Alerts */
+            alerts: {
+                [key: string]: unknown;
+            }[] | null;
+            filters: components["schemas"]["AnalyticsFiltersOut"];
+            /** Machine Id */
+            machine_id: string;
+            /** Parameter */
+            parameter: string;
+            /** Series */
+            series: components["schemas"]["SpcPoint"][];
+            spc: components["schemas"]["SpcStatus"];
+            /** Unit */
+            unit: string | null;
+        };
+        /** SpcPoint */
+        SpcPoint: {
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Run Id */
+            run_id: string;
+            /** Value */
+            value: number;
+        };
+        /** SpcStatus */
+        SpcStatus: {
+            /** Available */
+            available: boolean;
+            /** Reason */
+            reason: string | null;
+        };
         /** StabilityReport */
         StabilityReport: {
             /**
@@ -1875,6 +2156,17 @@ export interface components {
             upstream_in: components["schemas"]["UpstreamContext"];
             upstream_out: components["schemas"]["UpstreamContext"];
         };
+        /** StageRiskFrequency */
+        StageRiskFrequency: {
+            /** Counts */
+            counts: {
+                [key: string]: number;
+            };
+            /** Stage */
+            stage: string;
+            /** Total */
+            total: number;
+        };
         /** StageRiskShare */
         StageRiskShare: {
             /** Share */
@@ -1984,6 +2276,197 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    by_machine_api_v1_analytics_by_machine_get: {
+        parameters: {
+            query?: {
+                include_whatif?: boolean;
+                include_mock?: boolean;
+                include_unfinished?: boolean;
+                from?: string | null;
+                to?: string | null;
+            };
+            header?: {
+                "x-api-key"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Envelope_GroupedAnalytics_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    by_material_api_v1_analytics_by_material_get: {
+        parameters: {
+            query?: {
+                group?: "lot" | "resin_grade";
+                include_whatif?: boolean;
+                include_mock?: boolean;
+                include_unfinished?: boolean;
+                from?: string | null;
+                to?: string | null;
+            };
+            header?: {
+                "x-api-key"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Envelope_MaterialAnalytics_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    by_parameter_api_v1_analytics_by_parameter_get: {
+        parameters: {
+            query: {
+                parameter: string;
+                buckets?: number;
+                include_whatif?: boolean;
+                include_mock?: boolean;
+                include_unfinished?: boolean;
+                from?: string | null;
+                to?: string | null;
+            };
+            header?: {
+                "x-api-key"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Envelope_ParameterAnalytics_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    spc_api_v1_analytics_spc_get: {
+        parameters: {
+            query: {
+                machine_id: string;
+                parameter: string;
+                limit?: number;
+                include_whatif?: boolean;
+                include_mock?: boolean;
+                include_unfinished?: boolean;
+                from?: string | null;
+                to?: string | null;
+            };
+            header?: {
+                "x-api-key"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Envelope_SpcOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    summary_api_v1_analytics_summary_get: {
+        parameters: {
+            query?: {
+                include_whatif?: boolean;
+                include_mock?: boolean;
+                include_unfinished?: boolean;
+                from?: string | null;
+                to?: string | null;
+            };
+            header?: {
+                "x-api-key"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Envelope_AnalyticsSummary_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     get_constraints_api_v1_constraints_get: {
         parameters: {
             query?: never;

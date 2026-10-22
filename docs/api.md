@@ -36,6 +36,34 @@ Expensive endpoints (`/recommend`, `/whatif/sensitivity`, when added) use the in
 bucket in `api/rate_limit.py` (`SMQI_RATE_LIMIT_PER_MIN`, per client and endpoint) → 429
 `RATE_LIMITED`.
 
+## Analytics (R2-P8)
+
+Handoff for the report (roadmap R2-P8 §12). Every number is an SQL aggregation over stored runs
+(`backend/app/services/analytics_service.py`); nothing is synthesised.
+
+**Scope (all endpoints):**
+- `include_whatif` (default `false`): what-if children (`process_runs.is_whatif`).
+- `include_mock` (default `false`): runs whose prediction, or failing that the run itself, records `inference_backend = 'mock'`.
+- `include_unfinished` (default `false`): runs whose status is not `FINAL_RESULT` (blocked, aborted, still running).
+- `from` / `to`: `process_runs.created_at` range (inclusive).
+
+**Definitions:**
+- `runs`: runs in scope. `with_prediction`: those with a stored prediction.
+- `predicted_fail`: runs whose prediction label is `FAIL`. `predicted_fail_rate` = `predicted_fail / with_prediction` (null when 0). This is the **model's predicted** FAIL share, not an observed defect rate.
+- `mean_p_fail`: mean calibrated P(fail) over runs with a prediction.
+- `not_releasable`: predictions with `constraint_override_applied` (an overridden critical breach, UD-07).
+- `excluded`: for each active exclusion, how many runs in the date range it removes (counted separately; one run can fall under several).
+- `stage_risk_frequency`: stage results of in-scope runs, counted per stage and risk level.
+- `runs_over_time`: the outcome fields per calendar day (UTC) of `created_at`.
+
+| Method | Path | Returns |
+|---|---|---|
+| GET | `/analytics/summary` | Totals, `excluded`, `risk_levels` (operational risk of each prediction), `not_releasable`, `stage_risk_frequency`, `runs_over_time` |
+| GET | `/analytics/by-machine` | Outcome per machine code |
+| GET | `/analytics/by-material?group=lot\|resin_grade` | Outcome per lot code or resin grade |
+| GET | `/analytics/by-parameter?parameter=&buckets=2..20` | Outcome per equal-width bucket over the parameter's **registry window** (`min`–`max` from `constraints.yaml`); the last bucket includes `max`. Unknown parameter → 422 `UNKNOWN_PARAMETER` |
+| GET | `/analytics/spc?machine_id=&parameter=&limit=` | The parameter's stored values on one machine, oldest first. `spc.available` is `false` and `alerts` is `null` until Role 1 delivers `spc_check` (CCR-004 #10); Role 2 does not implement SPC rules |
+
 ## Error codes
 
 These are the roadmap §9.3.4 codes plus CCR-001 (proposed). The HTTP status comes from

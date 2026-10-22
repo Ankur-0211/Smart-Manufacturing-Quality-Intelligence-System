@@ -30,7 +30,7 @@ everything done up to now. The source of truth for scope is `PROJECT_DEVELOPMENT
 | **R2-P5** | Real intelligence integration, what-if, recommend | **Done** |
 | **R2-P6** | Process Control UI | **Done** |
 | **R2-P7** | What-if, recommendations and explainability UI | **Done** (P0; P1 added after this checkpoint except the dependence plot, which has no API) |
-| R2-P8 | History | P0 part done (list, filters, run detail, scenario label) |
+| R2-P8 | History and analytics | P0 done at this checkpoint; P1 (lineage, analytics, SPC series) added after it |
 | R2-P9, R2-P10 | Analytics, system test and release | Not started |
 
 **Milestones:**
@@ -153,5 +153,5 @@ everything done up to now. The source of truth for scope is `PROJECT_DEVELOPMENT
 
 1. **Role 1:** work through CCR-003 and CCR-004, and restore roadmap 1.0.1 on `main`.
 2. **R2-P7 P1:** done on 2026-10-22 after this checkpoint: live slider, A/B compare page, sensitivity strip, Model Info (CCR-004 #7c, #7d raised). The dependence plot is not built.
-3. **R2-P8:** remaining History items.
+3. **R2-P8:** done on 2026-10-22 after this checkpoint: lineage tree, `/analytics/*`, Analytics screen with SPC series (alerts wait on CCR-004 #10). Batch CSV scoring (P2) not built. Completed phases are now R2-P2…R2-P8 (seven); checkpoint 3 is due after R2-P10.
 4. **R2-P9 / R2-P10:** analytics, system test and release.

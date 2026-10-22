@@ -13,6 +13,7 @@ from fastapi import APIRouter, Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api import (
+    routes_analytics,
     routes_meta,
     routes_prediction,
     routes_reference,
@@ -133,6 +134,7 @@ PROTECTED_ROUTERS: list[APIRouter] = [
     routes_prediction.router,
     routes_simulation.router,
     routes_whatif.router,
+    routes_analytics.router,
 ]
 
 

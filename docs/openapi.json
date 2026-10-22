@@ -45,6 +45,144 @@
         "title": "ActiveModelsOut",
         "type": "object"
       },
+      "AnalyticsFiltersOut": {
+        "description": "The exclusions and range that produced the numbers (stated on screen, Plan \u00a713.7).",
+        "properties": {
+          "created_from": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created From"
+          },
+          "created_to": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created To"
+          },
+          "include_mock": {
+            "title": "Include Mock",
+            "type": "boolean"
+          },
+          "include_unfinished": {
+            "title": "Include Unfinished",
+            "type": "boolean"
+          },
+          "include_whatif": {
+            "title": "Include Whatif",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "include_whatif",
+          "include_mock",
+          "include_unfinished",
+          "created_from",
+          "created_to"
+        ],
+        "title": "AnalyticsFiltersOut",
+        "type": "object"
+      },
+      "AnalyticsSummary": {
+        "properties": {
+          "excluded": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "Excluded",
+            "type": "object"
+          },
+          "filters": {
+            "$ref": "#/components/schemas/AnalyticsFiltersOut"
+          },
+          "mean_p_fail": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mean P Fail"
+          },
+          "not_releasable": {
+            "title": "Not Releasable",
+            "type": "integer"
+          },
+          "predicted_fail": {
+            "title": "Predicted Fail",
+            "type": "integer"
+          },
+          "predicted_fail_rate": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Predicted Fail Rate"
+          },
+          "risk_levels": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "Risk Levels",
+            "type": "object"
+          },
+          "runs": {
+            "title": "Runs",
+            "type": "integer"
+          },
+          "runs_over_time": {
+            "items": {
+              "$ref": "#/components/schemas/DayOutcome"
+            },
+            "title": "Runs Over Time",
+            "type": "array"
+          },
+          "stage_risk_frequency": {
+            "items": {
+              "$ref": "#/components/schemas/StageRiskFrequency"
+            },
+            "title": "Stage Risk Frequency",
+            "type": "array"
+          },
+          "with_prediction": {
+            "title": "With Prediction",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "runs",
+          "with_prediction",
+          "predicted_fail",
+          "predicted_fail_rate",
+          "mean_p_fail",
+          "filters",
+          "excluded",
+          "risk_levels",
+          "not_releasable",
+          "stage_risk_frequency",
+          "runs_over_time"
+        ],
+        "title": "AnalyticsSummary",
+        "type": "object"
+      },
       "AnomalyContributor": {
         "additionalProperties": false,
         "properties": {
@@ -133,6 +271,63 @@
           "threshold"
         ],
         "title": "AnomalyResult",
+        "type": "object"
+      },
+      "BucketOutcome": {
+        "properties": {
+          "hi": {
+            "title": "Hi",
+            "type": "number"
+          },
+          "lo": {
+            "title": "Lo",
+            "type": "number"
+          },
+          "mean_p_fail": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mean P Fail"
+          },
+          "predicted_fail": {
+            "title": "Predicted Fail",
+            "type": "integer"
+          },
+          "predicted_fail_rate": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Predicted Fail Rate"
+          },
+          "runs": {
+            "title": "Runs",
+            "type": "integer"
+          },
+          "with_prediction": {
+            "title": "With Prediction",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "runs",
+          "with_prediction",
+          "predicted_fail",
+          "predicted_fail_rate",
+          "mean_p_fail",
+          "lo",
+          "hi"
+        ],
+        "title": "BucketOutcome",
         "type": "object"
       },
       "CandidateFlag": {
@@ -533,6 +728,59 @@
         "title": "DataProvenance",
         "type": "string"
       },
+      "DayOutcome": {
+        "properties": {
+          "day": {
+            "format": "date",
+            "title": "Day",
+            "type": "string"
+          },
+          "mean_p_fail": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mean P Fail"
+          },
+          "predicted_fail": {
+            "title": "Predicted Fail",
+            "type": "integer"
+          },
+          "predicted_fail_rate": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Predicted Fail Rate"
+          },
+          "runs": {
+            "title": "Runs",
+            "type": "integer"
+          },
+          "with_prediction": {
+            "title": "With Prediction",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "runs",
+          "with_prediction",
+          "predicted_fail",
+          "predicted_fail_rate",
+          "mean_p_fail",
+          "day"
+        ],
+        "title": "DayOutcome",
+        "type": "object"
+      },
       "Envelope_ActiveModelsOut_": {
         "additionalProperties": false,
         "properties": {
@@ -564,6 +812,39 @@
           "meta"
         ],
         "title": "Envelope[ActiveModelsOut]",
+        "type": "object"
+      },
+      "Envelope_AnalyticsSummary_": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AnalyticsSummary"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "error": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ErrorBody"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "meta": {
+            "$ref": "#/components/schemas/Meta"
+          }
+        },
+        "required": [
+          "meta"
+        ],
+        "title": "Envelope[AnalyticsSummary]",
         "type": "object"
       },
       "Envelope_ConstraintsOut_": {
@@ -630,6 +911,39 @@
           "meta"
         ],
         "title": "Envelope[GlobalExplanation]",
+        "type": "object"
+      },
+      "Envelope_GroupedAnalytics_": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/GroupedAnalytics"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "error": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ErrorBody"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "meta": {
+            "$ref": "#/components/schemas/Meta"
+          }
+        },
+        "required": [
+          "meta"
+        ],
+        "title": "Envelope[GroupedAnalytics]",
         "type": "object"
       },
       "Envelope_HealthData_": {
@@ -731,6 +1045,39 @@
         "title": "Envelope[LocalExplanation]",
         "type": "object"
       },
+      "Envelope_MaterialAnalytics_": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/MaterialAnalytics"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "error": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ErrorBody"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "meta": {
+            "$ref": "#/components/schemas/Meta"
+          }
+        },
+        "required": [
+          "meta"
+        ],
+        "title": "Envelope[MaterialAnalytics]",
+        "type": "object"
+      },
       "Envelope_MaterialLotOut_": {
         "additionalProperties": false,
         "properties": {
@@ -762,6 +1109,39 @@
           "meta"
         ],
         "title": "Envelope[MaterialLotOut]",
+        "type": "object"
+      },
+      "Envelope_ParameterAnalytics_": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ParameterAnalytics"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "error": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ErrorBody"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "meta": {
+            "$ref": "#/components/schemas/Meta"
+          }
+        },
+        "required": [
+          "meta"
+        ],
+        "title": "Envelope[ParameterAnalytics]",
         "type": "object"
       },
       "Envelope_PredictResponse_": {
@@ -960,6 +1340,39 @@
           "meta"
         ],
         "title": "Envelope[SimulationStateOut]",
+        "type": "object"
+      },
+      "Envelope_SpcOut_": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SpcOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "error": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ErrorBody"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "meta": {
+            "$ref": "#/components/schemas/Meta"
+          }
+        },
+        "required": [
+          "meta"
+        ],
+        "title": "Envelope[SpcOut]",
         "type": "object"
       },
       "Envelope_WhatIfResult_": {
@@ -1488,6 +1901,78 @@
         "title": "GlobalExplanation",
         "type": "object"
       },
+      "GroupOutcome": {
+        "properties": {
+          "key": {
+            "title": "Key",
+            "type": "string"
+          },
+          "mean_p_fail": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mean P Fail"
+          },
+          "predicted_fail": {
+            "title": "Predicted Fail",
+            "type": "integer"
+          },
+          "predicted_fail_rate": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Predicted Fail Rate"
+          },
+          "runs": {
+            "title": "Runs",
+            "type": "integer"
+          },
+          "with_prediction": {
+            "title": "With Prediction",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "runs",
+          "with_prediction",
+          "predicted_fail",
+          "predicted_fail_rate",
+          "mean_p_fail",
+          "key"
+        ],
+        "title": "GroupOutcome",
+        "type": "object"
+      },
+      "GroupedAnalytics": {
+        "properties": {
+          "filters": {
+            "$ref": "#/components/schemas/AnalyticsFiltersOut"
+          },
+          "rows": {
+            "items": {
+              "$ref": "#/components/schemas/GroupOutcome"
+            },
+            "title": "Rows",
+            "type": "array"
+          }
+        },
+        "required": [
+          "filters",
+          "rows"
+        ],
+        "title": "GroupedAnalytics",
+        "type": "object"
+      },
       "GroupedAttribution": {
         "additionalProperties": false,
         "properties": {
@@ -1849,6 +2334,31 @@
         ],
         "title": "MachineType",
         "type": "string"
+      },
+      "MaterialAnalytics": {
+        "properties": {
+          "filters": {
+            "$ref": "#/components/schemas/AnalyticsFiltersOut"
+          },
+          "group": {
+            "title": "Group",
+            "type": "string"
+          },
+          "rows": {
+            "items": {
+              "$ref": "#/components/schemas/GroupOutcome"
+            },
+            "title": "Rows",
+            "type": "array"
+          }
+        },
+        "required": [
+          "filters",
+          "rows",
+          "group"
+        ],
+        "title": "MaterialAnalytics",
+        "type": "object"
       },
       "MaterialLotCreate": {
         "additionalProperties": false,
@@ -2244,6 +2754,47 @@
         "title": "OverrideRequest",
         "type": "object"
       },
+      "ParameterAnalytics": {
+        "properties": {
+          "filters": {
+            "$ref": "#/components/schemas/AnalyticsFiltersOut"
+          },
+          "parameter": {
+            "title": "Parameter",
+            "type": "string"
+          },
+          "rows": {
+            "items": {
+              "$ref": "#/components/schemas/BucketOutcome"
+            },
+            "title": "Rows",
+            "type": "array"
+          },
+          "unit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit"
+          },
+          "window": {
+            "$ref": "#/components/schemas/ParameterWindow"
+          }
+        },
+        "required": [
+          "filters",
+          "parameter",
+          "unit",
+          "window",
+          "rows"
+        ],
+        "title": "ParameterAnalytics",
+        "type": "object"
+      },
       "ParameterChange": {
         "additionalProperties": false,
         "properties": {
@@ -2462,6 +3013,24 @@
           "display_name"
         ],
         "title": "ParameterSpecOut",
+        "type": "object"
+      },
+      "ParameterWindow": {
+        "properties": {
+          "max": {
+            "title": "Max",
+            "type": "number"
+          },
+          "min": {
+            "title": "Min",
+            "type": "number"
+          }
+        },
+        "required": [
+          "min",
+          "max"
+        ],
+        "title": "ParameterWindow",
         "type": "object"
       },
       "PredictRequest": {
@@ -3764,6 +4333,118 @@
         "title": "SimulationStateOut",
         "type": "object"
       },
+      "SpcOut": {
+        "description": "The stored series, and SPC alerts only when the intelligence layer provides them\n(Role 2 never implements SPC rules, roadmap R2-P8 \u00a715).",
+        "properties": {
+          "alerts": {
+            "anyOf": [
+              {
+                "items": {
+                  "additionalProperties": true,
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Alerts"
+          },
+          "filters": {
+            "$ref": "#/components/schemas/AnalyticsFiltersOut"
+          },
+          "machine_id": {
+            "title": "Machine Id",
+            "type": "string"
+          },
+          "parameter": {
+            "title": "Parameter",
+            "type": "string"
+          },
+          "series": {
+            "items": {
+              "$ref": "#/components/schemas/SpcPoint"
+            },
+            "title": "Series",
+            "type": "array"
+          },
+          "spc": {
+            "$ref": "#/components/schemas/SpcStatus"
+          },
+          "unit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit"
+          }
+        },
+        "required": [
+          "machine_id",
+          "parameter",
+          "unit",
+          "filters",
+          "series",
+          "spc",
+          "alerts"
+        ],
+        "title": "SpcOut",
+        "type": "object"
+      },
+      "SpcPoint": {
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "run_id": {
+            "title": "Run Id",
+            "type": "string"
+          },
+          "value": {
+            "title": "Value",
+            "type": "number"
+          }
+        },
+        "required": [
+          "run_id",
+          "created_at",
+          "value"
+        ],
+        "title": "SpcPoint",
+        "type": "object"
+      },
+      "SpcStatus": {
+        "properties": {
+          "available": {
+            "title": "Available",
+            "type": "boolean"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          }
+        },
+        "required": [
+          "available",
+          "reason"
+        ],
+        "title": "SpcStatus",
+        "type": "object"
+      },
       "StabilityReport": {
         "additionalProperties": false,
         "properties": {
@@ -4021,6 +4702,32 @@
           "indicators"
         ],
         "title": "StageResult",
+        "type": "object"
+      },
+      "StageRiskFrequency": {
+        "properties": {
+          "counts": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "Counts",
+            "type": "object"
+          },
+          "stage": {
+            "title": "Stage",
+            "type": "string"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "stage",
+          "counts",
+          "total"
+        ],
+        "title": "StageRiskFrequency",
         "type": "object"
       },
       "StageRiskShare": {
@@ -4345,6 +5052,636 @@
   },
   "openapi": "3.1.0",
   "paths": {
+    "/api/v1/analytics/by-machine": {
+      "get": {
+        "operationId": "by_machine_api_v1_analytics_by_machine_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "include_whatif",
+            "required": false,
+            "schema": {
+              "default": false,
+              "title": "Include Whatif",
+              "type": "boolean"
+            }
+          },
+          {
+            "in": "query",
+            "name": "include_mock",
+            "required": false,
+            "schema": {
+              "default": false,
+              "title": "Include Mock",
+              "type": "boolean"
+            }
+          },
+          {
+            "in": "query",
+            "name": "include_unfinished",
+            "required": false,
+            "schema": {
+              "default": false,
+              "title": "Include Unfinished",
+              "type": "boolean"
+            }
+          },
+          {
+            "in": "query",
+            "name": "from",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "From"
+            }
+          },
+          {
+            "in": "query",
+            "name": "to",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "To"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-api-key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Envelope_GroupedAnalytics_"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Outcomes per machine",
+        "tags": [
+          "analytics"
+        ]
+      }
+    },
+    "/api/v1/analytics/by-material": {
+      "get": {
+        "operationId": "by_material_api_v1_analytics_by_material_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "group",
+            "required": false,
+            "schema": {
+              "default": "lot",
+              "enum": [
+                "lot",
+                "resin_grade"
+              ],
+              "title": "Group",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "include_whatif",
+            "required": false,
+            "schema": {
+              "default": false,
+              "title": "Include Whatif",
+              "type": "boolean"
+            }
+          },
+          {
+            "in": "query",
+            "name": "include_mock",
+            "required": false,
+            "schema": {
+              "default": false,
+              "title": "Include Mock",
+              "type": "boolean"
+            }
+          },
+          {
+            "in": "query",
+            "name": "include_unfinished",
+            "required": false,
+            "schema": {
+              "default": false,
+              "title": "Include Unfinished",
+              "type": "boolean"
+            }
+          },
+          {
+            "in": "query",
+            "name": "from",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "From"
+            }
+          },
+          {
+            "in": "query",
+            "name": "to",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "To"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-api-key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Envelope_MaterialAnalytics_"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Outcomes per material lot or resin grade",
+        "tags": [
+          "analytics"
+        ]
+      }
+    },
+    "/api/v1/analytics/by-parameter": {
+      "get": {
+        "operationId": "by_parameter_api_v1_analytics_by_parameter_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "parameter",
+            "required": true,
+            "schema": {
+              "title": "Parameter",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "buckets",
+            "required": false,
+            "schema": {
+              "default": 5,
+              "maximum": 20,
+              "minimum": 2,
+              "title": "Buckets",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "include_whatif",
+            "required": false,
+            "schema": {
+              "default": false,
+              "title": "Include Whatif",
+              "type": "boolean"
+            }
+          },
+          {
+            "in": "query",
+            "name": "include_mock",
+            "required": false,
+            "schema": {
+              "default": false,
+              "title": "Include Mock",
+              "type": "boolean"
+            }
+          },
+          {
+            "in": "query",
+            "name": "include_unfinished",
+            "required": false,
+            "schema": {
+              "default": false,
+              "title": "Include Unfinished",
+              "type": "boolean"
+            }
+          },
+          {
+            "in": "query",
+            "name": "from",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "From"
+            }
+          },
+          {
+            "in": "query",
+            "name": "to",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "To"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-api-key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Envelope_ParameterAnalytics_"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Outcomes per equal-width bucket of a parameter's registry window",
+        "tags": [
+          "analytics"
+        ]
+      }
+    },
+    "/api/v1/analytics/spc": {
+      "get": {
+        "operationId": "spc_api_v1_analytics_spc_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "machine_id",
+            "required": true,
+            "schema": {
+              "title": "Machine Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "parameter",
+            "required": true,
+            "schema": {
+              "title": "Parameter",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 100,
+              "maximum": 500,
+              "minimum": 2,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "include_whatif",
+            "required": false,
+            "schema": {
+              "default": false,
+              "title": "Include Whatif",
+              "type": "boolean"
+            }
+          },
+          {
+            "in": "query",
+            "name": "include_mock",
+            "required": false,
+            "schema": {
+              "default": false,
+              "title": "Include Mock",
+              "type": "boolean"
+            }
+          },
+          {
+            "in": "query",
+            "name": "include_unfinished",
+            "required": false,
+            "schema": {
+              "default": false,
+              "title": "Include Unfinished",
+              "type": "boolean"
+            }
+          },
+          {
+            "in": "query",
+            "name": "from",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "From"
+            }
+          },
+          {
+            "in": "query",
+            "name": "to",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "To"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-api-key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Envelope_SpcOut_"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "A parameter's stored series on one machine",
+        "tags": [
+          "analytics"
+        ]
+      }
+    },
+    "/api/v1/analytics/summary": {
+      "get": {
+        "operationId": "summary_api_v1_analytics_summary_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "include_whatif",
+            "required": false,
+            "schema": {
+              "default": false,
+              "title": "Include Whatif",
+              "type": "boolean"
+            }
+          },
+          {
+            "in": "query",
+            "name": "include_mock",
+            "required": false,
+            "schema": {
+              "default": false,
+              "title": "Include Mock",
+              "type": "boolean"
+            }
+          },
+          {
+            "in": "query",
+            "name": "include_unfinished",
+            "required": false,
+            "schema": {
+              "default": false,
+              "title": "Include Unfinished",
+              "type": "boolean"
+            }
+          },
+          {
+            "in": "query",
+            "name": "from",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "From"
+            }
+          },
+          {
+            "in": "query",
+            "name": "to",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "To"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-api-key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Envelope_AnalyticsSummary_"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Run counts, predicted FAIL share, stage risk frequency",
+        "tags": [
+          "analytics"
+        ]
+      }
+    },
     "/api/v1/constraints": {
       "get": {
         "operationId": "get_constraints_api_v1_constraints_get",

@@ -46,4 +46,13 @@ Captured on 2026-10-22 with the **demo profile** (`SMQI_ENV=demo`, real intellig
 | `15-ab-compare.jpg` | A/B compare of two seeded runs (melt above ceiling vs short cooling): FAIL 0.53 → PASS 0.29, CRITICAL → LOW |
 | `16-model-info.jpg` | Model Info: no metrics or calibration reported by `fusion-1.0.0` (CCR-004 #7d), global mean \|SHAP\| importance |
 
+**R2-P8 History and Analytics**, on the same demo database (two extra scenarios saved through `POST /whatif` for the lineage):
+
+| File | Shows |
+|---|---|
+| `17-lineage-tree.jpg` | Run detail of a grandchild scenario: the tree from the root run with its children, this run highlighted, "Compare with parent" links |
+| `18-analytics-totals.jpg` | Stated exclusions (3 what-if, 0 mock, 1 unfinished) and totals: 6 runs, predicted FAIL share 33 %, 2 NOT RELEASABLE, few-runs caution |
+| `19-analytics-by-parameter.jpg` | Melt temperature in five registry-window buckets: both predicted FAILs are in 272–295 °C |
+| `20-analytics-spc.jpg` | Melt temperature series on MC-02 without control limits, and why (CCR-004 #10) |
+
 **Note:** the risk origin is split evenly at 20 % per stage. That is Role 1's `stage_risk_mass` for this input; see CCR-004 #3.
