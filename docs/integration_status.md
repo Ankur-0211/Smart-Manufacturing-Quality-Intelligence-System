@@ -3,7 +3,7 @@
 Both roles update this file (roadmap §10.1). A capability counts as **REAL** only when
 `QualityIntelligence.capabilities()` reports it **and** this table says so.
 
-_Last updated: 2026-10-22 by Role 2 (R2-P6: run setup — pickers, registry-driven sliders, RUN creates runs)._
+_Last updated: 2026-10-22 by Role 2 (R2-P6 complete: Create lot, polling test, screenshots, UI copy list)._
 
 ## Capability matrix
 
@@ -44,7 +44,7 @@ Status values: `NOT AVAILABLE` → `MOCK` → `HYBRID` → `REAL`.
 | R2-P3 | Done: reference endpoints, `POST /simulation/runs`, `/predict` (persists `run_id=NULL` rows), explain, `/models`; `npm run check:api` fails on stale TS types |
 | R2-P4 | Done; runs on the mock or Role 1's real facade |
 | R2-P5 | Done. Serving-model registration, global explanation, `POST /whatif` (partial re-sim via Role 1's `invalidated_stages`, diff, persisted child runs; property-tested equal to full runs), `/whatif/compare`, `/whatif/sensitivity` (rate limited), `POST /recommend` (rows per candidate with `request_id` + model version), `GET /simulation/runs/{id}/lineage`. Dev default backend is now `real`. N/A with Role 1's artifact-free facade: tiny-bundle CI and missing-bundle 503 |
-| R2-P6 | Run setup done: machine/product/lot pickers, one slider + input per registry setpoint grouped by stage, client range checks from `/constraints`, 422 details mapped to fields (coupling rules listed), RUN creates + starts + follows a run. Earlier: pipeline, SSE, controls, override, result card. Open: "Create lot" dialog, 300 ms polling-fallback test, stepwise screenshots for the report |
+| R2-P6 | Done. Run setup (pickers, registry-driven sliders, Create lot dialog, 422 mapping), RUN creates + starts + follows runs; SSE with polling fallback (hook + screen tests); pipeline, stage panel, timeline, override, result card. Handoff: `docs/screenshots/` (stepwise, real intelligence) and `docs/coordination/UI_COPY_FOR_ROLE1.md` |
 
 ## Milestones
 

@@ -70,7 +70,7 @@ export function constraintsPayload(parameters?: ParameterSpec[]): Constraints {
     ],
     coupling_rules: [],
     hard_constraints: [],
-    resin_grades: {},
+    resin_grades: { 'PP-H': { name: 'Homopolymer' }, 'PP-C': { name: 'Copolymer' } },
     risk_bands: { stage_health: {}, p_fail: {} },
   } as unknown as Constraints
 }

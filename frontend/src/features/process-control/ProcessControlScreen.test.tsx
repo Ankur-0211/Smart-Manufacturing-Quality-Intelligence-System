@@ -7,7 +7,7 @@ import { App } from '@/app/App'
 import { createQueryClient } from '@/app/queryClient'
 import { FakeEventSource } from '@/test/fakeEventSource'
 import { fullRun, RUN_ID, stageResult, StreamBuilder } from '@/test/fixtures/runEvents'
-import { runState } from '@/test/fixtures/runState'
+import { finishedRunState, runState } from '@/test/fixtures/runState'
 import { API, envelope, server } from '@/test/server'
 
 const create = (url: string) => new FakeEventSource(url)
@@ -127,5 +127,31 @@ describe('ProcessControlScreen with ?run=', () => {
     await userEvent.type(within(panel).getByLabelText('Acknowledgement (required)'), 'operator accepts')
     await userEvent.click(submit)
     await waitFor(() => expect(body).toEqual({ stage: 'PLASTICIZING', acknowledgement: 'operator accepts' }))
+  })
+})
+
+describe('ProcessControlScreen polling fallback', () => {
+  it('switches to polling when SSE keeps failing and finishes from polled state', async () => {
+    let polls = 0
+    server.use(
+      http.get(`${API}/simulation/runs/:id`, () => {
+        polls += 1
+        // The first loads see a running run; later polls see it finished.
+        return HttpResponse.json(envelope(polls < 3 ? runState({ status: 'COOLING' }) : finishedRunState()))
+      }),
+    )
+    renderAt(`/?run=${RUN_ID}`)
+    await screen.findByText('MC-03')
+    act(() => stream().fail())
+    act(() => stream().fail())
+    expect(stream().closed).toBe(true)
+    await waitFor(() => expect(screen.getByLabelText('Connection')).toHaveTextContent('live (polling)'))
+    await waitFor(() => expect(screen.getByLabelText('Connection')).toHaveTextContent('finished'), {
+      timeout: 3000,
+    })
+    expect(screen.getByRole('region', { name: 'Model-predicted failure probability' })).toHaveTextContent(
+      '0.71',
+    )
+    expect(FakeEventSource.instances).toHaveLength(1) // no SSE reconnect while polling
   })
 })

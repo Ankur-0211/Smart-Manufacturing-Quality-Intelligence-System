@@ -1,9 +1,12 @@
+import { useState } from 'react'
+
 import { useConstraints, nominalRecipe, setpoints, type ParameterSpec } from '@/api/constraints'
 import { useMachines, useMaterials, useProducts } from '@/api/reference'
 import { STAGE_META, STAGE_ORDER, type StageName } from '@/features/process-control/model'
 import { cn } from '@/lib/utils'
 import { useRunSetup } from '@/stores/runSetup'
 
+import { CreateLotDialog } from './CreateLotDialog'
 import { clientErrors, rangeText, unitLabel, type ServerErrors } from './recipeValidation'
 import { useEffectiveRecipe } from './useEffectiveRecipe'
 
@@ -128,6 +131,7 @@ export function RunSetupPanel({
   const products = useProducts()
   const materials = useMaterials()
   const { machineId, productId, lotId, setContext, setParam, setRecipe } = useRunSetup()
+  const [creatingLot, setCreatingLot] = useState(false)
   const recipe = useEffectiveRecipe()
   const constraints = constraintsQuery.data
 
@@ -206,7 +210,24 @@ export function RunSetupPanel({
             label: `${l.material_lot_id} · ${l.resin_grade} · moisture ${l.moisture_pct} %`,
           }))}
         />
+        <button
+          type="button"
+          onClick={() => setCreatingLot(true)}
+          className="self-end rounded border border-border px-2 py-1 text-xs text-text hover:bg-panel-raised"
+        >
+          New lot…
+        </button>
       </div>
+      {creatingLot && (
+        <CreateLotDialog
+          constraints={constraints}
+          onClose={() => setCreatingLot(false)}
+          onCreated={(id) => {
+            setContext({ lotId: id })
+            setCreatingLot(false)
+          }}
+        />
+      )}
 
       {server.general.length > 0 && (
         <ul role="alert" aria-label="Run setup errors" className="text-xs text-risk-critical">
