@@ -1110,6 +1110,8 @@ export interface components {
         ModelVersionOut: {
             /** Algorithm */
             algorithm: string;
+            /** Bundle Sha256 */
+            bundle_sha256: string | null;
             /** Constraints Version */
             constraints_version: string | null;
             /**
@@ -1117,8 +1119,12 @@ export interface components {
              * Format: date-time
              */
             created_at: string;
+            /** Dataset Hash */
+            dataset_hash: string | null;
             /** Feature Schema Hash */
             feature_schema_hash: string | null;
+            /** Git Sha */
+            git_sha: string | null;
             /** Is Active */
             is_active: boolean;
             /** Metrics */

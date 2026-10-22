@@ -4,7 +4,7 @@ import { Link, useSearchParams } from 'react-router-dom'
 import { ApiClientError } from '@/api/client'
 import { setpoints, useConstraints, type ParameterSpec } from '@/api/constraints'
 import { useRunState } from '@/api/runs'
-import { useWhatIf } from '@/api/whatif'
+import { LIVE_DEBOUNCE_MS, useLiveWhatIf, useWhatIf } from '@/api/whatif'
 import { ParameterControl } from '@/components/params/ParameterControl'
 import { clientErrors, serverErrors } from '@/components/params/recipeValidation'
 import { RISK_TEXT } from '@/components/pipeline/stateStyle'
@@ -12,6 +12,7 @@ import { STAGE_META, STAGE_ORDER, type RiskLevel, type StageName } from '@/featu
 
 import { DiffView } from './DiffView'
 import { FinishedRunPicker } from './FinishedRunPicker'
+import { SensitivityPanel } from './SensitivityPanel'
 import { useWhatIfDrafts, type Overrides } from './whatifStore'
 
 const EMPTY: Overrides = {}
@@ -19,7 +20,8 @@ const EMPTY: Overrides = {}
 /**
  * What-If workbench (roadmap R2-P7 tasks 1-2; Plan §13.4-13.6). Fork a finished run, change one or
  * more parameters (windows from GET /constraints), then Evaluate (nothing saved) or Save as scenario
- * (a child run). The diff, stage reuse and every number come from POST /whatif.
+ * (a child run). Live mode (P1) re-evaluates with persist=false after each 150 ms pause in editing.
+ * The diff, stage reuse and every number come from POST /whatif.
  */
 export function WhatIfScreen() {
   const [params, setParams] = useSearchParams()
@@ -30,15 +32,23 @@ export function WhatIfScreen() {
   const { setOverride, reset } = useWhatIfDrafts()
   const whatif = useWhatIf()
   const [label, setLabel] = useState('')
+  const [live, setLive] = useState(false)
 
   const parent = base.data?.parameters ?? null
   const finished = base.data?.status === 'FINAL_RESULT'
   const recipe = parent ? { ...parent, ...overrides } : null
   const local = constraints && recipe ? clientErrors(constraints, recipe) : {}
-  const server = serverErrors(whatif.isError ? whatif.error : null)
   const changed = Object.keys(overrides).length
   const canEvaluate = Boolean(baseRunId && finished && changed > 0 && Object.keys(local).length === 0)
-  const result = whatif.data && whatif.data.parent_run_id === baseRunId ? whatif.data : null
+  const liveQuery = useLiveWhatIf(baseRunId, overrides, live && canEvaluate)
+  const error = live ? liveQuery.error : whatif.isError ? whatif.error : null
+  const server = serverErrors(error)
+  const shown = live ? (changed > 0 ? liveQuery.data : undefined) : whatif.data
+  const result = shown && shown.parent_run_id === baseRunId ? shown : null
+  const busy = live ? liveQuery.isFetching : whatif.isPending
+  // In live mode the diff is the live preview; a scenario saved meanwhile is reported separately.
+  const saved = whatif.data?.parent_run_id === baseRunId ? (whatif.data?.run_id ?? null) : null
+  const savedId = live ? saved : (result?.run_id ?? null)
 
   const evaluate = (persist: boolean) => {
     if (!baseRunId) return
@@ -64,7 +74,15 @@ export function WhatIfScreen() {
 
   return (
     <div className="flex flex-col gap-4">
-      <h2 className="text-sm font-semibold tracking-widest text-text-muted uppercase">What-If workbench</h2>
+      <div className="flex items-center justify-between gap-2">
+        <h2 className="text-sm font-semibold tracking-widest text-text-muted uppercase">What-If workbench</h2>
+        <Link
+          to={baseRunId ? `/what-if/compare?a=${baseRunId}` : '/what-if/compare'}
+          className="text-xs text-state-active"
+        >
+          A/B compare saved runs
+        </Link>
+      </div>
 
       <section
         aria-label="Base run"
@@ -162,10 +180,14 @@ export function WhatIfScreen() {
             aria-label="What-if result"
             className="flex flex-col gap-3 rounded border border-border bg-panel p-4"
           >
+            <label className="flex items-center gap-2 text-xs">
+              <input type="checkbox" checked={live} onChange={(e) => setLive(e.target.checked)} />
+              Live: re-evaluate {LIVE_DEBOUNCE_MS} ms after each change (nothing saved)
+            </label>
             <div className="flex flex-wrap items-end gap-2">
               <button
                 type="button"
-                disabled={!canEvaluate || whatif.isPending}
+                disabled={!canEvaluate || whatif.isPending || live}
                 onClick={() => evaluate(false)}
                 className="rounded border border-state-active px-3 py-1 text-xs font-semibold text-state-active uppercase disabled:opacity-40"
               >
@@ -189,7 +211,7 @@ export function WhatIfScreen() {
                 Save as scenario
               </button>
             </div>
-            {whatif.isPending && <p className="text-xs text-text-muted">Evaluating…</p>}
+            {busy && <p className="text-xs text-text-muted">Evaluating…</p>}
             {server.general.length > 0 && (
               <ul role="alert" aria-label="What-if errors" className="text-xs text-risk-critical">
                 {server.general.map((m) => (
@@ -197,24 +219,29 @@ export function WhatIfScreen() {
                 ))}
               </ul>
             )}
-            {whatif.isError && server.general.length === 0 && Object.keys(server.fields).length === 0 && (
+            {error && server.general.length === 0 && Object.keys(server.fields).length === 0 && (
               <p role="alert" className="text-xs text-risk-critical">
-                {whatif.error instanceof ApiClientError ? `${whatif.error.code}: ` : ''}
-                {whatif.error.message}
+                {error instanceof ApiClientError ? `${error.code}: ` : ''}
+                {error.message}
               </p>
             )}
             {result ? (
               <>
-                {result.run_id ? (
+                {savedId ? (
                   <p className="text-xs">
                     Saved as scenario{' '}
-                    <Link to={`/history/${result.run_id}`} className="text-state-active">
-                      {result.run_id.slice(0, 8)}
+                    <Link to={`/history/${savedId}`} className="text-state-active">
+                      {savedId.slice(0, 8)}
                     </Link>{' '}
-                    (child of the base run; the base run is unchanged).
+                    (child of the base run; the base run is unchanged).{' '}
+                    <Link to={`/what-if/compare?a=${baseRunId}&b=${savedId}`} className="text-state-active">
+                      Compare A/B
+                    </Link>
                   </p>
                 ) : (
-                  <p className="text-xs text-text-muted">Evaluated only; nothing was saved.</p>
+                  <p className="text-xs text-text-muted">
+                    {live ? 'Live preview' : 'Evaluated only'}; nothing was saved.
+                  </p>
                 )}
                 <DiffView
                   diff={result.diff}
@@ -224,12 +251,24 @@ export function WhatIfScreen() {
                 />
               </>
             ) : (
-              !whatif.isPending && (
-                <p className="text-sm text-text-muted">Change parameters, then Evaluate to see the diff.</p>
+              !busy && (
+                <p className="text-sm text-text-muted">
+                  {live
+                    ? 'Change a parameter to see the diff.'
+                    : 'Change parameters, then Evaluate to see the diff.'}
+                </p>
               )
             )}
           </section>
         </div>
+      )}
+
+      {baseRunId && parent && constraints && finished && (
+        <SensitivityPanel
+          baseRunId={baseRunId}
+          constraints={constraints}
+          threshold={(base.data?.prediction as { threshold_used?: number } | null)?.threshold_used ?? null}
+        />
       )}
     </div>
   )

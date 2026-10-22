@@ -52,6 +52,17 @@ The shared contract harness (`backend/tests/contract/test_interface_contract.py`
     - Role 2 now cross-checks every option against the registry's `max_step_change` and shows a warning on the card. Role 1's guard list is still shown as reported (screenshot `docs/screenshots/09-recommendation-card.jpg`).
     - Please fix the guard, or split large moves into several options or steps.
 
+7c. **`flip_point` is the first label change from the bottom of the window, not the one nearest the current value** (found 2026-10-22 through `POST /whatif/sensitivity`).
+    - On run `faf0cacf` (melt 290 °C, FAIL 0.53), the melt sweep crosses the threshold twice: FAIL→PASS near 190 °C and PASS→FAIL near 265–274 °C.
+    - `flip_point` is 190.45. The flip that matters to the operator, the one closest to 290 °C, is not reported.
+    - Roadmap §7.16 defines `flip_point` as the "nearest value where the label flips", linearly interpolated between grid points (`sensitivity.py`, F14). 190.45 is also a grid value, not an interpolated crossing.
+    - Please return the interpolated crossing nearest `current_value`.
+    - Role 2 draws only the reported `flip_point`; the curve itself shows the other crossing (screenshot `docs/screenshots/14-sensitivity-strip.jpg`).
+
+7d. **The serving model reports no metrics or provenance.** `version_info()` has no training date, dataset hash, generator version, metrics, calibration data or threshold, so Model Info (R2-P7) shows "not reported" for all of these (screenshot `docs/screenshots/16-model-info.jpg`).
+    - R1-P10's handoff requirements promise final metrics and frozen bundle versions for the Model Info screen.
+    - Role 2 registers whatever `version_info()` and the bundle metadata provide, and displays `metrics.generator_version` and `metrics.calibration` (or `metrics.reliability`) when present. Please put them there, together with the threshold policy.
+
 ## B. Contract gaps against roadmap §9.1 (please add, or agree to drop)
 
 8. **`QualityIntelligence` is missing four methods.**

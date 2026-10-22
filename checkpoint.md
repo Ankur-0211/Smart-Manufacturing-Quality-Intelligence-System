@@ -29,7 +29,7 @@ everything done up to now. The source of truth for scope is `PROJECT_DEVELOPMENT
 | **R2-P4** | Simulation state machine, event flow and SSE | **Done** |
 | **R2-P5** | Real intelligence integration, what-if, recommend | **Done** |
 | **R2-P6** | Process Control UI | **Done** |
-| **R2-P7** | What-if, recommendations and explainability UI | **Done (P0)**. P1 open: live slider, A/B compare page, sensitivity strip, Model Info |
+| **R2-P7** | What-if, recommendations and explainability UI | **Done** (P0; P1 added after this checkpoint except the dependence plot, which has no API) |
 | R2-P8 | History | P0 part done (list, filters, run detail, scenario label) |
 | R2-P9, R2-P10 | Analytics, system test and release | Not started |
 
@@ -152,6 +152,6 @@ everything done up to now. The source of truth for scope is `PROJECT_DEVELOPMENT
 ## Next
 
 1. **Role 1:** work through CCR-003 and CCR-004, and restore roadmap 1.0.1 on `main`.
-2. **R2-P7 P1:** live slider, A/B compare page, sensitivity strip, Model Info.
+2. **R2-P7 P1:** done on 2026-10-22 after this checkpoint: live slider, A/B compare page, sensitivity strip, Model Info (CCR-004 #7c, #7d raised). The dependence plot is not built.
 3. **R2-P8:** remaining History items.
 4. **R2-P9 / R2-P10:** analytics, system test and release.

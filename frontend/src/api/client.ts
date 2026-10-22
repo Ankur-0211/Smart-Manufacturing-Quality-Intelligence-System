@@ -78,6 +78,7 @@ export async function apiRequest<T>(
   try {
     response = await fetch(`${baseUrl}${path}`, { ...init, headers })
   } catch (cause) {
+    if (init.signal?.aborted) throw cause // superseded by a newer request, not a network failure
     throw new ApiClientError({
       code: 'NETWORK_ERROR',
       message: 'Cannot reach the API server.',
@@ -125,5 +126,6 @@ export async function apiRequest<T>(
 
 export const apiGet = <T>(path: string): Promise<ApiResult<T>> => apiRequest<T>(path)
 
-export const apiPost = <T>(path: string, payload: unknown): Promise<ApiResult<T>> =>
-  apiRequest<T>(path, { method: 'POST', body: JSON.stringify(payload) })
+/** `signal` lets a caller abort a superseded request (what-if live mode, roadmap R2-P7 §9). */
+export const apiPost = <T>(path: string, payload: unknown, signal?: AbortSignal): Promise<ApiResult<T>> =>
+  apiRequest<T>(path, { method: 'POST', body: JSON.stringify(payload), signal })

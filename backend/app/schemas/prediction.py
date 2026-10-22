@@ -40,6 +40,9 @@ class ModelVersionOut(BaseModel):
     trained_at: datetime | None
     metrics: dict[str, Any]
     feature_schema_hash: str | None
+    dataset_hash: str | None  # provenance for Model Info (roadmap R2-P7 task 7)
+    git_sha: str | None
+    bundle_sha256: str | None
     constraints_version: str | None
     threshold: float | None
     created_at: datetime

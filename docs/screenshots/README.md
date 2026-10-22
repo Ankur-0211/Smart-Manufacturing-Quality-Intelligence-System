@@ -37,4 +37,13 @@ Captured on 2026-10-22 with the **demo profile** (`SMQI_ENV=demo`, real intellig
 | `11-explainability-shap.jpg` | Prediction summary, caveat banner (CRITICAL_CONSTRAINT_OVERRIDDEN), signed SHAP bars and table: melt +1.50 toward FAIL |
 | `12-explainability-stage-mass.jpg` | Stage risk mass donut (Plasticizing 93 %), share list, method note and the permanent SHAP disclaimer |
 
+**R2-P7 P1 screens**, on the same demo database:
+
+| File | Shows |
+|---|---|
+| `13-whatif-live.jpg` | Live mode on run `faf0cacf`: melt 290 → 235 °C, one `persist=false` request after the pause; P(fail) 0.53 → 0.24 FLIPPED, Thermal onward recomputed |
+| `14-sensitivity-strip.jpg` | Melt temperature sweep with current, flip and threshold markers, and the parameter ranking by range swing. Role 1's flip point is the first crossing (190 °C), not the nearest one (CCR-004 #7c) |
+| `15-ab-compare.jpg` | A/B compare of two seeded runs (melt above ceiling vs short cooling): FAIL 0.53 → PASS 0.29, CRITICAL → LOW |
+| `16-model-info.jpg` | Model Info: no metrics or calibration reported by `fusion-1.0.0` (CCR-004 #7d), global mean \|SHAP\| importance |
+
 **Note:** the risk origin is split evenly at 20 % per stage. That is Role 1's `stage_risk_mass` for this input; see CCR-004 #3.

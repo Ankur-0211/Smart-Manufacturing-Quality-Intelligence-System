@@ -150,3 +150,24 @@ export function recommendOut(over: Partial<Schemas['RecommendOut']> = {}): Schem
     ...over,
   }
 }
+
+/** A sensitivity sweep; `range_swing` is the ranking key. */
+export function sensitivityResult(
+  parameter: string,
+  over: Partial<Schemas['SensitivityResult']> = {},
+): Schemas['SensitivityResult'] {
+  return {
+    parameter,
+    unit: 's',
+    current_value: 11,
+    points: [
+      { value: 3, p_fail: 0.81, label: 'FAIL' },
+      { value: 11, p_fail: 0.62, label: 'FAIL' },
+      { value: 30, p_fail: 0.2, label: 'PASS' },
+    ],
+    local_gradient: -0.031,
+    range_swing: 0.61,
+    flip_point: 17.5,
+    ...over,
+  }
+}

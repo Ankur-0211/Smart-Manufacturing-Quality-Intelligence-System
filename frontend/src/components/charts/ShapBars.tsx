@@ -8,12 +8,22 @@ export interface ShapBar {
 
 const TOWARD_FAIL = 'var(--color-risk-critical)'
 const TOWARD_PASS = 'var(--color-risk-normal)'
+const NEUTRAL = 'var(--color-state-active)'
 
 /**
  * Signed horizontal SHAP bars (roadmap R2-P7 task 6): right = toward FAIL, left = toward PASS.
+ * `unsigned` draws magnitudes (global mean |SHAP|) in one neutral colour.
  * Decorative for assistive technology; the caller renders the same numbers as a table.
  */
-export function ShapBars({ bars }: { bars: ShapBar[] }) {
+export function ShapBars({
+  bars,
+  unsigned = false,
+  valueName = 'SHAP (log-odds)',
+}: {
+  bars: ShapBar[]
+  unsigned?: boolean
+  valueName?: string
+}) {
   const height = Math.max(120, bars.length * 28 + 40)
   return (
     <div aria-hidden="true" style={{ height }} className="w-full">
@@ -33,7 +43,7 @@ export function ShapBars({ bars }: { bars: ShapBar[] }) {
             fontSize={11}
             interval={0}
           />
-          <ReferenceLine x={0} stroke="var(--color-border)" />
+          {!unsigned && <ReferenceLine x={0} stroke="var(--color-border)" />}
           <Tooltip
             cursor={{ fill: 'var(--color-panel-raised)' }}
             contentStyle={{
@@ -41,11 +51,11 @@ export function ShapBars({ bars }: { bars: ShapBar[] }) {
               border: '1px solid var(--color-border)',
               fontSize: 12,
             }}
-            formatter={(v) => [Number(v).toFixed(3), 'SHAP (log-odds)']}
+            formatter={(v) => [Number(v).toFixed(3), valueName]}
           />
           <Bar dataKey="value" isAnimationActive={false}>
             {bars.map((b) => (
-              <Cell key={b.key} fill={b.value >= 0 ? TOWARD_FAIL : TOWARD_PASS} />
+              <Cell key={b.key} fill={unsigned ? NEUTRAL : b.value >= 0 ? TOWARD_FAIL : TOWARD_PASS} />
             ))}
           </Bar>
         </BarChart>

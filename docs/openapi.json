@@ -2035,6 +2035,17 @@
             "title": "Algorithm",
             "type": "string"
           },
+          "bundle_sha256": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Bundle Sha256"
+          },
           "constraints_version": {
             "anyOf": [
               {
@@ -2051,6 +2062,17 @@
             "title": "Created At",
             "type": "string"
           },
+          "dataset_hash": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dataset Hash"
+          },
           "feature_schema_hash": {
             "anyOf": [
               {
@@ -2061,6 +2083,17 @@
               }
             ],
             "title": "Feature Schema Hash"
+          },
+          "git_sha": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Git Sha"
           },
           "is_active": {
             "title": "Is Active",
@@ -2116,6 +2149,9 @@
           "trained_at",
           "metrics",
           "feature_schema_hash",
+          "dataset_hash",
+          "git_sha",
+          "bundle_sha256",
           "constraints_version",
           "threshold",
           "created_at"

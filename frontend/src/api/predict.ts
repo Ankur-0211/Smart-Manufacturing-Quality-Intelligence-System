@@ -7,6 +7,7 @@ export type PredictRequest = Schemas['PredictRequest']
 export type PredictResponse = Schemas['PredictResponse']
 export type LocalExplanation = Schemas['LocalExplanation']
 export type ActiveModels = Schemas['ActiveModelsOut']
+export type GlobalExplanation = Schemas['GlobalExplanation']
 
 /** The server validates the recipe against the registry and persists the prediction. */
 export function usePredict() {
@@ -30,5 +31,15 @@ export function useActiveModels() {
     queryKey: ['models', 'active'],
     queryFn: async () => (await apiGet<ActiveModels>('/models/active')).data,
     staleTime: 60_000,
+  })
+}
+
+/** Global mean |SHAP| of the active model (P1, roadmap 9.3.2); fixed for a model version. */
+export function useGlobalExplanation() {
+  return useQuery({
+    queryKey: ['models', 'active', 'global-explanation'],
+    queryFn: async () => (await apiGet<GlobalExplanation>('/models/active/global-explanation')).data,
+    staleTime: 60_000,
+    retry: false,
   })
 }

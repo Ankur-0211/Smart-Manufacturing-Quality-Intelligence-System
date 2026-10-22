@@ -34,11 +34,14 @@ export function DiffView({
   constraints,
   recomputed,
   reused,
+  columns = { from: 'Base', to: 'What-if' },
 }: {
   diff: RunDiff
   constraints?: Constraints
-  recomputed: string[]
-  reused: string[]
+  /** Stage reuse from POST /whatif; omitted for an A/B compare of two saved runs. */
+  recomputed?: string[]
+  reused?: string[]
+  columns?: { from: string; to: string }
 }) {
   const spec = (name: string) => constraints?.parameters.find((p) => p.name === name)
   const p = diff.prediction
@@ -90,8 +93,8 @@ export function DiffView({
           <thead className="text-left text-text-muted">
             <tr>
               <th className="font-normal">Parameter</th>
-              <th className="text-right font-normal">Base</th>
-              <th className="text-right font-normal">What-if</th>
+              <th className="text-right font-normal">{columns.from}</th>
+              <th className="text-right font-normal">{columns.to}</th>
               <th className="text-right font-normal">Δ</th>
             </tr>
           </thead>
@@ -116,12 +119,14 @@ export function DiffView({
       </Section>
 
       <Section title="Stages">
-        <p className="mb-2 text-xs text-text-muted">
-          Recomputed:{' '}
-          {recomputed.length ? recomputed.map((s) => STAGE_META[s as StageName].short).join(', ') : 'none'}.{' '}
-          Reused from the base run:{' '}
-          {reused.length ? reused.map((s) => STAGE_META[s as StageName].short).join(', ') : 'none'}.
-        </p>
+        {recomputed && reused && (
+          <p className="mb-2 text-xs text-text-muted">
+            Recomputed:{' '}
+            {recomputed.length ? recomputed.map((s) => STAGE_META[s as StageName].short).join(', ') : 'none'}.{' '}
+            Reused from the base run:{' '}
+            {reused.length ? reused.map((s) => STAGE_META[s as StageName].short).join(', ') : 'none'}.
+          </p>
+        )}
         <table className="numeric w-full text-xs">
           <thead className="text-left text-text-muted">
             <tr>

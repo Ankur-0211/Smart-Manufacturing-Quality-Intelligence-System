@@ -1,10 +1,12 @@
 import type { RouteObject } from 'react-router-dom'
 
 import { ExplainabilityScreen } from '@/features/explainability/ExplainabilityScreen'
+import { ModelInfoScreen } from '@/features/model-info/ModelInfoScreen'
 import { HistoryScreen } from '@/features/history/HistoryScreen'
 import { RunDetailScreen } from '@/features/history/RunDetailScreen'
 import { ProcessControlScreen } from '@/features/process-control/ProcessControlScreen'
 import { RecommendationsScreen } from '@/features/recommendations/RecommendationsScreen'
+import { CompareScreen } from '@/features/whatif/CompareScreen'
 import { WhatIfScreen } from '@/features/whatif/WhatIfScreen'
 
 import { AppShell } from './AppShell'
@@ -17,6 +19,7 @@ const IMPLEMENTED: Record<string, RouteObject> = {
   '/explainability': { path: '/explainability', element: <ExplainabilityScreen /> },
   '/what-if': { path: '/what-if', element: <WhatIfScreen /> },
   '/recommendations': { path: '/recommendations', element: <RecommendationsScreen /> },
+  '/model-info': { path: '/model-info', element: <ModelInfoScreen /> },
 }
 
 export const routes: RouteObject[] = [
@@ -28,6 +31,7 @@ export const routes: RouteObject[] = [
           IMPLEMENTED[screen.path] ?? { path: screen.path, element: <ScreenPlaceholder screen={screen} /> },
       ),
       { path: '/history/:runId', element: <RunDetailScreen /> },
+      { path: '/what-if/compare', element: <CompareScreen /> },
     ],
   },
 ]

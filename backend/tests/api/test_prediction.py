@@ -151,6 +151,8 @@ def test_models_active_lists_the_mock(client: TestClient) -> None:
     assert data["is_mock"] is True
     assert data["intelligence"]["model_version"] == "mock-0.0.0"
     assert [m["version"] for m in data["models"]] == ["mock-0.0.0"]
+    # provenance keys are always present (null when the bundle does not report them)
+    assert {"dataset_hash", "git_sha", "bundle_sha256"} <= data["models"][0].keys()
     assert client.get("/api/v1/models").json()["data"][0]["algorithm"] == "mock"
 
 
