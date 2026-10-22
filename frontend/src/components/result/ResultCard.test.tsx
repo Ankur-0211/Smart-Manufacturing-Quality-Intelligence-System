@@ -1,4 +1,5 @@
 import { render, screen, within } from '@testing-library/react'
+import { MemoryRouter } from 'react-router-dom'
 import { describe, expect, it } from 'vitest'
 
 import { prediction } from '@/test/fixtures/runEvents'
@@ -62,5 +63,22 @@ describe('ResultCard', () => {
     const anomaly = screen.getByRole('region', { name: 'Anomaly status' })
     expect(anomaly).toHaveTextContent('Unusual process condition')
     expect(anomaly).toHaveTextContent('Outside training range on 1 feature(s)')
+  })
+
+  it('offers what-if, recommendations and scenario saving for a finished run only', () => {
+    const { rerender } = render(<ResultCard prediction={prediction()} />)
+    expect(screen.queryByRole('link')).toBeNull()
+    rerender(
+      <MemoryRouter>
+        <ResultCard prediction={prediction()} runId="run-1" />
+      </MemoryRouter>,
+    )
+    expect(screen.getByRole('link', { name: 'What should I change?' })).toHaveAttribute(
+      'href',
+      '/recommendations?run=run-1',
+    )
+    expect(screen.getByRole('link', { name: 'Try a what-if' })).toHaveAttribute('href', '/what-if?base=run-1')
+    expect(screen.getByRole('link', { name: 'Save scenario' })).toHaveAttribute('href', '/history/run-1')
+    expect(screen.getByRole('button', { name: 'Why this prediction?' })).toBeDisabled()
   })
 })

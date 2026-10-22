@@ -123,7 +123,7 @@ export function RunDetailScreen() {
 
       <div className="grid gap-4 lg:grid-cols-2">
         <div className="flex flex-col gap-4">
-          <ResultCard prediction={view.prediction} />
+          <ResultCard prediction={view.prediction} runId={data?.status === 'FINAL_RESULT' ? runId : null} />
           <div className="rounded border border-border bg-panel p-4">
             <ActiveStagePanel stage={focus} view={focus ? view.stages[focus] : null} />
           </div>

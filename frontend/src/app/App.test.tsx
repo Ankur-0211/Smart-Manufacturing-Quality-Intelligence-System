@@ -27,7 +27,7 @@ describe('App shell', () => {
   it('navigates between screens', async () => {
     renderApp()
     await userEvent.click(screen.getByRole('link', { name: 'What-If' }))
-    expect(await screen.findByRole('heading', { name: 'What-If' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'What-If workbench' })).toBeInTheDocument()
   })
 
   it('always shows the software-simulation disclaimer', () => {

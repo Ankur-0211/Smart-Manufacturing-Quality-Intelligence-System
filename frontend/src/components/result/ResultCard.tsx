@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { Link } from 'react-router-dom'
 
 import { RISK_TEXT } from '@/components/pipeline/stateStyle'
 import { STAGE_META, type PredictionView, type StageName } from '@/features/process-control/model'
@@ -34,7 +35,14 @@ function RiskOrigin({ mass }: { mass: { stage: StageName; share: number }[] }) {
  * model-predicted failure probability, operational risk, and anomaly status.
  * Every number shown comes from the API payload passed in; nothing is computed or defaulted here.
  */
-export function ResultCard({ prediction }: { prediction: PredictionView | null }) {
+export function ResultCard({
+  prediction,
+  runId = null,
+}: {
+  prediction: PredictionView | null
+  /** The finished run this result belongs to; enables the follow-up actions. */
+  runId?: string | null
+}) {
   if (!prediction) {
     return (
       <section aria-label="Quality result" className="rounded border border-border bg-panel p-4">
@@ -123,17 +131,36 @@ export function ResultCard({ prediction }: { prediction: PredictionView | null }
       )}
 
       <div className="mt-4 flex flex-wrap gap-2">
-        {['Why this prediction?', 'What should I change?', 'Save scenario'].map((label) => (
-          <button
-            key={label}
-            type="button"
-            disabled
-            title="Available in a later phase (R2-P7)"
-            className="rounded border border-border px-3 py-1 text-xs uppercase opacity-40"
-          >
-            {label}
-          </button>
-        ))}
+        <button
+          type="button"
+          disabled
+          title="Explainability panel: next step of R2-P7"
+          className="rounded border border-border px-3 py-1 text-xs uppercase opacity-40"
+        >
+          Why this prediction?
+        </button>
+        {runId ? (
+          <>
+            <Link
+              to={`/recommendations?run=${runId}`}
+              className="rounded border border-border px-3 py-1 text-xs uppercase hover:bg-panel-raised"
+            >
+              What should I change?
+            </Link>
+            <Link
+              to={`/what-if?base=${runId}`}
+              className="rounded border border-border px-3 py-1 text-xs uppercase hover:bg-panel-raised"
+            >
+              Try a what-if
+            </Link>
+            <Link
+              to={`/history/${runId}`}
+              className="rounded border border-border px-3 py-1 text-xs uppercase hover:bg-panel-raised"
+            >
+              Save scenario
+            </Link>
+          </>
+        ) : null}
       </div>
     </section>
   )

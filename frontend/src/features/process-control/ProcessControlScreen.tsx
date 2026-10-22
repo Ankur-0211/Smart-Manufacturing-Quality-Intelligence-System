@@ -271,7 +271,7 @@ export function ProcessControlScreen() {
           <div className="rounded border border-border bg-panel p-4">
             <ActiveStagePanel stage={focus} view={focusView} />
           </div>
-          <ResultCard prediction={state.prediction} />
+          <ResultCard prediction={state.prediction} runId={state.status === 'FINAL_RESULT' ? runId : null} />
         </div>
         <div className="flex flex-col gap-4">
           <div className="rounded border border-border bg-panel p-4">

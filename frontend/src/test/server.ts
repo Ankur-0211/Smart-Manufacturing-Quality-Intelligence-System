@@ -44,6 +44,7 @@ export const defaultHandlers = [
   http.get(`${API}/machines`, () => HttpResponse.json(envelope(machines))),
   http.get(`${API}/products`, () => HttpResponse.json(envelope(products))),
   http.get(`${API}/materials`, () => HttpResponse.json(envelope(materials))),
+  http.get(`${API}/simulation/runs`, () => HttpResponse.json(envelope([]))),
 ]
 
 export const server = setupServer(...defaultHandlers)

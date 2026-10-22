@@ -48,7 +48,7 @@ export function serverErrors(error: unknown): ServerErrors {
   if (!(error instanceof ApiClientError)) return out
   const details = error.details ?? []
   for (const d of details) {
-    const field = d.field?.replace(/^parameters\./, '') ?? null
+    const field = d.field?.replace(/^(parameters|overrides)\./, '') ?? null
     if (d.code === 'COUPLING_VIOLATION') out.general.push(d.message)
     if (field) out.fields[field] = d.limit != null ? `${d.message} (limit ${d.limit})` : d.message
     else if (d.code !== 'COUPLING_VIOLATION') out.general.push(d.message)

@@ -45,6 +45,13 @@ The shared contract harness (`backend/tests/contract/test_interface_contract.py`
     - For the nominal run (MC-02 / PP-JBOX-42 / A-771, p_fail 0.236), all three candidates predict exactly 0.236. They are labelled Minimal change, Balanced and Aggressive, and change 1–3 parameters.
     - Roadmap §7.15 and Plan §14 rank candidates by improvement. An option with zero predicted improvement should either not be offered, or come with an `empty_reason` / note saying nothing better was found.
 
+7b. **The step-size guard reports a pass while the steps exceed the limit** (found 2026-10-22). This is a false guard stamp.
+    - Run `faf0cacf` (MC-02 / PP-JBOX-42 / E-200, melt 290 °C, p_fail 0.53) received the option "Aggressive": melt −65 °C, holding pressure +150 bar, cooling +4 s.
+    - Its guard checks include `✓ step_size — Step changes <= max allowed per parameter`.
+    - `constraints.yaml` sets `max_step_change` to 20 °C for melt, 100 bar for holding pressure and 3 s for cooling, so all three changes exceed their limit.
+    - Role 2 now cross-checks every option against the registry's `max_step_change` and shows a warning on the card. Role 1's guard list is still shown as reported (screenshot `docs/screenshots/09-recommendation-card.jpg`).
+    - Please fix the guard, or split large moves into several options or steps.
+
 ## B. Contract gaps against roadmap §9.1 (please add, or agree to drop)
 
 8. **`QualityIntelligence` is missing four methods.**

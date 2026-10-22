@@ -23,4 +23,11 @@ Captured on 2026-10-22 with the **demo profile** (`SMQI_ENV=demo`, real intellig
 | `07-blocked-override.jpg` | Melt 290 °C above the PP-H ceiling: Thermal BLOCKED `[/]` (HC-001), override panel requiring an acknowledgement |
 | `08-not-releasable.jpg` | After the override: Thermal CRITICAL "overridden", QUALITY "NOT REL.", **NOT RELEASABLE** banner over the model output (UD-07) |
 
+**Recommendations and what-if**, on finished run `faf0cacf` (melt 290 °C, model FAIL 0.53):
+
+| File | Shows |
+|---|---|
+| `09-recommendation-card.jpg` | Role 1's option (P(fail) 0.53 → 0.24), its guard checks as reported, stability/cost, and Role 2's warning that the steps exceed the registry's `max_step_change` (CCR-004 #7b) |
+| `10-whatif-diff.jpg` | The same option sent to What-If and evaluated: P(fail) 0.53 → 0.24 FLIPPED, operational risk CRITICAL → LOW, parameter table incl. the cycle-time rule (UD-09) |
+
 **Note:** the risk origin is split evenly at 20 % per stage. That is Role 1's `stage_risk_mass` for this input; see CCR-004 #3.
