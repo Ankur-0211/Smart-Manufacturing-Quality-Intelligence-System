@@ -41,6 +41,10 @@ The shared contract harness (`backend/tests/contract/test_interface_contract.py`
    - As a result, `POST /materials` can only type-check those values. Role 2's validation picks up their windows automatically once entries exist.
 7. **`fleet.yaml`:** with the nominal recipe (120 t clamp), CPL-003 rejects MC-03 (110 t max). That is acceptable if intended, but the nominal recipe can't be used on that machine.
 
+7a. **Recommendations without predicted benefit** (found 2026-10-22 through `POST /recommend`).
+    - For the nominal run (MC-02 / PP-JBOX-42 / A-771, p_fail 0.236), all three candidates predict exactly 0.236. They are labelled Minimal change, Balanced and Aggressive, and change 1–3 parameters.
+    - Roadmap §7.15 and Plan §14 rank candidates by improvement. An option with zero predicted improvement should either not be offered, or come with an `empty_reason` / note saying nothing better was found.
+
 ## B. Contract gaps against roadmap §9.1 (please add, or agree to drop)
 
 8. **`QualityIntelligence` is missing four methods.**

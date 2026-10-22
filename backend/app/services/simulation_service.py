@@ -31,6 +31,7 @@ from app.db.errors import NotFoundError
 from app.db.models import ProcessRun, SimulationEvent
 from app.db.repositories import (
     EventRepository,
+    LineageNode,
     PredictionRepository,
     ReferenceRepository,
     RunFilters,
@@ -170,6 +171,10 @@ class SimulationService:
         if handle is None:
             handle = self._handles[run_id] = _Handle()
         return handle
+
+    def require_executor(self) -> StageExecutor:
+        """The bound executor; ``ExecutorUnavailableError`` (HTTP 501) when none is bound."""
+        return self._require_executor()
 
     def _require_executor(self) -> StageExecutor:
         if self.executor is None:
@@ -718,6 +723,19 @@ class SimulationService:
             rows, total = RunRepository(s).search(filters, limit=limit, offset=offset)
             predictions = PredictionRepository(s)
             return [self._summary(r, predictions.for_run(r.id)) for r in rows], total
+
+    def lineage(self, run_id: str) -> dict[str, Any]:
+        """``{run: ScenarioSummary, children: [...]}`` rooted at ``run_id`` (what-if tree)."""
+        with self.db.session() as s:
+            predictions = PredictionRepository(s)
+
+            def node(n: LineageNode) -> dict[str, Any]:
+                return {
+                    "run": self._summary(n.run, predictions.for_run(n.run.id)),
+                    "children": [node(c) for c in n.children],
+                }
+
+            return node(RunRepository(s).lineage(run_id))
 
     def set_label(self, run_id: str, label: str | None) -> dict[str, Any]:
         """Save scenario: the only mutation allowed on a finished run (roadmap §9.4)."""

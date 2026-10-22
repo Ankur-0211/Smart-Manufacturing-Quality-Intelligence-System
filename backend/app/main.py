@@ -12,7 +12,13 @@ from contextlib import asynccontextmanager
 from fastapi import APIRouter, Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api import routes_meta, routes_prediction, routes_reference, routes_simulation
+from app.api import (
+    routes_meta,
+    routes_prediction,
+    routes_reference,
+    routes_simulation,
+    routes_whatif,
+)
 from app.api.deps import build_intelligence, load_registry, require_api_key
 from app.api.errors import register_exception_handlers
 from app.api.middleware import RequestContextMiddleware
@@ -126,6 +132,7 @@ PROTECTED_ROUTERS: list[APIRouter] = [
     routes_reference.router,
     routes_prediction.router,
     routes_simulation.router,
+    routes_whatif.router,
 ]
 
 

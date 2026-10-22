@@ -135,6 +135,15 @@
         "title": "AnomalyResult",
         "type": "object"
       },
+      "CandidateFlag": {
+        "enum": [
+          "EXTRAPOLATED",
+          "UNSTABLE",
+          "NEAR_WINDOW_EDGE"
+        ],
+        "title": "CandidateFlag",
+        "type": "string"
+      },
       "CaveatItem": {
         "additionalProperties": false,
         "properties": {
@@ -159,6 +168,53 @@
           "message"
         ],
         "title": "CaveatItem",
+        "type": "object"
+      },
+      "CompareRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "run_id_a": {
+            "title": "Run Id A",
+            "type": "string"
+          },
+          "run_id_b": {
+            "title": "Run Id B",
+            "type": "string"
+          }
+        },
+        "required": [
+          "run_id_a",
+          "run_id_b"
+        ],
+        "title": "CompareRequest",
+        "type": "object"
+      },
+      "ComplianceDiff": {
+        "properties": {
+          "critical_from": {
+            "title": "Critical From",
+            "type": "integer"
+          },
+          "critical_to": {
+            "title": "Critical To",
+            "type": "integer"
+          },
+          "warnings_from": {
+            "title": "Warnings From",
+            "type": "integer"
+          },
+          "warnings_to": {
+            "title": "Warnings To",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "warnings_from",
+          "warnings_to",
+          "critical_from",
+          "critical_to"
+        ],
+        "title": "ComplianceDiff",
         "type": "object"
       },
       "ComponentStatus": {
@@ -437,6 +493,34 @@
         "title": "CreateRunRequest",
         "type": "object"
       },
+      "CycleTimeDiff": {
+        "properties": {
+          "delta_pct": {
+            "title": "Delta Pct",
+            "type": "number"
+          },
+          "delta_s": {
+            "title": "Delta S",
+            "type": "number"
+          },
+          "from": {
+            "title": "From",
+            "type": "number"
+          },
+          "to": {
+            "title": "To",
+            "type": "number"
+          }
+        },
+        "required": [
+          "from",
+          "to",
+          "delta_s",
+          "delta_pct"
+        ],
+        "title": "CycleTimeDiff",
+        "type": "object"
+      },
       "DataProvenance": {
         "enum": [
           "dataset_derived",
@@ -581,6 +665,39 @@
         "title": "Envelope[HealthData]",
         "type": "object"
       },
+      "Envelope_LineageOut_": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LineageOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "error": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ErrorBody"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "meta": {
+            "$ref": "#/components/schemas/Meta"
+          }
+        },
+        "required": [
+          "meta"
+        ],
+        "title": "Envelope[LineageOut]",
+        "type": "object"
+      },
       "Envelope_LocalExplanation_": {
         "additionalProperties": false,
         "properties": {
@@ -680,6 +797,72 @@
         "title": "Envelope[PredictResponse]",
         "type": "object"
       },
+      "Envelope_RecommendOut_": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RecommendOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "error": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ErrorBody"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "meta": {
+            "$ref": "#/components/schemas/Meta"
+          }
+        },
+        "required": [
+          "meta"
+        ],
+        "title": "Envelope[RecommendOut]",
+        "type": "object"
+      },
+      "Envelope_RunDiff_": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RunDiff"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "error": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ErrorBody"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "meta": {
+            "$ref": "#/components/schemas/Meta"
+          }
+        },
+        "required": [
+          "meta"
+        ],
+        "title": "Envelope[RunDiff]",
+        "type": "object"
+      },
       "Envelope_ScenarioSummary_": {
         "additionalProperties": false,
         "properties": {
@@ -713,6 +896,39 @@
         "title": "Envelope[ScenarioSummary]",
         "type": "object"
       },
+      "Envelope_SensitivityResult_": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SensitivityResult"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "error": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ErrorBody"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "meta": {
+            "$ref": "#/components/schemas/Meta"
+          }
+        },
+        "required": [
+          "meta"
+        ],
+        "title": "Envelope[SensitivityResult]",
+        "type": "object"
+      },
       "Envelope_SimulationStateOut_": {
         "additionalProperties": false,
         "properties": {
@@ -744,6 +960,39 @@
           "meta"
         ],
         "title": "Envelope[SimulationStateOut]",
+        "type": "object"
+      },
+      "Envelope_WhatIfResult_": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/WhatIfResult"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "error": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ErrorBody"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "meta": {
+            "$ref": "#/components/schemas/Meta"
+          }
+        },
+        "required": [
+          "meta"
+        ],
+        "title": "Envelope[WhatIfResult]",
         "type": "object"
       },
       "Envelope_dict_str__Any__": {
@@ -1258,6 +1507,38 @@
         "title": "GroupedAttribution",
         "type": "object"
       },
+      "GuardCheck": {
+        "additionalProperties": false,
+        "properties": {
+          "check": {
+            "enum": [
+              "box",
+              "hard_constraints",
+              "couplings",
+              "distribution",
+              "step_size",
+              "stability"
+            ],
+            "title": "Check",
+            "type": "string"
+          },
+          "detail": {
+            "title": "Detail",
+            "type": "string"
+          },
+          "passed": {
+            "title": "Passed",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "check",
+          "passed",
+          "detail"
+        ],
+        "title": "GuardCheck",
+        "type": "object"
+      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -1422,6 +1703,26 @@
           }
         },
         "title": "LabelRequest",
+        "type": "object"
+      },
+      "LineageOut": {
+        "properties": {
+          "children": {
+            "items": {
+              "$ref": "#/components/schemas/LineageOut"
+            },
+            "title": "Children",
+            "type": "array"
+          },
+          "run": {
+            "$ref": "#/components/schemas/ScenarioSummary"
+          }
+        },
+        "required": [
+          "run",
+          "children"
+        ],
+        "title": "LineageOut",
         "type": "object"
       },
       "LocalExplanation": {
@@ -1907,6 +2208,68 @@
         "title": "OverrideRequest",
         "type": "object"
       },
+      "ParameterChange": {
+        "additionalProperties": false,
+        "properties": {
+          "delta": {
+            "title": "Delta",
+            "type": "number"
+          },
+          "from_value": {
+            "title": "From Value",
+            "type": "number"
+          },
+          "parameter": {
+            "title": "Parameter",
+            "type": "string"
+          },
+          "to_value": {
+            "title": "To Value",
+            "type": "number"
+          },
+          "unit": {
+            "title": "Unit",
+            "type": "string"
+          }
+        },
+        "required": [
+          "parameter",
+          "from_value",
+          "to_value",
+          "delta",
+          "unit"
+        ],
+        "title": "ParameterChange",
+        "type": "object"
+      },
+      "ParameterDiff": {
+        "properties": {
+          "delta": {
+            "title": "Delta",
+            "type": "number"
+          },
+          "from": {
+            "title": "From",
+            "type": "number"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "to": {
+            "title": "To",
+            "type": "number"
+          }
+        },
+        "required": [
+          "name",
+          "from",
+          "to",
+          "delta"
+        ],
+        "title": "ParameterDiff",
+        "type": "object"
+      },
       "ParameterSpecOut": {
         "additionalProperties": true,
         "properties": {
@@ -2122,6 +2485,44 @@
           "prediction"
         ],
         "title": "PredictResponse",
+        "type": "object"
+      },
+      "PredictionDiff": {
+        "properties": {
+          "flipped": {
+            "title": "Flipped",
+            "type": "boolean"
+          },
+          "label_from": {
+            "title": "Label From",
+            "type": "string"
+          },
+          "label_to": {
+            "title": "Label To",
+            "type": "string"
+          },
+          "p_fail_delta": {
+            "title": "P Fail Delta",
+            "type": "number"
+          },
+          "p_fail_from": {
+            "title": "P Fail From",
+            "type": "number"
+          },
+          "p_fail_to": {
+            "title": "P Fail To",
+            "type": "number"
+          }
+        },
+        "required": [
+          "label_from",
+          "label_to",
+          "p_fail_from",
+          "p_fail_to",
+          "p_fail_delta",
+          "flipped"
+        ],
+        "title": "PredictionDiff",
         "type": "object"
       },
       "PredictionLabel": {
@@ -2414,6 +2815,246 @@
         "title": "ProductOut",
         "type": "object"
       },
+      "RecommendOut": {
+        "additionalProperties": false,
+        "properties": {
+          "base_label": {
+            "$ref": "#/components/schemas/PredictionLabel"
+          },
+          "base_p_fail": {
+            "title": "Base P Fail",
+            "type": "number"
+          },
+          "candidates": {
+            "items": {
+              "$ref": "#/components/schemas/RecommendationCandidate"
+            },
+            "title": "Candidates",
+            "type": "array"
+          },
+          "compute_ms": {
+            "default": 0.0,
+            "title": "Compute Ms",
+            "type": "number"
+          },
+          "constraints_version": {
+            "default": "constraints-1.0.0",
+            "title": "Constraints Version",
+            "type": "string"
+          },
+          "disclaimer_key": {
+            "default": "DISCLAIMER_RECOMMENDATION",
+            "title": "Disclaimer Key",
+            "type": "string"
+          },
+          "empty_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Empty Reason"
+          },
+          "evaluated_count": {
+            "default": 0,
+            "title": "Evaluated Count",
+            "type": "integer"
+          },
+          "model_version": {
+            "default": "fusion-1.0.0",
+            "title": "Model Version",
+            "type": "string"
+          },
+          "rejected_counts": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "Rejected Counts",
+            "type": "object"
+          },
+          "request_id": {
+            "title": "Request Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "base_p_fail",
+          "base_label",
+          "request_id"
+        ],
+        "title": "RecommendOut",
+        "type": "object"
+      },
+      "RecommendRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "enable_refinement": {
+            "default": false,
+            "title": "Enable Refinement",
+            "type": "boolean"
+          },
+          "locked": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Locked",
+            "type": "array"
+          },
+          "max_changes": {
+            "default": 3,
+            "maximum": 6.0,
+            "minimum": 1.0,
+            "title": "Max Changes",
+            "type": "integer"
+          },
+          "n_options": {
+            "default": 3,
+            "maximum": 10.0,
+            "minimum": 1.0,
+            "title": "N Options",
+            "type": "integer"
+          },
+          "objective": {
+            "const": "min_p_fail",
+            "default": "min_p_fail",
+            "title": "Objective",
+            "type": "string"
+          },
+          "run_id": {
+            "title": "Run Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "run_id"
+        ],
+        "title": "RecommendRequest",
+        "type": "object"
+      },
+      "RecommendationCandidate": {
+        "additionalProperties": false,
+        "properties": {
+          "change_cost": {
+            "default": 0.0,
+            "title": "Change Cost",
+            "type": "number"
+          },
+          "changes": {
+            "items": {
+              "$ref": "#/components/schemas/ParameterChange"
+            },
+            "title": "Changes",
+            "type": "array"
+          },
+          "constraint_status": {
+            "const": "ALL_SATISFIED",
+            "default": "ALL_SATISFIED",
+            "title": "Constraint Status",
+            "type": "string"
+          },
+          "cycle_time_delta_pct": {
+            "default": 0.0,
+            "title": "Cycle Time Delta Pct",
+            "type": "number"
+          },
+          "cycle_time_delta_s": {
+            "default": 0.0,
+            "title": "Cycle Time Delta S",
+            "type": "number"
+          },
+          "delta_p_fail": {
+            "title": "Delta P Fail",
+            "type": "number"
+          },
+          "flags": {
+            "items": {
+              "$ref": "#/components/schemas/CandidateFlag"
+            },
+            "title": "Flags",
+            "type": "array"
+          },
+          "guard_checks": {
+            "items": {
+              "$ref": "#/components/schemas/GuardCheck"
+            },
+            "title": "Guard Checks",
+            "type": "array"
+          },
+          "in_distribution": {
+            "default": true,
+            "title": "In Distribution",
+            "type": "boolean"
+          },
+          "option_label": {
+            "enum": [
+              "Minimal change",
+              "Balanced",
+              "Aggressive"
+            ],
+            "title": "Option Label",
+            "type": "string"
+          },
+          "option_rank": {
+            "minimum": 1.0,
+            "title": "Option Rank",
+            "type": "integer"
+          },
+          "predicted_label": {
+            "$ref": "#/components/schemas/PredictionLabel"
+          },
+          "predicted_p_fail": {
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Predicted P Fail",
+            "type": "number"
+          },
+          "rationale": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Rationale",
+            "type": "array"
+          },
+          "score": {
+            "default": 0.0,
+            "title": "Score",
+            "type": "number"
+          },
+          "search_method": {
+            "default": "coordinate",
+            "enum": [
+              "rule_proposal",
+              "coordinate",
+              "pairwise",
+              "differential_evolution"
+            ],
+            "title": "Search Method",
+            "type": "string"
+          },
+          "stability": {
+            "$ref": "#/components/schemas/StabilityReport"
+          },
+          "stage_health_after": {
+            "items": {
+              "$ref": "#/components/schemas/StageHealthAfter"
+            },
+            "title": "Stage Health After",
+            "type": "array"
+          }
+        },
+        "required": [
+          "option_rank",
+          "option_label",
+          "predicted_p_fail",
+          "predicted_label",
+          "delta_p_fail"
+        ],
+        "title": "RecommendationCandidate",
+        "type": "object"
+      },
       "ResinGradeOut": {
         "additionalProperties": true,
         "properties": {
@@ -2537,6 +3178,29 @@
         "title": "RiskBandsOut",
         "type": "object"
       },
+      "RiskDiff": {
+        "properties": {
+          "band_delta": {
+            "title": "Band Delta",
+            "type": "integer"
+          },
+          "from": {
+            "title": "From",
+            "type": "string"
+          },
+          "to": {
+            "title": "To",
+            "type": "string"
+          }
+        },
+        "required": [
+          "from",
+          "to",
+          "band_delta"
+        ],
+        "title": "RiskDiff",
+        "type": "object"
+      },
       "RiskDriver": {
         "additionalProperties": false,
         "properties": {
@@ -2576,6 +3240,47 @@
         ],
         "title": "RiskLevel",
         "type": "string"
+      },
+      "RunDiff": {
+        "description": "Roadmap 7.16 ``diff`` (Plan \u00a716.4 example, \u00a713.6 table).",
+        "properties": {
+          "constraint_compliance": {
+            "$ref": "#/components/schemas/ComplianceDiff"
+          },
+          "cycle_time": {
+            "$ref": "#/components/schemas/CycleTimeDiff"
+          },
+          "operational_risk": {
+            "$ref": "#/components/schemas/RiskDiff"
+          },
+          "parameters": {
+            "items": {
+              "$ref": "#/components/schemas/ParameterDiff"
+            },
+            "title": "Parameters",
+            "type": "array"
+          },
+          "prediction": {
+            "$ref": "#/components/schemas/PredictionDiff"
+          },
+          "stages": {
+            "items": {
+              "$ref": "#/components/schemas/StageDiff"
+            },
+            "title": "Stages",
+            "type": "array"
+          }
+        },
+        "required": [
+          "parameters",
+          "stages",
+          "prediction",
+          "operational_risk",
+          "constraint_compliance",
+          "cycle_time"
+        ],
+        "title": "RunDiff",
+        "type": "object"
       },
       "ScenarioSummary": {
         "description": "History row (roadmap \u00a77.16).",
@@ -2704,6 +3409,109 @@
           "inference_backend"
         ],
         "title": "ScenarioSummary",
+        "type": "object"
+      },
+      "SensitivityPoint": {
+        "additionalProperties": false,
+        "properties": {
+          "label": {
+            "$ref": "#/components/schemas/PredictionLabel"
+          },
+          "p_fail": {
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "P Fail",
+            "type": "number"
+          },
+          "value": {
+            "title": "Value",
+            "type": "number"
+          }
+        },
+        "required": [
+          "value",
+          "p_fail",
+          "label"
+        ],
+        "title": "SensitivityPoint",
+        "type": "object"
+      },
+      "SensitivityRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "base_run_id": {
+            "title": "Base Run Id",
+            "type": "string"
+          },
+          "parameter": {
+            "title": "Parameter",
+            "type": "string"
+          },
+          "steps": {
+            "default": 40,
+            "maximum": 200.0,
+            "minimum": 2.0,
+            "title": "Steps",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "base_run_id",
+          "parameter"
+        ],
+        "title": "SensitivityRequest",
+        "type": "object"
+      },
+      "SensitivityResult": {
+        "additionalProperties": false,
+        "properties": {
+          "current_value": {
+            "title": "Current Value",
+            "type": "number"
+          },
+          "flip_point": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Flip Point"
+          },
+          "local_gradient": {
+            "default": 0.0,
+            "title": "Local Gradient",
+            "type": "number"
+          },
+          "parameter": {
+            "title": "Parameter",
+            "type": "string"
+          },
+          "points": {
+            "items": {
+              "$ref": "#/components/schemas/SensitivityPoint"
+            },
+            "title": "Points",
+            "type": "array"
+          },
+          "range_swing": {
+            "default": 0.0,
+            "title": "Range Swing",
+            "type": "number"
+          },
+          "unit": {
+            "title": "Unit",
+            "type": "string"
+          }
+        },
+        "required": [
+          "parameter",
+          "unit",
+          "current_value"
+        ],
+        "title": "SensitivityResult",
         "type": "object"
       },
       "SimulationStateOut": {
@@ -2920,6 +3728,28 @@
         "title": "SimulationStateOut",
         "type": "object"
       },
+      "StabilityReport": {
+        "additionalProperties": false,
+        "properties": {
+          "flips": {
+            "default": 0,
+            "title": "Flips",
+            "type": "integer"
+          },
+          "stable": {
+            "default": true,
+            "title": "Stable",
+            "type": "boolean"
+          },
+          "trials": {
+            "default": 20,
+            "title": "Trials",
+            "type": "integer"
+          }
+        },
+        "title": "StabilityReport",
+        "type": "object"
+      },
       "StageAnomaly": {
         "additionalProperties": false,
         "description": "L1 per-stage anomaly output.",
@@ -2957,6 +3787,73 @@
           "method"
         ],
         "title": "StageAnomaly",
+        "type": "object"
+      },
+      "StageDiff": {
+        "properties": {
+          "change": {
+            "enum": [
+              "improved",
+              "worsened",
+              "unchanged"
+            ],
+            "title": "Change",
+            "type": "string"
+          },
+          "health_from": {
+            "title": "Health From",
+            "type": "number"
+          },
+          "health_to": {
+            "title": "Health To",
+            "type": "number"
+          },
+          "risk_from": {
+            "title": "Risk From",
+            "type": "string"
+          },
+          "risk_to": {
+            "title": "Risk To",
+            "type": "string"
+          },
+          "stage": {
+            "title": "Stage",
+            "type": "string"
+          }
+        },
+        "required": [
+          "stage",
+          "health_from",
+          "health_to",
+          "risk_from",
+          "risk_to",
+          "change"
+        ],
+        "title": "StageDiff",
+        "type": "object"
+      },
+      "StageHealthAfter": {
+        "additionalProperties": false,
+        "properties": {
+          "health_score": {
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Health Score",
+            "type": "number"
+          },
+          "risk_level": {
+            "$ref": "#/components/schemas/RiskLevel"
+          },
+          "stage": {
+            "$ref": "#/components/schemas/StageName"
+          }
+        },
+        "required": [
+          "stage",
+          "health_score",
+          "risk_level"
+        ],
+        "title": "StageHealthAfter",
         "type": "object"
       },
       "StageName": {
@@ -3303,6 +4200,104 @@
           "type"
         ],
         "title": "ValidationError",
+        "type": "object"
+      },
+      "WhatIfRequest": {
+        "additionalProperties": false,
+        "description": "Overrides use canonical recipe names; registry windows and couplings are enforced.",
+        "properties": {
+          "base_run_id": {
+            "title": "Base Run Id",
+            "type": "string"
+          },
+          "label": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Label"
+          },
+          "overrides": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "minProperties": 1,
+            "title": "Overrides",
+            "type": "object"
+          },
+          "persist": {
+            "default": true,
+            "title": "Persist",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "base_run_id",
+          "overrides"
+        ],
+        "title": "WhatIfRequest",
+        "type": "object"
+      },
+      "WhatIfResult": {
+        "properties": {
+          "diff": {
+            "$ref": "#/components/schemas/RunDiff"
+          },
+          "parent_run_id": {
+            "title": "Parent Run Id",
+            "type": "string"
+          },
+          "prediction": {
+            "$ref": "#/components/schemas/PredictionResult"
+          },
+          "recomputed_stages": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Recomputed Stages",
+            "type": "array"
+          },
+          "reused_stages": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Reused Stages",
+            "type": "array"
+          },
+          "run_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Run Id"
+          },
+          "stage_results": {
+            "items": {
+              "$ref": "#/components/schemas/StageResult"
+            },
+            "title": "Stage Results",
+            "type": "array"
+          }
+        },
+        "required": [
+          "run_id",
+          "parent_run_id",
+          "recomputed_stages",
+          "reused_stages",
+          "stage_results",
+          "prediction",
+          "diff"
+        ],
+        "title": "WhatIfResult",
         "type": "object"
       }
     }
@@ -3868,6 +4863,65 @@
         "summary": "Active products",
         "tags": [
           "reference"
+        ]
+      }
+    },
+    "/api/v1/recommend": {
+      "post": {
+        "operationId": "recommend_api_v1_recommend_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "x-api-key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecommendRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Envelope_RecommendOut_"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Constrained recommendations for a finished run (model-relative, guarded)",
+        "tags": [
+          "what-if"
         ]
       }
     },
@@ -4490,6 +5544,64 @@
         ]
       }
     },
+    "/api/v1/simulation/runs/{run_id}/lineage": {
+      "get": {
+        "operationId": "lineage_api_v1_simulation_runs__run_id__lineage_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "run_id",
+            "required": true,
+            "schema": {
+              "title": "Run Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-api-key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Envelope_LineageOut_"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "What-if lineage tree rooted at a run",
+        "tags": [
+          "simulation"
+        ]
+      }
+    },
     "/api/v1/simulation/runs/{run_id}/override": {
       "post": {
         "operationId": "override_api_v1_simulation_runs__run_id__override_post",
@@ -4871,6 +5983,183 @@
         "summary": "Start",
         "tags": [
           "simulation"
+        ]
+      }
+    },
+    "/api/v1/whatif": {
+      "post": {
+        "operationId": "whatif_api_v1_whatif_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "x-api-key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WhatIfRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Envelope_WhatIfResult_"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Branch a finished run: partial re-simulation of the invalidated stages + diff",
+        "tags": [
+          "what-if"
+        ]
+      }
+    },
+    "/api/v1/whatif/compare": {
+      "post": {
+        "operationId": "compare_api_v1_whatif_compare_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "x-api-key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CompareRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Envelope_RunDiff_"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Diff between two finished runs",
+        "tags": [
+          "what-if"
+        ]
+      }
+    },
+    "/api/v1/whatif/sensitivity": {
+      "post": {
+        "operationId": "sensitivity_api_v1_whatif_sensitivity_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "x-api-key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SensitivityRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Envelope_SensitivityResult_"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "1-D sensitivity sweep around a finished run",
+        "tags": [
+          "what-if"
         ]
       }
     }

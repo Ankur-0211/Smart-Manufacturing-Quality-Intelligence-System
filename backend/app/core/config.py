@@ -49,7 +49,8 @@ class Settings(BaseSettings):
     # --- Role 2 ---
     env: Environment = Environment.DEV
     database_url: str = f"sqlite:///{(REPO_ROOT / 'var' / 'smqi.db').as_posix()}"
-    intelligence_backend: IntelligenceBackendMode = IntelligenceBackendMode.MOCK
+    # R2-P5 task 11: Role 1's facade is the default; tests and offline work opt into "mock".
+    intelligence_backend: IntelligenceBackendMode = IntelligenceBackendMode.REAL
     cors_origins: Annotated[list[str], NoDecode] = Field(
         default_factory=lambda: ["http://localhost:5173"]
     )

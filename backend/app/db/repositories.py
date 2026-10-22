@@ -180,7 +180,10 @@ class RunRepository:
         inference_backend: str | None = None,
         constraints_version: str | None = None,
         today: date | None = None,
+        snapshot: Mapping[str, Any] | None = None,
     ) -> ProcessRun:
+        """New INITIALIZED run. ``snapshot`` freezes a given context instead of deriving one
+        for ``today``: a what-if child inherits its parent's context exactly (roadmap 7.16)."""
         missing = [f for f in RECIPE_FIELDS if f not in parameters]
         unknown = [f for f in parameters if f not in RECIPE_FIELDS]
         if missing or unknown:
@@ -199,9 +202,9 @@ class RunRepository:
             parent_run_id=parent_run_id,
             inference_backend=inference_backend,
             constraints_version=constraints_version,
-            context_snapshot=context_snapshot(
-                machine, product, material_lot, today=today or utcnow().date()
-            ),
+            context_snapshot=dict(snapshot)
+            if snapshot is not None
+            else context_snapshot(machine, product, material_lot, today=today or utcnow().date()),
         )
         run.parameters = RunParameters(**{f: float(parameters[f]) for f in RECIPE_FIELDS})
         self.s.add(run)

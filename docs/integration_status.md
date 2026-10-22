@@ -3,7 +3,7 @@
 Both roles update this file (roadmap §10.1). A capability counts as **REAL** only when
 `QualityIntelligence.capabilities()` reports it **and** this table says so.
 
-_Last updated: 2026-10-22 by Role 2 (R2-P5 part 1: real model registration, demo profile)._
+_Last updated: 2026-10-22 by Role 2 (R2-P5 complete: what-if, recommend, lineage; dev default = real)._
 
 ## Capability matrix
 
@@ -13,8 +13,8 @@ _Last updated: 2026-10-22 by Role 2 (R2-P5 part 1: real model registration, demo
 | `predict` | REAL | 2026-10-21 | Threshold 0.35 (in code). Open defects: label forced to FAIL on critical breaches, risk-mass sum ([CCR-004](contract_changes/CCR-004-role1-integration-findings.md) #2-#3) |
 | `explain` / `global_explanation` | REAL | 2026-10-21 | Signature `explain(inp, stage_results, prediction)` (CCR-004 #8) |
 | `anomaly_global` | NOT AVAILABLE | — | Not in Role 1's Protocol (CCR-004 #8) |
-| `recommend` | REAL | 2026-10-21 | Role 2 endpoint pending (R2-P7). UI gated on the "guard tested" statement |
-| `sensitivity` | REAL | 2026-10-21 | Role 2 endpoint pending (R2-P7, P1) |
+| `recommend` | REAL | 2026-10-21 | `POST /recommend` live 2026-10-22. Candidates show no predicted improvement (CCR-004 #7a). UI gated on the "guard tested" statement |
+| `sensitivity` | REAL | 2026-10-21 | `POST /whatif/sensitivity` live 2026-10-22 |
 | `spc` | NOT AVAILABLE | — | Reported as `spc_check: true` but not implemented (CCR-004 #10) |
 
 The mock (`app/intelligence_mock`) remains available for every capability above except SPC and is the
@@ -43,7 +43,7 @@ Status values: `NOT AVAILABLE` → `MOCK` → `HYBRID` → `REAL`.
 | R2-P2 | Done |
 | R2-P3 | Done: reference endpoints, `POST /simulation/runs`, `/predict` (persists `run_id=NULL` rows), explain, `/models`; `npm run check:api` fails on stale TS types |
 | R2-P4 | Done; runs on the mock or Role 1's real facade |
-| R2-P5 | Part 1 done: serving model registered at startup from `version_info()` (one active `model_versions` row), `/models/active/global-explanation`, real mode never falls back to mock, demo profile + `scripts/seed_demo_runs.py` verified live. Open: `/whatif` (+compare, sensitivity), `/recommend`, lineage endpoint |
+| R2-P5 | Done. Serving-model registration, global explanation, `POST /whatif` (partial re-sim via Role 1's `invalidated_stages`, diff, persisted child runs; property-tested equal to full runs), `/whatif/compare`, `/whatif/sensitivity` (rate limited), `POST /recommend` (rows per candidate with `request_id` + model version), `GET /simulation/runs/{id}/lineage`. Dev default backend is now `real`. N/A with Role 1's artifact-free facade: tiny-bundle CI and missing-bundle 503 |
 | R2-P6 | Visual components and live run viewing done; parameter sliders next (they use `GET /constraints`) |
 
 ## Milestones

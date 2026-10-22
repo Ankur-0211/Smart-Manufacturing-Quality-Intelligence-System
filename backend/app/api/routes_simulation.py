@@ -31,6 +31,7 @@ from app.schemas.simulation import (
     StageNameLiteral,
     StartRequest,
 )
+from app.schemas.whatif import LineageOut
 from app.services.simulation_service import ExecutorUnavailableError, SimulationService
 
 router = APIRouter(prefix="/simulation/runs", tags=["simulation"])
@@ -284,3 +285,14 @@ async def set_label(
     with _mapped_errors(run_id):
         data = await _sync(service.set_label, run_id, body.scenario_label)
     return Envelope(data=ScenarioSummary.model_validate(data), meta=build_meta(request))
+
+
+@router.get(
+    "/{run_id}/lineage",
+    response_model=Envelope[LineageOut],
+    summary="What-if lineage tree rooted at a run",
+)
+async def lineage(request: Request, run_id: str, service: ServiceDep) -> Envelope[LineageOut]:
+    with _mapped_errors(run_id):
+        data = await _sync(service.lineage, run_id)
+    return Envelope(data=LineageOut.model_validate(data), meta=build_meta(request))

@@ -174,6 +174,6 @@ Written after three Role 2 phases were complete (R2-P2, R2-P3, R2-P4), per the
 ## Next
 
 1. **Role 1:** work through CCR-003 and CCR-004, and restore roadmap 1.0.1 on `main`.
-2. **R2-P5 (rest):** the backend for `/whatif` (single and multi-parameter), `/recommend` and the lineage endpoint. Done on 2026-10-22: serving-model registration, the global-explanation endpoint, the demo profile and `seed_demo_runs.py`.
+2. **R2-P5:** done on 2026-10-22: what-if, compare, sensitivity, recommend, lineage, serving-model registration, the demo profile, and `real` as the default backend.
 3. **R2-P6:** run setup screen with parameter sliders from `GET /constraints`.
 4. **R2-P7:** what-if and recommendation screens on top of the R2-P5 endpoints.
