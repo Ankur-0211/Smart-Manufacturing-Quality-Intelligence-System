@@ -1,4 +1,4 @@
-"""GET /api/v1/constraints (roadmap R2-P1 task 9 required tests)."""
+"""GET /api/v1/constraints (roadmap R2-P1 task 9 required tests), served from Role 1's registry."""
 
 from __future__ import annotations
 
@@ -14,24 +14,46 @@ def test_constraints_returns_registry_version_and_hash(client: TestClient) -> No
     assert resp.status_code == 200
     data = resp.json()["data"]
     registry = client.app.state.registry  # type: ignore[attr-defined]
-    assert data["version"] == registry.version == "constraints-0.1.0"
+    assert data["version"] == data["registry_version"] == registry.version
     assert data["content_hash"] == registry.content_hash
-    assert data == registry.to_public_dict()  # the typed schema loses nothing
+
+
+def test_payload_carries_role1_registry_unchanged(client: TestClient) -> None:
+    """Typed for the frontend, but nothing Role 1 publishes is dropped or altered."""
+    data = client.get("/api/v1/constraints").json()["data"]
+    public = client.app.state.registry.to_public_dict()  # type: ignore[attr-defined]
+    assert {p["name"]: {k: v for k, v in p.items() if k != "name"} for p in data["parameters"]} == {
+        name: {k: spec.get(k) for k in {**spec, **dict.fromkeys(_TYPED)}}
+        for name, spec in public["parameters"].items()
+    }
+    for key in ("coupling_rules", "hard_constraints", "resin_grades", "risk_bands"):
+        assert data[key] == public[key] or _superset(data[key], public[key]), key
+
+
+_TYPED = (
+    "kind", "stage", "unit", "dtype", "min", "max", "nominal", "step", "tolerance", "actionable",
+    "change_cost", "max_step_change", "display_name", "provenance", "citation",
+)  # fmt: skip
+
+
+def _superset(served: object, source: object) -> bool:
+    """Served payload = source plus typed fields defaulted to null/false where Role 1 omits them."""
+    if isinstance(source, dict) and isinstance(served, dict):
+        return all(k in served and _superset(served[k], v) for k, v in source.items())
+    if isinstance(source, list) and isinstance(served, list):
+        return len(source) == len(served) and all(map(_superset, served, source))
+    return served == source
 
 
 def test_constraints_carry_everything_a_slider_needs(client: TestClient) -> None:
     data = client.get("/api/v1/constraints").json()["data"]
-    params = {p["name"]: p for p in data["parameters"]}
+    registry = client.app.state.registry  # type: ignore[attr-defined]
     assert [p["name"] for p in data["parameters"]][: len(RECIPE_FIELDS)] == list(RECIPE_FIELDS)
-    melt = params["melt_temp_c"]
-    assert {k: melt[k] for k in ("min", "max", "nominal", "step", "unit")} == {
-        "min": 180.0,
-        "max": 295.0,
-        "nominal": 230.0,
-        "step": 1.0,
-        "unit": "c",
-    }
-    assert params["resin_grade"]["allowed_values"] == ["PP-H", "PP-C"]
+    for p in data["parameters"]:
+        source = registry.get_parameter(p["name"])
+        for key in ("min", "max", "nominal", "step", "unit", "display_name", "actionable"):
+            assert p[key] == source[key], (p["name"], key)
+    assert set(data["resin_grades"]) == set(registry.resin_grades)
     assert {r["id"] for r in data["coupling_rules"]} == {"CPL-001", "CPL-002", "CPL-003", "CPL-004"}
 
 

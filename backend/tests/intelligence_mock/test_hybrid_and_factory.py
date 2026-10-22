@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import sys
-import types
 from pathlib import Path
 from typing import Any
 
@@ -14,9 +12,10 @@ from app.contracts.context import ProcessInput
 from app.contracts.errors import CapabilityUnavailableError
 from app.contracts.interface import QualityIntelligence
 from app.core.config import IntelligenceBackendMode
-from app.domain.constraint_loader import ConstraintRegistry
+from app.domain.constraint_loader import ConstraintRegistry, load_constraint_registry
+from app.intelligence.facade import RealQualityIntelligence
 from app.intelligence_mock.hybrid import HybridQualityIntelligence
-from app.intelligence_mock.mock import DEFAULT_REGISTRY, MockQualityIntelligence
+from app.intelligence_mock.mock import MockQualityIntelligence
 from tests.conftest import make_settings
 
 FIXTURE = Path(__file__).resolve().parents[1] / "contract" / "fixtures" / "recipe_nominal.json"
@@ -24,70 +23,56 @@ FIXTURE = Path(__file__).resolve().parents[1] / "contract" / "fixtures" / "recip
 
 @pytest.fixture(scope="module")
 def registry() -> ConstraintRegistry:
-    return ConstraintRegistry.load(DEFAULT_REGISTRY)
+    return load_constraint_registry()
 
 
-class PartialReal(MockQualityIntelligence):
-    """TEST DOUBLE standing in for a real facade that only offers stage intelligence."""
+class StagesOnlyReal(RealQualityIntelligence):
+    """TEST DOUBLE: Role 1's facade restricted to stage intelligence."""
 
     def capabilities(self) -> dict[str, bool]:
         return {"run_stage": True}
 
-    def version_info(self) -> Any:
-        info = super().version_info()
-        return info.model_copy(update={"inference_backend": "real", "is_mock": False})
-
 
 def test_hybrid_routes_per_capability(registry: ConstraintRegistry) -> None:
-    real, mock = PartialReal(registry), MockQualityIntelligence(registry)
+    real, mock = StagesOnlyReal(registry=registry), MockQualityIntelligence(registry)
     hybrid = HybridQualityIntelligence(real, mock)
     assert isinstance(hybrid, QualityIntelligence)
     routing = hybrid.routing()
     assert routing["run_stage"] == "real" and routing["predict"] == "mock"
-    info = hybrid.version_info()
-    assert info.is_mock and info.inference_backend == "mock"  # anything mocked => labelled mock
+    assert hybrid.version_info().is_mock  # anything mocked => labelled mock
     inp = ProcessInput.model_validate_json(FIXTURE.read_text("utf-8"))
     result = hybrid.evaluate(inp, include_explanation=True)
+    assert result.stage_results[0].module_version != "mock-0.0.0"  # stages came from Role 1
     assert result.prediction.is_mock  # predict came from the mock and says so
     assert result.prediction.explanation is not None
 
 
-def test_factory_mock(registry: ConstraintRegistry) -> None:
-    built = build_intelligence(make_settings(), registry)
-    assert isinstance(built, MockQualityIntelligence)
+def test_hybrid_with_a_full_real_facade_is_real(registry: ConstraintRegistry) -> None:
+    hybrid = HybridQualityIntelligence(
+        RealQualityIntelligence(registry=registry), MockQualityIntelligence(registry)
+    )
+    assert set(hybrid.routing().values()) == {"real"}
+    assert not hybrid.version_info().is_mock
 
 
-def test_factory_hybrid_without_facade_is_all_mock(registry: ConstraintRegistry) -> None:
-    built = build_intelligence(make_settings(intelligence_backend="hybrid"), registry)
-    assert isinstance(built, MockQualityIntelligence)
-
-
-def test_factory_real_refuses_to_start_without_facade(registry: ConstraintRegistry) -> None:
-    with pytest.raises(CapabilityUnavailableError):
-        build_intelligence(make_settings(intelligence_backend="real"), registry)
-
-
-def _install_facade(monkeypatch: pytest.MonkeyPatch, facade_cls: type) -> None:
-    pkg = types.ModuleType("app.intelligence")
-    module = types.ModuleType("app.intelligence.facade")
-    module.RealQualityIntelligence = facade_cls  # type: ignore[attr-defined]
-    monkeypatch.setitem(sys.modules, "app.intelligence", pkg)
-    monkeypatch.setitem(sys.modules, "app.intelligence.facade", module)
+def test_factory_modes(registry: ConstraintRegistry) -> None:
+    assert isinstance(build_intelligence(make_settings(), registry), MockQualityIntelligence)
+    hybrid = build_intelligence(make_settings(intelligence_backend="hybrid"), registry)
+    assert isinstance(hybrid, HybridQualityIntelligence)
+    real = build_intelligence(make_settings(intelligence_backend="real"), registry)
+    assert isinstance(real, RealQualityIntelligence)
+    assert real.registry is registry  # Role 1's facade shares the app's registry
 
 
 def test_factory_real_needs_p0_capabilities(
     registry: ConstraintRegistry, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    class Facade(PartialReal):
-        @classmethod
-        def from_settings(cls, settings: Any, reg: ConstraintRegistry) -> Facade:
-            return cls(reg)
+    def no_recommend(self: Any) -> dict[str, bool]:
+        return {"run_stage": True, "predict": True, "explain": True, "recommend": False}
 
-    _install_facade(monkeypatch, Facade)
-    with pytest.raises(CapabilityUnavailableError, match="predict"):
+    monkeypatch.setattr(RealQualityIntelligence, "capabilities", no_recommend)
+    with pytest.raises(CapabilityUnavailableError, match="recommend"):
         build_intelligence(make_settings(intelligence_backend="real"), registry)
-    hybrid = build_intelligence(make_settings(intelligence_backend="hybrid"), registry)
-    assert isinstance(hybrid, HybridQualityIntelligence)
 
 
 def test_demo_profile_refuses_mock() -> None:

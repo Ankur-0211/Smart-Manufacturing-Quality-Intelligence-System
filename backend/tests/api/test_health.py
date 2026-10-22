@@ -5,6 +5,7 @@ from pathlib import Path
 from fastapi.testclient import TestClient
 
 from app.core.ids import is_valid_uuid
+from app.domain.constraint_loader import load_constraint_registry
 from app.main import create_app
 from tests.conftest import make_settings
 from tests.db.conftest import migrate
@@ -41,9 +42,8 @@ def test_app_starts_with_mock_and_says_so(client: TestClient) -> None:
     data = client.get("/api/v1/health").json()["data"]
     info = data["intelligence"]
     assert info["is_mock"] is True
-    assert info["inference_backend"] == "mock"
-    assert info["fusion_model_version"] == "mock-0.0.0"
-    assert info["constraints_version"] == "constraints-0.1.0"
+    assert info["model_version"] == "mock-0.0.0"
+    assert info["constraints_version"] == load_constraint_registry().version
     assert info["capabilities"]["run_stage"] is True
     intelligence = next(c for c in data["components"] if c["name"] == "intelligence")
     assert intelligence["detail"].startswith("MOCK intelligence")

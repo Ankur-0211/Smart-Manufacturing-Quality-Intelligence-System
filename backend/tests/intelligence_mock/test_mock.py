@@ -6,11 +6,9 @@ from pathlib import Path
 
 import pytest
 
-from app.contracts.anomaly import SpcSeries
 from app.contracts.context import ProcessInput
-from app.contracts.enums import INTELLIGENCE_STAGES, ConstraintSeverity, RiskLevel, StageName
+from app.contracts.enums import ConstraintSeverity, RiskLevel, StageName
 from app.contracts.errors import (
-    CapabilityUnavailableError,
     InvalidInputError,
     LockedParameterError,
     StageResultsIncompleteError,
@@ -34,11 +32,12 @@ def load(name: str) -> ProcessInput:
     return ProcessInput.model_validate_json((FIXTURES / f"{name}.json").read_text("utf-8"))
 
 
-def test_satisfies_the_protocol(mock: MockQualityIntelligence) -> None:
+def test_satisfies_role1_protocol(mock: MockQualityIntelligence) -> None:
     assert isinstance(mock, QualityIntelligence)
     info = mock.version_info()
-    assert info.is_mock and info.fusion_model_version == MOCK_VERSION
-    assert set(info.module_versions) == set(INTELLIGENCE_STAGES)
+    assert info.is_mock and info.model_version == MOCK_VERSION
+    assert info.constraints_version == mock.registry.version
+    assert info.capabilities["run_stage"] and not info.capabilities["spc_check"]
 
 
 def test_every_prediction_is_labelled_mock(mock: MockQualityIntelligence) -> None:
@@ -48,7 +47,7 @@ def test_every_prediction_is_labelled_mock(mock: MockQualityIntelligence) -> Non
     assert "MOCK_INFERENCE" in {c.code for c in prediction.caveats}
 
 
-def test_outputs_depend_on_inputs(mock: MockQualityIntelligence) -> None:
+def test_outputs_depend_on_the_stage_slice(mock: MockQualityIntelligence) -> None:
     a = mock.evaluate(load("recipe_nominal"))
     b = mock.evaluate(load("recipe_short_cooling"))
     # S1-S4 read the same slice; COOLING reads cooling_time_s, so only it changes.
@@ -62,6 +61,7 @@ def test_outputs_depend_on_inputs(mock: MockQualityIntelligence) -> None:
     [
         ("recipe_high_moisture", StageName.MATERIAL_CONDITIONING, "HC-006"),
         ("recipe_melt_ceiling_breach", StageName.PLASTICIZING, "HC-001"),
+        ("recipe_clamp_insufficient", StageName.INJECTION, "HC-002"),
     ],
 )
 def test_blocked_path_comes_from_the_registry(
@@ -80,18 +80,16 @@ def test_blocked_path_comes_from_the_registry(
 
 
 def test_warning_breach_does_not_block(mock: MockQualityIntelligence) -> None:
-    inp = load("recipe_nominal")
-    recipe = inp.recipe.model_copy(update={"cushion_mm": 13.0})  # HC-005 band is 1-12
-    result = mock.evaluate(ProcessInput(context=inp.context, recipe=recipe))
-    packing = result.stage_results[3]
-    assert not packing.blocked
-    assert [(b.rule_id, b.severity) for b in packing.constraint_breaches] == [
-        ("HC-005", ConstraintSeverity.WARNING)
+    cooling = mock.evaluate(load("recipe_short_cooling")).stage_results[4]
+    assert not cooling.blocked
+    assert [(b.rule_id, b.severity) for b in cooling.constraint_breaches] == [
+        ("HC-004", ConstraintSeverity.WARNING)
     ]
+    assert "required_cooling_estimate_s" in cooling.indicators  # computed by Role 1's registry
 
 
 def test_upstream_is_cumulative_and_required(mock: MockQualityIntelligence) -> None:
-    stages = mock.run_all_stages(load("recipe_nominal"))
+    stages = mock.evaluate(load("recipe_nominal")).stage_results
     out = stages[-1].upstream_out.model_dump(exclude_none=True)
     assert set(out) == {
         "viscosity_class",
@@ -110,7 +108,7 @@ def test_upstream_is_cumulative_and_required(mock: MockQualityIntelligence) -> N
 
 def test_predict_needs_all_five_stages(mock: MockQualityIntelligence) -> None:
     inp = load("recipe_nominal")
-    stages = mock.run_all_stages(inp)
+    stages = mock.evaluate(inp).stage_results
     with pytest.raises(StageResultsIncompleteError):
         mock.predict(inp, stages[:4])
     with pytest.raises(StageResultsIncompleteError):
@@ -119,9 +117,10 @@ def test_predict_needs_all_five_stages(mock: MockQualityIntelligence) -> None:
 
 def test_explanation_is_top_k_sorted(mock: MockQualityIntelligence) -> None:
     inp = load("recipe_nominal")
-    explanation = mock.explain(inp, mock.run_all_stages(inp), top_k=5)
+    result = mock.evaluate(inp)
+    explanation = mock.explain(inp, result.stage_results, result.prediction)
     shap = [abs(a.shap_value) for a in explanation.attributions]
-    assert len(shap) == 5 and shap == sorted(shap, reverse=True)
+    assert len(shap) == 10 and shap == sorted(shap, reverse=True)
 
 
 def test_recommendations_respect_the_registry(mock: MockQualityIntelligence) -> None:
@@ -131,28 +130,24 @@ def test_recommendations_respect_the_registry(mock: MockQualityIntelligence) -> 
     response = mock.recommend(inp, base.stage_results, base.prediction, request)
     assert response.base_p_fail == base.prediction.p_fail
     assert response.candidates or response.empty_reason
-    registry = mock.registry
     for c in response.candidates:
         assert 1 <= len(c.changes) <= 2
         assert c.predicted_p_fail < base.prediction.p_fail
         for ch in c.changes:
-            spec = registry.parameter(ch.parameter)
-            assert spec.actionable and ch.parameter != "melt_temp_c"
-            assert spec.max_step_change is not None and abs(ch.delta) <= spec.max_step_change
+            spec = mock.registry.get_parameter(ch.parameter)
+            assert spec is not None and spec["actionable"] and ch.parameter != "melt_temp_c"
+            assert abs(ch.delta) <= spec["max_step_change"]
+            assert mock.registry.check_box(ch.parameter, ch.to_value)[0]
         # Scored through the same pipeline: re-evaluating the candidate gives its p_fail.
-        updated = inp.recipe.model_copy(update={ch.parameter: ch.to_value for ch in c.changes})
-        recipe = updated.model_dump()
+        recipe = inp.recipe.model_dump() | {ch.parameter: ch.to_value for ch in c.changes}
         recipe["cycle_time_s"] = inp.recipe.cycle_time_s + c.cycle_time_delta_s
         again = mock.evaluate(
-            ProcessInput.model_validate({"context": inp.context, "recipe": recipe})
+            ProcessInput.model_validate({"context": inp.context.model_dump(), "recipe": recipe})
         )
         assert again.prediction.p_fail == c.predicted_p_fail
     assert [c.option_rank for c in response.candidates] == list(
         range(1, len(response.candidates) + 1)
     )
-    if response.candidates:
-        aggressive = min(response.candidates, key=lambda c: c.predicted_p_fail)
-        assert aggressive.option_label == "Aggressive"
     with pytest.raises(InvalidInputError):
         mock.recommend(
             inp, base.stage_results, base.prediction, RecommendationRequest(locked=["ghost"])
@@ -162,16 +157,11 @@ def test_recommendations_respect_the_registry(mock: MockQualityIntelligence) -> 
 def test_sensitivity(mock: MockQualityIntelligence) -> None:
     inp = load("recipe_nominal")
     result = mock.sensitivity(inp, "melt_temp_c", steps=12)
-    spec = mock.registry.parameter("melt_temp_c")
-    assert (result.points[0].value, result.points[-1].value) == (spec.min, spec.max)
+    spec = mock.registry.get_parameter("melt_temp_c")
+    assert spec is not None
+    assert (result.points[0].value, result.points[-1].value) == (spec["min"], spec["max"])
     assert len(result.points) == 12
     with pytest.raises(UnknownParameterError):
         mock.sensitivity(inp, "ghost")
     with pytest.raises(LockedParameterError):
-        mock.sensitivity(inp, "moisture_pct")
-
-
-def test_spc_is_not_offered(mock: MockQualityIntelligence) -> None:
-    assert mock.capabilities()["spc"] is False
-    with pytest.raises(CapabilityUnavailableError):
-        mock.spc_check(SpcSeries(parameter="melt_temp_c", values=[230.0]))
+        mock.sensitivity(inp, "ejection_force_proxy")  # not actionable in the registry

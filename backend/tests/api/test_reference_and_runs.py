@@ -12,10 +12,12 @@ from typing import Any
 
 import httpx
 import pytest
+import yaml
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
 from app.db.seed import load_fleet, seed
+from app.domain.constraint_loader import load_constraint_registry
 from app.main import create_app
 from tests.conftest import make_settings
 from tests.db.conftest import migrate
@@ -53,7 +55,7 @@ def _error(resp: httpx.Response) -> dict[str, Any]:
 
 def _body(**over: Any) -> dict[str, Any]:
     body: dict[str, Any] = {
-        "machine_id": "MC-03",
+        "machine_id": "MC-02",  # the nominal clamp force exceeds MC-03's rating (CPL-003)
         "product_id": "PP-JBOX-42",
         "material_lot_id": "A-771",
         "parameters": dict(NOMINAL),
@@ -68,13 +70,19 @@ def _body(**over: Any) -> dict[str, Any]:
 def test_reference_lists(client: TestClient) -> None:
     machines = client.get("/api/v1/machines").json()["data"]
     assert [m["machine_id"] for m in machines] == ["MC-01", "MC-02", "MC-03", "MC-04"]
-    mc03 = machines[2]
-    assert mc03["machine_type"] == "ELECTRIC" and mc03["max_inj_pressure_bar"] == 2000
-    assert mc03["machine_age_days"] > 0 and mc03["installed_on"] == "2020-01-01"
+    fleet = {
+        m["machine_id"]: m
+        for m in yaml.safe_load((DOMAIN / "fleet.yaml").read_text("utf-8"))["machines"]
+    }
+    for m in machines:
+        src = fleet[m["machine_id"]]
+        assert m["machine_type"] == src["machine_type"]
+        assert m["max_clamp_force_ton"] == src["max_clamp_force_ton"]
+        assert m["installed_on"] == src["installed_on"] and m["machine_age_days"] >= 0
     products = client.get("/api/v1/products").json()["data"]
-    assert [p["product_id"] for p in products] == ["PP-JBOX-42"]
+    assert [p["product_id"] for p in products] == ["PP-JBOX-42", "PP-JBOX-42-4C"]
     lots = client.get("/api/v1/materials").json()["data"]
-    assert {lot["material_lot_id"] for lot in lots} == {"A-771", "A-772", "B-310", "A-790"}
+    assert {lot["material_lot_id"] for lot in lots} == {"A-771", "B-812", "C-904", "D-105"}
 
 
 def test_create_material(client: TestClient) -> None:
@@ -99,8 +107,8 @@ def test_create_material(client: TestClient) -> None:
 @pytest.mark.parametrize(
     ("over", "code", "field"),
     [
-        ({"mfi": 41}, "PARAM_OUT_OF_RANGE", "mfi"),  # registry max 40
-        ({"moisture_pct": -0.01}, "PARAM_OUT_OF_RANGE", "moisture_pct"),
+        # Role 1's registry has no windows for lot attributes yet (CCR-004 #4): types only.
+        ({"mfi": "high"}, "VALIDATION_ERROR", "mfi"),
         ({"resin_grade": "ABS"}, "VALIDATION_ERROR", "resin_grade"),
         ({"material_lot_id": "bad code!"}, "VALIDATION_ERROR", "material_lot_id"),
         ({"surprise": 1}, "UNKNOWN_PARAMETER", "surprise"),
@@ -140,8 +148,8 @@ def test_create_run_returns_initialized_state(client: TestClient) -> None:
     assert state["status"] == "INITIALIZED" and state["mode"] == "stepwise"
     assert state["scenario_label"] == "baseline"
     assert state["inference_backend"] == "mock"
-    assert state["constraints_version"] == "constraints-0.1.0"
-    assert state["context"]["machine"]["machine_id"] == "MC-03"
+    assert state["constraints_version"] == load_constraint_registry().version
+    assert state["context"]["machine"]["machine_id"] == "MC-02"
     assert state["parameters"] == {k: float(v) for k, v in NOMINAL.items()}
     assert state["timeline"] == []
 
@@ -175,7 +183,7 @@ def test_exact_bounds_are_accepted_and_one_step_beyond_rejected(
     assert bad.status_code == 422
     error = _error(bad)
     assert error["code"] == "PARAM_OUT_OF_RANGE"
-    assert error["constraint_version"] == "constraints-0.1.0"
+    assert error["constraint_version"] == load_constraint_registry().version
     (detail,) = error["details"]
     assert detail["field"] == "parameters.screw_rpm"
     assert (detail["value"], detail["limit"]) == (beyond, edge)
@@ -191,8 +199,8 @@ def test_coupling_violation_names_the_rule(client: TestClient) -> None:
 
 
 def test_runtime_hard_constraint_is_not_an_http_error(client: TestClient) -> None:
-    # Wet lot A-790 breaches HC-006 only at runtime (BLOCKED stage), never at creation.
-    resp = client.post(RUNS, json=_body(material_lot_id="A-790"))
+    # Wet lot D-105 breaches HC-006 only at runtime (BLOCKED stage), never at creation.
+    resp = client.post(RUNS, json=_body(material_lot_id="D-105"))
     assert resp.status_code == 201
 
 

@@ -10,6 +10,7 @@ import pytest
 
 from app.contracts.enums import StageSubstate
 from app.db.session import Database
+from app.domain.constraint_loader import load_constraint_registry
 from app.engine.cache import StageCache
 from app.engine.events import EventBus
 from app.intelligence_mock.mock import MockQualityIntelligence
@@ -48,16 +49,16 @@ async def test_mock_run_reaches_final_result(
     assert any(c["code"] == "MOCK_INFERENCE" for c in prediction["caveats"])
     assert prediction["explanation"]["attributions"]
     assert state["inference_backend"] == "mock"
-    assert state["constraints_version"] == "constraints-0.1.0"
+    assert state["constraints_version"] == load_constraint_registry().version
     assert [r["module_version"] for r in state["stage_results"]] == ["mock-0.0.0"] * 5
 
 
 async def test_wet_lot_blocks_and_override_is_reported(
     mock_service: SimulationService, database: Database
 ) -> None:
-    # A-790-like lot: 0.25 % moisture > 0.10 % spec x 2.0 critical factor (HC-006).
+    # D-105-like lot: 0.22 % moisture > 2 x the PP-H spec (HC-006).
     run_id = create_test_run(
-        database, recipe=NOMINAL, lot_code="A-790", moisture_pct=0.25, speed_factor="instant"
+        database, recipe=NOMINAL, lot_code="D-105", moisture_pct=0.22, speed_factor="instant"
     )
     await mock_service.start(run_id, mode="auto")
     state = await _wait_done(mock_service, run_id)
@@ -93,7 +94,7 @@ def test_stored_overridden_stage_is_rebuilt_as_blocked() -> None:
             )
         }
     )
-    result = mock.run_all_stages(inp)[0]
+    result = mock.evaluate(inp).stage_results[0]
     stored: dict[str, Any] = {
         **result.model_dump(mode="json"),
         "substate": "COMPLETED",  # how the DB keeps an overridden stage

@@ -44,7 +44,7 @@ def client(app: FastAPI) -> Iterator[TestClient]:
 
 def _body(**over: Any) -> dict[str, Any]:
     body: dict[str, Any] = {
-        "machine_id": "MC-03",
+        "machine_id": "MC-02",  # the nominal clamp force exceeds MC-03's rating (CPL-003)
         "product_id": "PP-JBOX-42",
         "material_lot_id": "A-771",
         "parameters": dict(NOMINAL),
@@ -106,7 +106,7 @@ def test_predict_validates_like_run_creation(client: TestClient) -> None:
 
 
 def test_hard_constraint_is_data_not_an_error(client: TestClient) -> None:
-    resp = client.post("/api/v1/predict", json=_body(material_lot_id="A-790"))
+    resp = client.post("/api/v1/predict", json=_body(material_lot_id="D-105"))
     assert resp.status_code == 200
     data = resp.json()["data"]
     assert data["stage_results"][0]["blocked"] is True
@@ -139,7 +139,7 @@ def test_explain_from_an_unloaded_model_is_unavailable(app: FastAPI, client: Tes
     data = client.post("/api/v1/predict", json=_body(include_explanation=False)).json()["data"]
     info = app.state.intelligence.version_info()
     app.state.intelligence.version_info = lambda: info.model_copy(
-        update={"fusion_model_version": "fusion-9.9.9"}
+        update={"model_version": "fusion-9.9.9"}
     )
     resp = client.get(f"/api/v1/predict/{data['prediction_id']}/explain")
     assert resp.status_code == 503
@@ -149,7 +149,7 @@ def test_explain_from_an_unloaded_model_is_unavailable(app: FastAPI, client: Tes
 def test_models_active_lists_the_mock(client: TestClient) -> None:
     data = client.get("/api/v1/models/active").json()["data"]
     assert data["is_mock"] is True
-    assert data["intelligence"]["fusion_model_version"] == "mock-0.0.0"
+    assert data["intelligence"]["model_version"] == "mock-0.0.0"
     assert [m["version"] for m in data["models"]] == ["mock-0.0.0"]
     assert client.get("/api/v1/models").json()["data"][0]["algorithm"] == "mock"
 

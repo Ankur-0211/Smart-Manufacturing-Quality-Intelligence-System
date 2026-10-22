@@ -135,84 +135,10 @@
         "title": "AnomalyResult",
         "type": "object"
       },
-      "Attribution": {
-        "additionalProperties": false,
-        "properties": {
-          "direction": {
-            "enum": [
-              "toward_fail",
-              "toward_pass"
-            ],
-            "title": "Direction",
-            "type": "string"
-          },
-          "display_name": {
-            "title": "Display Name",
-            "type": "string"
-          },
-          "feature": {
-            "title": "Feature",
-            "type": "string"
-          },
-          "group": {
-            "title": "Group",
-            "type": "string"
-          },
-          "shap_value": {
-            "title": "Shap Value",
-            "type": "number"
-          },
-          "stage": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/StageName"
-              },
-              {
-                "const": "CONTEXT",
-                "type": "string"
-              }
-            ],
-            "title": "Stage"
-          },
-          "value": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Value"
-          }
-        },
-        "required": [
-          "feature",
-          "display_name",
-          "value",
-          "shap_value",
-          "direction",
-          "stage",
-          "group"
-        ],
-        "title": "Attribution",
-        "type": "object"
-      },
-      "Caveat": {
+      "CaveatItem": {
         "additionalProperties": false,
         "properties": {
           "code": {
-            "enum": [
-              "OUT_OF_DISTRIBUTION",
-              "ANOMALY_DETECTED",
-              "CRITICAL_CONSTRAINT_OVERRIDDEN",
-              "MOCK_INFERENCE",
-              "CONSTRAINTS_VERSION_MISMATCH",
-              "STAGE_SUBMODEL_DISABLED"
-            ],
             "title": "Code",
             "type": "string"
           },
@@ -232,7 +158,7 @@
           "code",
           "message"
         ],
-        "title": "Caveat",
+        "title": "CaveatItem",
         "type": "object"
       },
       "ComponentStatus": {
@@ -261,8 +187,10 @@
       },
       "ConstraintBreach": {
         "additionalProperties": false,
+        "description": "Record of a single breached parameter range, coupling rule or hard constraint.",
         "properties": {
           "constraints_version": {
+            "default": "constraints-1.0.0",
             "title": "Constraints Version",
             "type": "string"
           },
@@ -300,7 +228,8 @@
             "type": "array"
           },
           "provenance": {
-            "$ref": "#/components/schemas/DataProvenance"
+            "$ref": "#/components/schemas/DataProvenance",
+            "default": "unvalidated"
           },
           "rule_id": {
             "title": "Rule Id",
@@ -325,9 +254,7 @@
           "rule_id",
           "severity",
           "parameters",
-          "message",
-          "provenance",
-          "constraints_version"
+          "message"
         ],
         "title": "ConstraintBreach",
         "type": "object"
@@ -342,7 +269,7 @@
         "type": "string"
       },
       "ConstraintsOut": {
-        "additionalProperties": false,
+        "additionalProperties": true,
         "properties": {
           "content_hash": {
             "title": "Content Hash",
@@ -350,73 +277,38 @@
           },
           "coupling_rules": {
             "items": {
-              "$ref": "#/components/schemas/CouplingRule"
+              "$ref": "#/components/schemas/CouplingRuleOut"
             },
             "title": "Coupling Rules",
             "type": "array"
           },
           "hard_constraints": {
             "items": {
-              "$ref": "#/components/schemas/HardConstraint"
+              "$ref": "#/components/schemas/HardConstraintOut"
             },
             "title": "Hard Constraints",
             "type": "array"
           },
           "parameters": {
             "items": {
-              "$ref": "#/components/schemas/ParameterSpec"
+              "$ref": "#/components/schemas/ParameterSpecOut"
             },
             "title": "Parameters",
             "type": "array"
           },
-          "recommendation": {
-            "$ref": "#/components/schemas/RecommendationSettings"
+          "registry_version": {
+            "title": "Registry Version",
+            "type": "string"
           },
           "resin_grades": {
             "additionalProperties": {
-              "$ref": "#/components/schemas/ResinGradeSpec"
+              "$ref": "#/components/schemas/ResinGradeOut"
             },
             "title": "Resin Grades",
             "type": "object"
           },
           "risk_bands": {
-            "$ref": "#/components/schemas/RiskBands"
-          },
-          "stage_checks": {
-            "additionalProperties": {
-              "items": {
-                "$ref": "#/components/schemas/StageCheck"
-              },
-              "type": "array"
-            },
-            "propertyNames": {
-              "$ref": "#/components/schemas/StageName"
-            },
-            "title": "Stage Checks",
-            "type": "object"
-          },
-          "stage_inputs": {
-            "additionalProperties": {
-              "items": {
-                "type": "string"
-              },
-              "type": "array"
-            },
-            "propertyNames": {
-              "$ref": "#/components/schemas/StageName"
-            },
-            "title": "Stage Inputs",
-            "type": "object"
-          },
-          "submodels": {
-            "$ref": "#/components/schemas/Submodels"
-          },
-          "units_allowed": {
-            "items": {
-              "type": "string"
-            },
-            "title": "Units Allowed",
-            "type": "array"
+            "$ref": "#/components/schemas/RiskBandsOut"
           },
           "version": {
             "title": "Version",
@@ -425,23 +317,19 @@
         },
         "required": [
           "version",
+          "registry_version",
           "content_hash",
-          "units_allowed",
-          "resin_grades",
-          "stage_inputs",
           "parameters",
           "coupling_rules",
           "hard_constraints",
-          "stage_checks",
-          "risk_bands",
-          "recommendation",
-          "submodels"
+          "resin_grades",
+          "risk_bands"
         ],
         "title": "ConstraintsOut",
         "type": "object"
       },
-      "CouplingRule": {
-        "additionalProperties": false,
+      "CouplingRuleOut": {
+        "additionalProperties": true,
         "properties": {
           "description": {
             "title": "Description",
@@ -451,44 +339,36 @@
             "title": "Id",
             "type": "string"
           },
-          "kind": {
-            "enum": [
-              "le",
-              "ge_offset"
+          "message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
             ],
-            "title": "Kind",
-            "type": "string"
+            "title": "Message"
           },
-          "left": {
-            "title": "Left",
-            "type": "string"
-          },
-          "offset": {
-            "default": 0.0,
-            "title": "Offset",
-            "type": "number"
-          },
-          "provenance": {
-            "$ref": "#/components/schemas/DataProvenance",
-            "default": "unvalidated"
-          },
-          "right": {
-            "title": "Right",
-            "type": "string"
+          "params": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Params",
+            "type": "array"
           },
           "severity": {
-            "$ref": "#/components/schemas/ConstraintSeverity"
+            "title": "Severity",
+            "type": "string"
           }
         },
         "required": [
           "id",
-          "kind",
-          "left",
-          "right",
-          "severity",
-          "description"
+          "description",
+          "params",
+          "severity"
         ],
-        "title": "CouplingRule",
+        "title": "CouplingRuleOut",
         "type": "object"
       },
       "CreateRunRequest": {
@@ -1213,6 +1093,64 @@
         "title": "EventOut",
         "type": "object"
       },
+      "FeatureAttribution": {
+        "additionalProperties": false,
+        "properties": {
+          "direction": {
+            "enum": [
+              "toward_fail",
+              "toward_pass"
+            ],
+            "title": "Direction",
+            "type": "string"
+          },
+          "display_name": {
+            "title": "Display Name",
+            "type": "string"
+          },
+          "feature": {
+            "title": "Feature",
+            "type": "string"
+          },
+          "group": {
+            "title": "Group",
+            "type": "string"
+          },
+          "shap_value": {
+            "title": "Shap Value",
+            "type": "number"
+          },
+          "stage": {
+            "title": "Stage",
+            "type": "string"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
+          }
+        },
+        "required": [
+          "feature",
+          "display_name",
+          "value",
+          "shap_value",
+          "direction",
+          "stage",
+          "group"
+        ],
+        "title": "FeatureAttribution",
+        "type": "object"
+      },
       "GroupedAttribution": {
         "additionalProperties": false,
         "properties": {
@@ -1245,23 +1183,12 @@
         "title": "HTTPValidationError",
         "type": "object"
       },
-      "HardConstraint": {
-        "additionalProperties": false,
+      "HardConstraintOut": {
+        "additionalProperties": true,
         "properties": {
           "blocks_stage": {
             "title": "Blocks Stage",
             "type": "boolean"
-          },
-          "derived": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Derived"
           },
           "description": {
             "title": "Description",
@@ -1271,124 +1198,28 @@
             "title": "Enforced In Guard",
             "type": "boolean"
           },
-          "factor": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Factor"
-          },
-          "factor_field": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Factor Field"
-          },
-          "grade_field": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Grade Field"
-          },
-          "hint": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Hint"
-          },
           "id": {
             "title": "Id",
             "type": "string"
           },
-          "kind": {
-            "enum": [
-              "max_from_grade",
-              "max_from_grade_factor",
-              "max_ratio",
-              "min_derived",
-              "range"
-            ],
-            "title": "Kind",
-            "type": "string"
-          },
-          "max": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Max"
-          },
-          "min": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Min"
-          },
-          "other": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Other"
-          },
-          "param": {
-            "title": "Param",
-            "type": "string"
-          },
-          "provenance": {
-            "$ref": "#/components/schemas/DataProvenance",
-            "default": "unvalidated"
-          },
           "severity_in_simulation": {
-            "$ref": "#/components/schemas/ConstraintSeverity"
+            "title": "Severity In Simulation",
+            "type": "string"
           },
           "stage": {
-            "$ref": "#/components/schemas/StageName"
+            "title": "Stage",
+            "type": "string"
           }
         },
         "required": [
           "id",
           "stage",
-          "kind",
-          "param",
           "blocks_stage",
           "severity_in_simulation",
           "enforced_in_guard",
           "description"
         ],
-        "title": "HardConstraint",
+        "title": "HardConstraintOut",
         "type": "object"
       },
       "HealthData": {
@@ -1452,17 +1283,6 @@
       "IntelligenceVersionInfo": {
         "additionalProperties": false,
         "properties": {
-          "anomaly_model_version": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Anomaly Model Version"
-          },
           "capabilities": {
             "additionalProperties": {
               "type": "boolean"
@@ -1478,65 +1298,21 @@
             "title": "Contracts Version",
             "type": "string"
           },
-          "feature_schema_hash": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Feature Schema Hash"
-          },
-          "fusion_model_version": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Fusion Model Version"
-          },
-          "inference_backend": {
-            "$ref": "#/components/schemas/InferenceBackend"
-          },
           "is_mock": {
             "title": "Is Mock",
             "type": "boolean"
           },
-          "module_versions": {
-            "additionalProperties": {
-              "type": "string"
-            },
-            "propertyNames": {
-              "$ref": "#/components/schemas/StageName"
-            },
-            "title": "Module Versions",
-            "type": "object"
-          },
-          "stage_stats_version": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Stage Stats Version"
+          "model_version": {
+            "title": "Model Version",
+            "type": "string"
           }
         },
         "required": [
           "contracts_version",
           "constraints_version",
-          "module_versions",
-          "fusion_model_version",
-          "feature_schema_hash",
-          "inference_backend",
-          "is_mock"
+          "model_version",
+          "is_mock",
+          "capabilities"
         ],
         "title": "IntelligenceVersionInfo",
         "type": "object"
@@ -1565,12 +1341,13 @@
         "properties": {
           "attributions": {
             "items": {
-              "$ref": "#/components/schemas/Attribution"
+              "$ref": "#/components/schemas/FeatureAttribution"
             },
             "title": "Attributions",
             "type": "array"
           },
           "background_version": {
+            "default": "bg-1.0.0",
             "title": "Background Version",
             "type": "string"
           },
@@ -1586,13 +1363,11 @@
             "type": "array"
           },
           "method": {
-            "const": "tree_shap",
             "default": "tree_shap",
             "title": "Method",
             "type": "string"
           },
           "output_space": {
-            "const": "log_odds",
             "default": "log_odds",
             "title": "Output Space",
             "type": "string"
@@ -1604,16 +1379,14 @@
           },
           "stage_risk_mass": {
             "items": {
-              "$ref": "#/components/schemas/StageShare"
+              "$ref": "#/components/schemas/StageRiskShare"
             },
             "title": "Stage Risk Mass",
             "type": "array"
           }
         },
         "required": [
-          "base_value",
-          "attributions",
-          "background_version"
+          "base_value"
         ],
         "title": "LocalExplanation",
         "type": "object"
@@ -1977,8 +1750,15 @@
             "type": "number"
           },
           "value": {
-            "title": "Value",
-            "type": "number"
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
           }
         },
         "required": [
@@ -1990,7 +1770,7 @@
         "title": "OodFeature",
         "type": "object"
       },
-      "OodInfo": {
+      "OodReport": {
         "additionalProperties": false,
         "properties": {
           "features_outside": {
@@ -2001,12 +1781,14 @@
             "type": "array"
           },
           "is_out_of_distribution": {
-            "default": false,
             "title": "Is Out Of Distribution",
             "type": "boolean"
           }
         },
-        "title": "OodInfo",
+        "required": [
+          "is_out_of_distribution"
+        ],
+        "title": "OodReport",
         "type": "object"
       },
       "OverrideRequest": {
@@ -2037,49 +1819,17 @@
         "title": "OverrideRequest",
         "type": "object"
       },
-      "ParameterKind": {
-        "enum": [
-          "setpoint",
-          "lot_attribute",
-          "product_context",
-          "machine_context"
-        ],
-        "title": "ParameterKind",
-        "type": "string"
-      },
-      "ParameterSpec": {
-        "additionalProperties": false,
+      "ParameterSpecOut": {
+        "additionalProperties": true,
         "properties": {
           "actionable": {
+            "default": false,
             "title": "Actionable",
             "type": "boolean"
-          },
-          "allowed_values": {
-            "anyOf": [
-              {
-                "items": {
-                  "anyOf": [
-                    {
-                      "type": "string"
-                    },
-                    {
-                      "type": "integer"
-                    }
-                  ]
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Allowed Values"
           },
           "change_cost": {
             "anyOf": [
               {
-                "maximum": 1.0,
-                "minimum": 0.0,
                 "type": "number"
               },
               {
@@ -2104,16 +1854,13 @@
             "type": "string"
           },
           "dtype": {
-            "enum": [
-              "float",
-              "int",
-              "category"
-            ],
+            "default": "float",
             "title": "Dtype",
             "type": "string"
           },
           "kind": {
-            "$ref": "#/components/schemas/ParameterKind"
+            "title": "Kind",
+            "type": "string"
           },
           "max": {
             "anyOf": [
@@ -2129,7 +1876,6 @@
           "max_step_change": {
             "anyOf": [
               {
-                "exclusiveMinimum": 0.0,
                 "type": "number"
               },
               {
@@ -2167,34 +1913,31 @@
             ],
             "title": "Nominal"
           },
-          "policy_max": {
+          "provenance": {
             "anyOf": [
               {
-                "type": "number"
+                "type": "string"
               },
               {
                 "type": "null"
               }
             ],
-            "title": "Policy Max"
-          },
-          "provenance": {
-            "$ref": "#/components/schemas/DataProvenance"
+            "title": "Provenance"
           },
           "stage": {
             "anyOf": [
               {
-                "$ref": "#/components/schemas/StageName"
+                "type": "string"
               },
               {
                 "type": "null"
               }
-            ]
+            ],
+            "title": "Stage"
           },
           "step": {
             "anyOf": [
               {
-                "exclusiveMinimum": 0.0,
                 "type": "number"
               },
               {
@@ -2206,7 +1949,6 @@
           "tolerance": {
             "anyOf": [
               {
-                "exclusiveMinimum": 0.0,
                 "type": "number"
               },
               {
@@ -2230,14 +1972,9 @@
         "required": [
           "name",
           "kind",
-          "stage",
-          "unit",
-          "dtype",
-          "actionable",
-          "display_name",
-          "provenance"
+          "display_name"
         ],
-        "title": "ParameterSpec",
+        "title": "ParameterSpecOut",
         "type": "object"
       },
       "PredictRequest": {
@@ -2322,13 +2059,13 @@
           },
           "caveats": {
             "items": {
-              "$ref": "#/components/schemas/Caveat"
+              "$ref": "#/components/schemas/CaveatItem"
             },
             "title": "Caveats",
             "type": "array"
           },
           "compute_ms": {
-            "minimum": 0.0,
+            "default": 0.0,
             "title": "Compute Ms",
             "type": "number"
           },
@@ -2338,6 +2075,7 @@
             "type": "boolean"
           },
           "constraints_version": {
+            "default": "constraints-1.0.0",
             "title": "Constraints Version",
             "type": "string"
           },
@@ -2352,13 +2090,16 @@
             ]
           },
           "feature_schema_hash": {
+            "default": "sha256-default",
             "title": "Feature Schema Hash",
             "type": "string"
           },
           "inference_backend": {
-            "$ref": "#/components/schemas/InferenceBackend"
+            "$ref": "#/components/schemas/InferenceBackend",
+            "default": "real"
           },
           "is_mock": {
+            "default": false,
             "title": "Is Mock",
             "type": "boolean"
           },
@@ -2366,11 +2107,12 @@
             "$ref": "#/components/schemas/PredictionLabel"
           },
           "model_version": {
+            "default": "fusion-1.0.0",
             "title": "Model Version",
             "type": "string"
           },
           "ood": {
-            "$ref": "#/components/schemas/OodInfo"
+            "$ref": "#/components/schemas/OodReport"
           },
           "p_fail": {
             "maximum": 1.0,
@@ -2396,7 +2138,7 @@
           },
           "stage_risk_mass": {
             "items": {
-              "$ref": "#/components/schemas/StageShare"
+              "$ref": "#/components/schemas/StageRiskShare"
             },
             "title": "Stage Risk Mass",
             "type": "array"
@@ -2408,7 +2150,7 @@
             "type": "number"
           },
           "uncertainty": {
-            "$ref": "#/components/schemas/Uncertainty"
+            "$ref": "#/components/schemas/UncertaintyEstimate"
           }
         },
         "required": [
@@ -2416,13 +2158,7 @@
           "p_fail",
           "p_fail_raw",
           "threshold_used",
-          "model_version",
-          "risk_level",
-          "inference_backend",
-          "is_mock",
-          "feature_schema_hash",
-          "constraints_version",
-          "compute_ms"
+          "risk_level"
         ],
         "title": "PredictionResult",
         "type": "object"
@@ -2590,68 +2326,8 @@
         "title": "ProductOut",
         "type": "object"
       },
-      "RecommendationSettings": {
-        "additionalProperties": false,
-        "properties": {
-          "coordinate_levels": {
-            "minimum": 2.0,
-            "title": "Coordinate Levels",
-            "type": "integer"
-          },
-          "cycle_time_follows_stage_times": {
-            "title": "Cycle Time Follows Stage Times",
-            "type": "boolean"
-          },
-          "default_max_changes": {
-            "maximum": 6.0,
-            "minimum": 1.0,
-            "title": "Default Max Changes",
-            "type": "integer"
-          },
-          "max_unstable_flip_rate": {
-            "maximum": 1.0,
-            "minimum": 0.0,
-            "title": "Max Unstable Flip Rate",
-            "type": "number"
-          },
-          "pairwise_top_k": {
-            "minimum": 1.0,
-            "title": "Pairwise Top K",
-            "type": "integer"
-          },
-          "stability_noise_fraction_of_step": {
-            "exclusiveMinimum": 0.0,
-            "title": "Stability Noise Fraction Of Step",
-            "type": "number"
-          },
-          "stability_trials": {
-            "minimum": 1.0,
-            "title": "Stability Trials",
-            "type": "integer"
-          },
-          "weights": {
-            "additionalProperties": {
-              "type": "number"
-            },
-            "title": "Weights",
-            "type": "object"
-          }
-        },
-        "required": [
-          "default_max_changes",
-          "coordinate_levels",
-          "pairwise_top_k",
-          "stability_trials",
-          "stability_noise_fraction_of_step",
-          "max_unstable_flip_rate",
-          "weights",
-          "cycle_time_follows_stage_times"
-        ],
-        "title": "RecommendationSettings",
-        "type": "object"
-      },
-      "ResinGradeSpec": {
-        "additionalProperties": false,
+      "ResinGradeOut": {
+        "additionalProperties": true,
         "properties": {
           "citation": {
             "anyOf": [
@@ -2665,61 +2341,95 @@
             "title": "Citation"
           },
           "degradation_ceiling_c": {
-            "title": "Degradation Ceiling C",
-            "type": "number"
-          },
-          "melt_window_c": {
-            "maxItems": 2,
-            "minItems": 2,
-            "prefixItems": [
+            "anyOf": [
               {
                 "type": "number"
               },
               {
-                "type": "number"
+                "type": "null"
               }
             ],
-            "title": "Melt Window C",
-            "type": "array"
+            "title": "Degradation Ceiling C"
+          },
+          "melt_window_c": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "number"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Melt Window C"
           },
           "mfi_nominal": {
-            "title": "Mfi Nominal",
-            "type": "number"
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mfi Nominal"
           },
           "moisture_critical_factor": {
-            "exclusiveMinimum": 0.0,
-            "title": "Moisture Critical Factor",
-            "type": "number"
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Moisture Critical Factor"
           },
           "moisture_spec_max_pct": {
-            "exclusiveMinimum": 0.0,
-            "title": "Moisture Spec Max Pct",
-            "type": "number"
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Moisture Spec Max Pct"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
           },
           "provenance": {
-            "$ref": "#/components/schemas/DataProvenance"
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Provenance"
           }
         },
-        "required": [
-          "melt_window_c",
-          "degradation_ceiling_c",
-          "moisture_spec_max_pct",
-          "moisture_critical_factor",
-          "mfi_nominal",
-          "provenance"
-        ],
-        "title": "ResinGradeSpec",
+        "title": "ResinGradeOut",
         "type": "object"
       },
-      "RiskBands": {
-        "additionalProperties": false,
+      "RiskBandsOut": {
+        "additionalProperties": true,
         "properties": {
           "p_fail": {
             "additionalProperties": {
               "type": "number"
-            },
-            "propertyNames": {
-              "$ref": "#/components/schemas/RiskLevel"
             },
             "title": "P Fail",
             "type": "object"
@@ -2727,9 +2437,6 @@
           "stage_health": {
             "additionalProperties": {
               "type": "number"
-            },
-            "propertyNames": {
-              "$ref": "#/components/schemas/RiskLevel"
             },
             "title": "Stage Health",
             "type": "object"
@@ -2739,7 +2446,7 @@
           "stage_health",
           "p_fail"
         ],
-        "title": "RiskBands",
+        "title": "RiskBandsOut",
         "type": "object"
       },
       "RiskDriver": {
@@ -3127,11 +2834,12 @@
       },
       "StageAnomaly": {
         "additionalProperties": false,
-        "description": "L1 per-stage anomaly (Plan 12.2).",
+        "description": "L1 per-stage anomaly output.",
         "properties": {
           "contributors": {
             "items": {
-              "$ref": "#/components/schemas/AnomalyContributor"
+              "additionalProperties": true,
+              "type": "object"
             },
             "title": "Contributors",
             "type": "array"
@@ -3163,46 +2871,6 @@
         "title": "StageAnomaly",
         "type": "object"
       },
-      "StageCheck": {
-        "additionalProperties": false,
-        "properties": {
-          "check_id": {
-            "title": "Check Id",
-            "type": "string"
-          },
-          "provenance": {
-            "$ref": "#/components/schemas/DataProvenance"
-          },
-          "target": {
-            "title": "Target",
-            "type": "string"
-          },
-          "type": {
-            "enum": [
-              "range",
-              "zscore",
-              "indicator"
-            ],
-            "title": "Type",
-            "type": "string"
-          },
-          "weight": {
-            "exclusiveMinimum": 0.0,
-            "maximum": 1.0,
-            "title": "Weight",
-            "type": "number"
-          }
-        },
-        "required": [
-          "check_id",
-          "type",
-          "target",
-          "weight",
-          "provenance"
-        ],
-        "title": "StageCheck",
-        "type": "object"
-      },
       "StageName": {
         "enum": [
           "MATERIAL_CONDITIONING",
@@ -3217,7 +2885,7 @@
       },
       "StageResult": {
         "additionalProperties": false,
-        "description": "Output of ``run_stage()`` for S1-S5 (7.9).",
+        "description": "Execution output from a single stage intelligence module (S1-S5).",
         "properties": {
           "anomaly": {
             "$ref": "#/components/schemas/StageAnomaly"
@@ -3239,7 +2907,7 @@
             "type": "boolean"
           },
           "compute_ms": {
-            "minimum": 0.0,
+            "default": 0.0,
             "title": "Compute Ms",
             "type": "number"
           },
@@ -3251,6 +2919,7 @@
             "type": "array"
           },
           "constraints_version": {
+            "default": "constraints-1.0.0",
             "title": "Constraints Version",
             "type": "string"
           },
@@ -3268,43 +2937,17 @@
             "type": "object"
           },
           "indicators": {
-            "additionalProperties": {
-              "anyOf": [
-                {
-                  "type": "number"
-                },
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "boolean"
-                },
-                {
-                  "type": "null"
-                }
-              ]
-            },
+            "additionalProperties": true,
             "title": "Indicators",
             "type": "object"
           },
           "inputs_used": {
-            "additionalProperties": {
-              "anyOf": [
-                {
-                  "type": "number"
-                },
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ]
-            },
+            "additionalProperties": true,
             "title": "Inputs Used",
             "type": "object"
           },
           "module_version": {
+            "default": "1.0.0",
             "title": "Module Version",
             "type": "string"
           },
@@ -3325,7 +2968,7 @@
             "type": "integer"
           },
           "sequence_index": {
-            "maximum": 5.0,
+            "maximum": 6.0,
             "minimum": 1.0,
             "title": "Sequence Index",
             "type": "integer"
@@ -3354,16 +2997,12 @@
           "risk_level",
           "risk_ordinal",
           "anomaly",
-          "indicators",
-          "indicator_provenance",
-          "module_version",
-          "constraints_version",
-          "compute_ms"
+          "indicators"
         ],
         "title": "StageResult",
         "type": "object"
       },
-      "StageShare": {
+      "StageRiskShare": {
         "additionalProperties": false,
         "properties": {
           "share": {
@@ -3380,7 +3019,7 @@
           "stage",
           "share"
         ],
-        "title": "StageShare",
+        "title": "StageRiskShare",
         "type": "object"
       },
       "StageSubstate": {
@@ -3426,21 +3065,7 @@
         "title": "StartRequest",
         "type": "object"
       },
-      "Submodels": {
-        "additionalProperties": false,
-        "properties": {
-          "enabled": {
-            "title": "Enabled",
-            "type": "boolean"
-          }
-        },
-        "required": [
-          "enabled"
-        ],
-        "title": "Submodels",
-        "type": "object"
-      },
-      "Uncertainty": {
+      "UncertaintyEstimate": {
         "additionalProperties": false,
         "properties": {
           "method": {
@@ -3464,12 +3089,12 @@
             "title": "Value"
           }
         },
-        "title": "Uncertainty",
+        "title": "UncertaintyEstimate",
         "type": "object"
       },
       "UpstreamContext": {
         "additionalProperties": false,
-        "description": "Every key is optional; each stage may only add the keys it owns (7.8).",
+        "description": "Cumulative state passed forward from earlier stages.",
         "properties": {
           "cavity_pressure_estimate_bar": {
             "anyOf": [
@@ -3496,8 +3121,6 @@
           "fill_completion_proxy": {
             "anyOf": [
               {
-                "maximum": 1.0,
-                "minimum": 0.0,
                 "type": "number"
               },
               {
@@ -3531,11 +3154,6 @@
           "viscosity_class": {
             "anyOf": [
               {
-                "enum": [
-                  "LOW",
-                  "NOMINAL",
-                  "HIGH"
-                ],
                 "type": "string"
               },
               {

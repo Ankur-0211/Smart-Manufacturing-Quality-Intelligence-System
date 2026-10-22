@@ -168,10 +168,10 @@ def create_test_run(
         product = s.query(Product).filter_by(code="PP-JBOX-42").one_or_none() or Product(
             code="PP-JBOX-42",
             name="housing",
-            cavity_count=4,
+            cavity_count=1,
             nominal_shot_weight_g=42,
-            wall_thickness_mm=2.5,
-            projected_area_cm2=100,
+            wall_thickness_mm=2.2,
+            projected_area_cm2=125,
         )
         lot = s.query(MaterialLot).filter_by(lot_code=lot_code).one_or_none() or MaterialLot(
             lot_code=lot_code,

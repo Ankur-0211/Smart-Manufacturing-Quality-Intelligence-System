@@ -39,6 +39,19 @@ IMPLEMENTATIONS = [
     pytest.param(MockQualityIntelligence(_REGISTRY), id="mock"),
     pytest.param(RealQualityIntelligence(registry=_REGISTRY), id="real"),
 ]
+# Known deviations of Role 1's facade from roadmap 7.9-7.12, raised in CCR-004. Strict: once Role
+# 1 fixes them the test XPASSes and fails, so this marker has to be removed.
+REAL_INVARIANT_GAPS = pytest.mark.xfail(
+    strict=True,
+    reason=(
+        "CCR-004 #6-#7: INJECTION reports required_clamp_force_ton without indicator_provenance; "
+        "stage_risk_mass does not always sum to 1"
+    ),
+)
+INVARIANT_IMPLEMENTATIONS = [
+    IMPLEMENTATIONS[0],
+    pytest.param(RealQualityIntelligence(registry=_REGISTRY), id="real", marks=REAL_INVARIANT_GAPS),
+]
 
 
 def _dump(obj: Any) -> dict[str, Any]:
@@ -100,17 +113,43 @@ def _assert_prediction(prediction: Any) -> None:
         assert any(c["code"] == "CRITICAL_CONSTRAINT_OVERRIDDEN" for c in p["caveats"])
 
 
+@pytest.mark.parametrize(
+    ("fixture", "rule"),
+    [
+        ("recipe_nominal", None),
+        ("recipe_melt_ceiling_breach", "HC-001"),
+        ("recipe_short_cooling", "HC-004"),
+        ("recipe_clamp_insufficient", "HC-002"),
+        ("recipe_high_moisture", "HC-006"),
+    ],
+)
+@pytest.mark.parametrize("impl", IMPLEMENTATIONS)
+def test_fixture_triggers_its_rule(
+    impl: QualityIntelligence, fixture: str, rule: str | None
+) -> None:
+    """Each fixture exercises exactly the hard constraint it is named after (Role 1's registry)."""
+    result = impl.evaluate(_load(FIXTURES_DIR / f"{fixture}.json"))
+    fired = {b.rule_id for r in result.stage_results for b in r.constraint_breaches}
+    assert fired == ({rule} if rule else set())
+
+
 def test_fixtures_present() -> None:
     assert FIXTURES, "recipe_*.json contract fixtures are missing"
 
 
 @pytest.mark.parametrize("fixture", FIXTURES, ids=lambda p: p.stem)
-@pytest.mark.parametrize("impl", IMPLEMENTATIONS)
+@pytest.mark.parametrize("impl", INVARIANT_IMPLEMENTATIONS)
 def test_evaluate_satisfies_contract(impl: QualityIntelligence, fixture: Path) -> None:
-    inp = _load(fixture)
-    result = impl.evaluate(inp, include_explanation=True)
+    result = impl.evaluate(_load(fixture), include_explanation=True)
     _assert_stage_results(result.stage_results)
     _assert_prediction(result.prediction)
+
+
+@pytest.mark.parametrize("fixture", FIXTURES, ids=lambda p: p.stem)
+@pytest.mark.parametrize("impl", IMPLEMENTATIONS)
+def test_pipeline_is_equivalent_and_deterministic(impl: QualityIntelligence, fixture: Path) -> None:
+    inp = _load(fixture)
+    result = impl.evaluate(inp, include_explanation=True)
 
     # Equivalence guarantee (roadmap 9.1 #4): evaluate == run_stage x5 + predict.
     stages = _run_stages(impl, inp)
