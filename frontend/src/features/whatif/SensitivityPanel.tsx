@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { ApiClientError } from '@/api/client'
 import { setpoints, type Constraints } from '@/api/constraints'
 import { fetchSensitivity, type SensitivityResult } from '@/api/whatif'
-import { SensitivityCurve } from '@/components/charts/SensitivityCurve'
+import { SensitivityCurve } from '@/components/charts/lazy'
 import { unitLabel } from '@/components/params/recipeValidation'
 
 /** Points per curve: a detailed single sweep, and a coarser one per parameter when ranking. */

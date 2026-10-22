@@ -1,6 +1,6 @@
 import { useConstraints } from '@/api/constraints'
 import { useActiveModels, useGlobalExplanation } from '@/api/predict'
-import { ShapBars } from '@/components/charts/ShapBars'
+import { ShapBars } from '@/components/charts/lazy'
 import { STAGE_META, type StageName } from '@/features/process-control/model'
 import { STATEMENT_SYNTHETIC_DATA } from '@/lib/disclaimers'
 

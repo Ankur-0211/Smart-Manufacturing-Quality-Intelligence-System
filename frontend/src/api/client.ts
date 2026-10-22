@@ -10,8 +10,10 @@ export type Schemas = components['schemas']
 export type Meta = Schemas['Meta']
 export type ErrorBody = Schemas['ErrorBody']
 
+/** A production build is served by the API itself (same origin, R2-P9); dev talks to port 8000. */
 export const API_BASE_URL: string =
-  (import.meta.env.VITE_API_BASE_URL as string | undefined) ?? 'http://localhost:8000/api/v1'
+  (import.meta.env.VITE_API_BASE_URL as string | undefined) ??
+  (import.meta.env.PROD ? '/api/v1' : 'http://localhost:8000/api/v1')
 
 export class ApiClientError extends Error {
   readonly code: ErrorCode | ClientErrorCode | string

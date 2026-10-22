@@ -18,6 +18,8 @@ def make_settings(**overrides: object) -> Settings:
         "log_level": "WARNING",
         # Never touch var/smqi.db from tests; DB tests pass a migrated temp file instead.
         "database_url": "sqlite:///:memory:",
+        # Never serve a developer's local frontend build from test apps.
+        "frontend_dist": "/nonexistent-frontend-dist",
     }
     base.update(overrides)
     # _env_file=None: tests never read a developer's local .env

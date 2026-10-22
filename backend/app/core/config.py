@@ -60,6 +60,9 @@ class Settings(BaseSettings):
     stage_presentation_ms: int = Field(default=1500, ge=1200, le=2000)
     stage_cache_size: int = Field(default=5000, ge=0)
     rate_limit_per_min: int = Field(default=30, ge=1)
+    # Production frontend build served by the API at "/" when it contains index.html (UD-16,
+    # roadmap R2-P9 task 4). Build it with `npm run build` in frontend/.
+    frontend_dist: Path = REPO_ROOT / "frontend" / "dist"
 
     # --- Role 1 (consumed read-only by the application) ---
     model_dir: Path = REPO_ROOT / "models"
@@ -84,7 +87,7 @@ class Settings(BaseSettings):
             return None
         return value
 
-    @field_validator("model_dir", "constraints_path", "fleet_path", mode="after")
+    @field_validator("model_dir", "constraints_path", "fleet_path", "frontend_dist", mode="after")
     @classmethod
     def _resolve_relative_to_repo(cls, value: Path) -> Path:
         return value if value.is_absolute() else (REPO_ROOT / value).resolve()

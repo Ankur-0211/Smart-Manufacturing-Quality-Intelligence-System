@@ -24,6 +24,7 @@ from app.api.deps import build_intelligence, load_registry, require_api_key
 from app.api.errors import register_exception_handlers
 from app.api.middleware import RequestContextMiddleware
 from app.api.rate_limit import TokenBucketLimiter
+from app.api.static_frontend import frontend_available, mount_frontend
 from app.core.config import Settings, get_settings
 from app.core.logging import configure_logging, get_logger
 from app.db.session import Database
@@ -47,6 +48,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     intelligence = build_intelligence(settings, registry)
     executor = IntelligenceStageExecutor(intelligence, registry)
     database = Database(settings.database_url)
+    serve_frontend = frontend_available(settings.frontend_dist)
     simulation = SimulationService(
         database,
         EventBus(),
@@ -65,12 +67,15 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             intelligence_backend=settings.intelligence_backend.value,
             model_version=info.model_version,
             is_mock=info.is_mock,
+            contracts_version=info.contracts_version,
+            capabilities=sorted(k for k, on in info.capabilities.items() if on),
             constraints_version=registry.version,
             constraints_hash=registry.content_hash[:12],
             database_url_scheme=settings.database_url.split(":", 1)[0],
             db_reachable=db_status.reachable,
             db_revision=db_status.revision,
             db_head=db_status.head,
+            frontend=str(settings.frontend_dist) if serve_frontend else None,
         )
         if db_status.migrated:
             # Every prediction references a model_versions row (roadmap 9.4, R2-P5 task 1).
@@ -124,6 +129,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(routes_meta.router, prefix=API_PREFIX)
     for router in PROTECTED_ROUTERS:
         include_protected(app, router)
+    if serve_frontend:
+        mount_frontend(app, settings.frontend_dist)  # last: its catch-all must not shadow the API
 
     return app
 
