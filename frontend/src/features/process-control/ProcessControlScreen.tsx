@@ -2,12 +2,24 @@ import { useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 
 import { ApiClientError } from '@/api/client'
-import { useRunCommand, useRunState, type OverrideRequest, type RunCommand } from '@/api/runs'
+import { useConstraints } from '@/api/constraints'
+import {
+  useCreateAndStartRun,
+  useRunCommand,
+  useRunState,
+  type CreateRunRequest,
+  type OverrideRequest,
+  type RunCommand,
+} from '@/api/runs'
+import { clientErrors, serverErrors } from '@/components/params/recipeValidation'
+import { RunSetupPanel } from '@/components/params/RunSetupPanel'
+import { useEffectiveRecipe } from '@/components/params/useEffectiveRecipe'
 import { ActiveStagePanel } from '@/components/pipeline/ActiveStagePanel'
 import { EventTimeline } from '@/components/pipeline/EventTimeline'
 import { RunControls } from '@/components/pipeline/RunControls'
 import { StagePipeline } from '@/components/pipeline/StagePipeline'
 import { ResultCard } from '@/components/result/ResultCard'
+import { useRunSetup } from '@/stores/runSetup'
 
 import { STAGE_META, TERMINAL_STATUSES, type RunMode, type SpeedFactor, type StageName } from './model'
 import { useRunEvents, type Transport } from './useRunEvents'
@@ -89,17 +101,20 @@ function OverridePanel({
 /**
  * Process Control workspace (Plan §15.2; roadmap R2-P6).
  *
- * Opens an existing run with `?run=<id>` (from History) and follows it live over SSE, with polling
- * fallback. Controls call the real run-command endpoints. Creating runs (machine/product/lot
- * selection and the recipe sliders) needs recipe validation from the shared contracts and the
- * constraint registry, so it is not available yet. Nothing on this screen is pre-filled.
+ * RUN creates a run from the setup panel (context pickers + registry-driven recipe), starts it and
+ * follows it live over SSE with polling fallback. `?run=<id>` (from History) opens an existing run;
+ * RUN on a finished run starts a fresh one from the setup (finished runs are immutable, UD-08).
  */
 export function ProcessControlScreen() {
-  const [params] = useSearchParams()
+  const [params, setParams] = useSearchParams()
   const runId = params.get('run')
   const { state, transport } = useRunEvents(runId)
   const runQuery = useRunState(runId)
   const command = useRunCommand(runId)
+  const createRun = useCreateAndStartRun()
+  const setup = useRunSetup()
+  const recipe = useEffectiveRecipe()
+  const constraints = useConstraints().data
   const [modeChoice, setModeChoice] = useState<RunMode | null>(null)
   const [speedChoice, setSpeedChoice] = useState<SpeedFactor | null>(null)
   const [selected, setSelected] = useState<StageName | null>(null)
@@ -115,6 +130,53 @@ export function ProcessControlScreen() {
     material_lot?: { material_lot_id?: string }
   }
 
+  // A new run is created from the setup draft when nothing is open or the open run is finished.
+  const createsNewRun = !runId || terminal
+  const missingContext = !setup.machineId || !setup.productId || !setup.lotId
+  const invalidRecipe = !constraints || !recipe || Object.keys(clientErrors(constraints, recipe)).length > 0
+  const setupReason = missingContext
+    ? 'Choose a machine, product and material lot to run.'
+    : invalidRecipe
+      ? 'Fix the highlighted parameters to run.'
+      : null
+  const createRunNow = () => {
+    if (!recipe || !setup.machineId || !setup.productId || !setup.lotId) return
+    const body = {
+      machine_id: setup.machineId,
+      product_id: setup.productId,
+      material_lot_id: setup.lotId,
+      parameters: recipe,
+      mode,
+      speed_factor: speed,
+      halt_on_critical: true,
+    } as CreateRunRequest
+    createRun.mutate(body, {
+      onSuccess: (created) => {
+        setSelected(null)
+        setParams({ run: created.run_id })
+      },
+    })
+  }
+  const copyRunToSetup = () => {
+    if (!run) return
+    setup.setContext({
+      machineId: ctx.machine?.machine_id ?? null,
+      productId: ctx.product?.product_id ?? null,
+      lotId: ctx.material_lot?.material_lot_id ?? null,
+    })
+    setup.setRecipe({ ...run.parameters })
+  }
+  const shown = runId
+    ? {
+        machine: ctx.machine?.machine_id,
+        product: ctx.product?.product_id,
+        lot: ctx.material_lot?.material_lot_id,
+      }
+    : { machine: setup.machineId, product: setup.productId, lot: setup.lotId }
+  const createErrors = serverErrors(createRun.isError ? createRun.error : null)
+  const createErrorShownInPanel =
+    createErrors.general.length > 0 || Object.keys(createErrors.fields).length > 0
+
   const focus = selected ?? state.activeStage
   const focusView = focus ? state.stages[focus] : null
 
@@ -127,13 +189,13 @@ export function ProcessControlScreen() {
       >
         <div className="numeric flex flex-wrap gap-4 text-sm">
           <span>
-            <span className="text-text-muted">Machine</span> {ctx.machine?.machine_id ?? '—'}
+            <span className="text-text-muted">Machine</span> {shown.machine ?? '—'}
           </span>
           <span>
-            <span className="text-text-muted">Product</span> {ctx.product?.product_id ?? '—'}
+            <span className="text-text-muted">Product</span> {shown.product ?? '—'}
           </span>
           <span>
-            <span className="text-text-muted">Lot</span> {ctx.material_lot?.material_lot_id ?? '—'}
+            <span className="text-text-muted">Lot</span> {shown.lot ?? '—'}
           </span>
           <span>
             <span className="text-text-muted">Run</span> {runId ? runId.slice(0, 8) : '—'}
@@ -150,35 +212,33 @@ export function ProcessControlScreen() {
           onModeChange={setModeChoice}
           onSpeedChange={setSpeedChoice}
           onRun={
-            runId && !terminal
-              ? () => send({ command: 'start', body: { mode, speed_factor: speed } })
-              : undefined
+            createsNewRun
+              ? setupReason
+                ? undefined
+                : createRunNow
+              : () => send({ command: 'start', body: { mode, speed_factor: speed } })
           }
           onStep={() => send({ command: 'advance' })}
           onPause={() => send({ command: 'pause' })}
           onResume={() => send({ command: 'resume' })}
           onReset={() => send({ command: 'reset' })}
           onAbort={() => send({ command: 'abort', body: { reason: 'Operator abort' } })}
-          disabledReason={
-            runId
-              ? command.isPending
-                ? 'Sending…'
-                : null
-              : 'Open a run from History. Creating runs needs recipe validation (waiting for the shared contracts).'
-          }
+          disabledReason={command.isPending || createRun.isPending ? 'Sending…' : null}
+          hint={createsNewRun ? setupReason : null}
         />
       </section>
 
       {!runId && (
         <p className="text-sm text-text-muted">
-          No run selected.{' '}
+          Set up a run below and press RUN, or{' '}
           <Link to="/history" className="text-state-active">
-            Open a run from History
+            open a run from History
           </Link>
           .
         </p>
       )}
       {command.isError && <CommandError error={command.error} />}
+      {createRun.isError && !createErrorShownInPanel && <CommandError error={createRun.error} />}
       {state.error && (
         <p role="alert" className="text-xs text-risk-critical">
           Run error: {state.error}
@@ -218,13 +278,7 @@ export function ProcessControlScreen() {
             <EventTimeline entries={state.timeline} />
           </div>
           <section aria-label="Parameter panel" className="rounded border border-border bg-panel p-4">
-            <h3 className="text-xs font-semibold tracking-widest text-text-muted uppercase">
-              Parameter panel
-            </h3>
-            <p className="mt-1 text-sm text-text-muted">
-              Machine, product, lot selection and the recipe sliders are built from <code>/constraints</code>{' '}
-              and the reference endpoints. They are waiting for the shared contracts and the registry loader.
-            </p>
+            <RunSetupPanel server={createErrors} onUseRun={run ? copyRunToSetup : undefined} />
           </section>
         </div>
       </div>

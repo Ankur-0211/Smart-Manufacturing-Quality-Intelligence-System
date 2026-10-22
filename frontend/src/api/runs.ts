@@ -108,3 +108,21 @@ export function useCreateRun() {
     },
   })
 }
+
+/** RUN for a new run: create it from the setup draft, then start it (roadmap R2-P6 task 6). */
+export function useCreateAndStartRun() {
+  const client = useQueryClient()
+  return useMutation({
+    mutationFn: async (body: CreateRunRequest) => {
+      const created = (await apiPost<SimulationState>('/simulation/runs', body)).data
+      const start: StartRequest = { mode: body.mode, speed_factor: body.speed_factor }
+      return (
+        await apiPost<SimulationState>(`/simulation/runs/${encodeURIComponent(created.run_id)}/start`, start)
+      ).data
+    },
+    onSuccess: (state) => {
+      client.setQueryData(['run', state.run_id], state)
+      void client.invalidateQueries({ queryKey: ['runs'] })
+    },
+  })
+}

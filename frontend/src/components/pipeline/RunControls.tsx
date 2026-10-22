@@ -18,8 +18,10 @@ interface RunControlsProps extends RunControlHandlers {
   mode: RunMode
   speed: SpeedFactor
   hasRun: boolean
-  /** When set, every control is disabled and this reason is shown (e.g. API not available yet). */
+  /** When set, every control is disabled and this reason is shown (e.g. a request in flight). */
   disabledReason?: string | null
+  /** Why RUN is unavailable while the other controls stay usable (e.g. incomplete setup). */
+  hint?: string | null
 }
 
 const SPEEDS: SpeedFactor[] = ['0.5x', '1x', '2x', 'instant']
@@ -54,7 +56,7 @@ function Button({
 
 /** RUN / STEP / PAUSE / RESUME / RESET / ABORT plus mode and presentation speed (Plan §15.2, F17). */
 export function RunControls(props: RunControlsProps) {
-  const { status, mode, speed, hasRun, disabledReason } = props
+  const { status, mode, speed, hasRun, disabledReason, hint } = props
   const can = controlAvailability(status, mode, hasRun)
   const off = Boolean(disabledReason)
 
@@ -98,7 +100,7 @@ export function RunControls(props: RunControlsProps) {
           ))}
         </select>
       </label>
-      {disabledReason && <span className="text-xs text-text-muted">{disabledReason}</span>}
+      {(disabledReason ?? hint) && <span className="text-xs text-text-muted">{disabledReason ?? hint}</span>}
     </div>
   )
 }

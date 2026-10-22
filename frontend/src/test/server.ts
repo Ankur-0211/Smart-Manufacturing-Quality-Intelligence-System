@@ -7,6 +7,8 @@ import { setupServer } from 'msw/node'
 
 import type { Schemas } from '@/api/client'
 
+import { constraintsPayload, machines, materials, products } from './fixtures/reference'
+
 export const API = 'http://localhost:8000/api/v1'
 
 export function envelope<T>(data: T) {
@@ -36,6 +38,12 @@ export function healthPayload(overrides: Partial<Schemas['HealthData']> = {}): S
   }
 }
 
-export const defaultHandlers = [http.get(`${API}/health`, () => HttpResponse.json(envelope(healthPayload())))]
+export const defaultHandlers = [
+  http.get(`${API}/health`, () => HttpResponse.json(envelope(healthPayload()))),
+  http.get(`${API}/constraints`, () => HttpResponse.json(envelope(constraintsPayload()))),
+  http.get(`${API}/machines`, () => HttpResponse.json(envelope(machines))),
+  http.get(`${API}/products`, () => HttpResponse.json(envelope(products))),
+  http.get(`${API}/materials`, () => HttpResponse.json(envelope(materials))),
+]
 
 export const server = setupServer(...defaultHandlers)

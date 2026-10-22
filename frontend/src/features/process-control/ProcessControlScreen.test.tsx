@@ -37,8 +37,8 @@ describe('ProcessControlScreen without a run', () => {
     ).toBe(true)
     const controls = screen.getByRole('group', { name: 'Run controls' })
     for (const button of within(controls).getAllByRole('button')) expect(button).toBeDisabled()
-    expect(controls).toHaveTextContent('Open a run from History')
-    expect(screen.getByRole('link', { name: 'Open a run from History' })).toHaveAttribute('href', '/history')
+    expect(controls).toHaveTextContent('Choose a machine, product and material lot to run.')
+    expect(screen.getByRole('link', { name: 'open a run from History' })).toHaveAttribute('href', '/history')
     expect(screen.getByRole('region', { name: 'Quality result' })).toHaveTextContent(
       'Awaiting the quality inspection stage.',
     )
