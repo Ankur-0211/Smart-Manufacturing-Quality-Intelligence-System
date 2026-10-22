@@ -58,7 +58,7 @@ npm run dev          # http://localhost:5173
 ```bash
 uv run pytest
 uv run ruff check .
-uv run black --check .
+uv run ruff format --check .
 uv run mypy
 cd frontend
 npm run typecheck
@@ -107,6 +107,14 @@ This creates three runs **through the API**, using the contract-fixture recipes 
 Re-running the script skips scenarios that already exist.
 
 The `D-105` lot is wet: any run on it blocks at Material Conditioning (HC-006). MC-03 can't run the nominal recipe, because its 110 t clamp rating is below the nominal 120 t (coupling rule CPL-003).
+
+## Single-process deployment and troubleshooting
+
+For the demo machine, build the frontend once (`cd frontend && npm run build`). The API then serves
+it at <http://localhost:8000/> together with `/api/v1`, on one origin. The steps are in
+[`docs/deployment.md`](docs/deployment.md), common problems in
+[`docs/troubleshooting.md`](docs/troubleshooting.md), and the performance check is
+`uv run python scripts/benchmark.py`.
 
 ## Branches (roadmap §14)
 
