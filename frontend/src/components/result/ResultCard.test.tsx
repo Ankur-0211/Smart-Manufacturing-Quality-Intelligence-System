@@ -14,6 +14,13 @@ describe('ResultCard', () => {
     expect(card.textContent).not.toMatch(/\d\.\d/)
   })
 
+  it('says an aborted run has no prediction instead of waiting for one', () => {
+    render(<ResultCard prediction={null} status="ABORTED" />)
+    expect(screen.getByRole('region', { name: 'Quality result' })).toHaveTextContent(
+      'No prediction: the run was aborted before quality inspection.',
+    )
+  })
+
   it('keeps probability, operational risk and anomaly as three distinct blocks', () => {
     render(<ResultCard prediction={prediction()} />)
     const prob = screen.getByRole('region', { name: 'Model-predicted failure probability' })

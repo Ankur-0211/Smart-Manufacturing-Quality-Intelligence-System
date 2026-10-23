@@ -155,4 +155,4 @@ everything done up to now. The source of truth for scope is `PROJECT_DEVELOPMENT
 2. **R2-P7 P1:** done on 2026-10-22 after this checkpoint: live slider, A/B compare page, sensitivity strip, Model Info (CCR-004 #7c, #7d raised). The dependence plot is not built.
 3. **R2-P8:** done on 2026-10-22 after this checkpoint: lineage tree, `/analytics/*`, Analytics screen with SPC series (alerts wait on CCR-004 #10). Batch CSV scoring (P2) not built. Completed phases are now R2-P2…R2-P8 (seven); checkpoint 3 is due after R2-P10.
 4. **R2-P9:** Role 2's P0 work done on 2026-10-22 after this checkpoint (single-process deployment, clean-clone run, benchmarks, deployment and troubleshooting docs). Waiting on Role 1: a clean-machine run on their machine and a model archive. Not built: Compose and CI (P2).
-5. **R2-P10:** system testing and the demonstration.
+5. **R2-P10:** started on 2026-10-23: Playwright E2E suite (journey, special paths, demo replay) and `docs/demo_script.md`. Open: fault injection, the system test report, the backup video and rehearsal, the final integration report.

@@ -1,4 +1,4 @@
-import { render, screen, waitFor, within } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
 import { describe, expect, it } from 'vitest'
@@ -43,14 +43,15 @@ describe('What-If live mode', () => {
 
     const params = await screen.findByRole('region', { name: 'What-if parameters' })
     const input = within(params).getByRole('spinbutton', { name: 'Cooling Time' })
-    await user.clear(input)
-    await user.type(input, '14') // "1" then "14", inside one 150 ms pause
+    // Two edits in the same tick: always inside one 150 ms pause, however busy the machine is.
+    fireEvent.change(input, { target: { value: '1' } })
+    fireEvent.change(input, { target: { value: '14' } })
     expect(await within(result).findByText('FLIPPED')).toBeInTheDocument()
     expect(bodies).toEqual([{ base_run_id: RUN_ID, overrides: { cooling_time_s: 14 }, persist: false }])
     expect(result).toHaveTextContent('Live preview; nothing was saved.')
     expect(within(result).getByRole('button', { name: 'Evaluate' })).toBeDisabled() // live replaces it
 
-    await user.type(input, '.5') // a second pause → a second request
+    fireEvent.change(input, { target: { value: '14.5' } }) // after a pause → a second request
     await waitFor(() => expect(bodies).toHaveLength(2))
     expect(bodies[1]).toEqual({ base_run_id: RUN_ID, overrides: { cooling_time_s: 14.5 }, persist: false })
   })

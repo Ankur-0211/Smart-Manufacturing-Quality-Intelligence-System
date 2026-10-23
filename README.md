@@ -66,7 +66,10 @@ npm run lint
 npm run format:check
 npm test
 npm run build
+npm run test:e2e     # Playwright: builds, starts scripts/e2e_server.py on :8001 (fresh DB, real intelligence)
 ```
+
+The first E2E run on a machine needs the browser once: `npx playwright install chromium`.
 
 ## Regenerating API types
 
@@ -96,12 +99,13 @@ In a second terminal, while the API is running:
 uv run python scripts/seed_demo_runs.py
 ```
 
-This creates three runs **through the API**, using the contract-fixture recipes on MC-02 / PP-JBOX-42:
+This creates four runs **through the API**, using the contract-fixture recipes on MC-02 / PP-JBOX-42:
 
 | Scenario | Lot | Outcome |
 |---|---|---|
 | Nominal recipe | A-771 | PASS |
 | Short cooling | A-771 | PASS, with an HC-004 warning |
+| High injection pressure (nominal + 1800 bar) | A-771 | FAIL 0.59, operational risk HIGH, anomaly on Injection; a what-if at 1100 bar flips it to PASS |
 | Melt above ceiling | A-771 | Left **BLOCKED** at Plasticizing (HC-001), so the override can be shown live; the result is then NOT RELEASABLE |
 
 Re-running the script skips scenarios that already exist.

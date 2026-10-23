@@ -43,6 +43,10 @@ The shared contract harness (`backend/tests/contract/test_interface_contract.py`
 
 7a. **Recommendations without predicted benefit** (found 2026-10-22 through `POST /recommend`).
     - For the nominal run (MC-02 / PP-JBOX-42 / A-771, p_fail 0.236), all three candidates predict exactly 0.236. They are labelled Minimal change, Balanced and Aggressive, and change 1–3 parameters.
+    - It also happens on a FAIL run (found 2026-10-23 while writing the demo script). Nominal recipe with injection pressure 1800 bar gives p_fail 0.586, and SHAP puts injection pressure on top (+0.80).
+      - All three options predict 0.586 and none changes injection pressure.
+      - A what-if at 1100 bar flips the run to PASS 0.236.
+      - Reproduce with `uv run python scripts/seed_demo_runs.py` (scenario "demo: high injection pressure"), then `POST /recommend` on that run.
     - Roadmap §7.15 and Plan §14 rank candidates by improvement. An option with zero predicted improvement should either not be offered, or come with an `empty_reason` / note saying nothing better was found.
 
 7b. **The step-size guard reports a pass while the steps exceed the limit** (found 2026-10-22). This is a false guard stamp.

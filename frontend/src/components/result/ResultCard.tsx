@@ -38,16 +38,23 @@ function RiskOrigin({ mass }: { mass: { stage: StageName; share: number }[] }) {
 export function ResultCard({
   prediction,
   runId = null,
+  status = null,
 }: {
   prediction: PredictionView | null
   /** The finished run this result belongs to; enables the follow-up actions. */
   runId?: string | null
+  /** The run's status; an aborted run will never get a prediction, so it says so. */
+  status?: string | null
 }) {
   if (!prediction) {
     return (
       <section aria-label="Quality result" className="rounded border border-border bg-panel p-4">
         <h3 className="text-xs font-semibold tracking-widest text-text-muted uppercase">Prediction</h3>
-        <p className="mt-1 text-sm text-text-muted">Awaiting the quality inspection stage.</p>
+        <p className="mt-1 text-sm text-text-muted">
+          {status === 'ABORTED'
+            ? 'No prediction: the run was aborted before quality inspection.'
+            : 'Awaiting the quality inspection stage.'}
+        </p>
       </section>
     )
   }

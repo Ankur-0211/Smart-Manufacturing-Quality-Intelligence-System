@@ -2,3 +2,5 @@ dist
 node_modules
 coverage
 src/api/generated
+playwright-report
+test-results

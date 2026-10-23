@@ -14,7 +14,7 @@ import argparse
 import json
 import os
 import sys
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
@@ -30,11 +30,19 @@ class DemoScenario:
     label: str
     fixture: str
     note: str
+    # Setpoints changed from the fixture recipe; the fixtures themselves belong to Role 1.
+    overrides: dict[str, float] = field(default_factory=dict)
 
 
 SCENARIOS = (
     DemoScenario("demo: nominal recipe", "recipe_nominal.json", "nominal PASS"),
     DemoScenario("demo: short cooling", "recipe_short_cooling.json", "HC-004 warning"),
+    DemoScenario(
+        "demo: high injection pressure",
+        "recipe_nominal.json",
+        "FAIL with an Injection anomaly; a what-if at 1100 bar flips it (demo segments 2-6)",
+        overrides={"inj_pressure_bar": 1800.0},
+    ),
     DemoScenario(
         "demo: melt above ceiling",
         "recipe_melt_ceiling_breach.json",
@@ -68,7 +76,7 @@ def run_scenario(client: httpx.Client, scenario: DemoScenario) -> dict[str, Any]
         "machine_id": ctx["machine"]["machine_id"],
         "product_id": ctx["product"]["product_id"],
         "material_lot_id": ctx["material_lot"]["material_lot_id"],
-        "parameters": fixture["recipe"],
+        "parameters": {**fixture["recipe"], **scenario.overrides},
         "mode": "stepwise",
         "speed_factor": "instant",
         "scenario_label": scenario.label,

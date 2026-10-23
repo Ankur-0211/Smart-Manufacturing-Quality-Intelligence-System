@@ -130,6 +130,8 @@ def test_seed_demo_runs_through_the_api(db_url: str) -> None:
         assert by_label["demo: nominal recipe"]["status"] == "FINAL_RESULT"
         assert by_label["demo: nominal recipe"]["result"] == "PASS"
         assert by_label["demo: short cooling"]["status"] == "FINAL_RESULT"
+        high = by_label["demo: high injection pressure"]
+        assert (high["status"], high["result"]) == ("FINAL_RESULT", "FAIL")
         blocked = by_label["demo: melt above ceiling"]
         assert (blocked["status"], blocked["blocked_stage"]) == ("BLOCKED", "PLASTICIZING")
         assert seed_demo_runs(c) == []  # idempotent

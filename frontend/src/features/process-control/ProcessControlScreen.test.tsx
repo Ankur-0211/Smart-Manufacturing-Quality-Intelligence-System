@@ -63,6 +63,23 @@ describe('ProcessControlScreen with ?run=', () => {
     expect(screen.getByText(/run completed/)).toBeInTheDocument()
   })
 
+  it('refreshes the cached run state once the live run finishes', async () => {
+    let gets = 0
+    server.use(
+      http.get(`${API}/simulation/runs/:id`, () => {
+        gets += 1
+        return HttpResponse.json(envelope(runState()))
+      }),
+    )
+    renderAt(`/?run=${RUN_ID}`)
+    expect(await screen.findByText('MC-03')).toBeInTheDocument()
+    const before = gets
+    act(() => stream().open())
+    act(() => fullRun().forEach((e) => stream().emit(e)))
+    // Other screens (Explainability, What-If) read this cache: it must not keep the pre-run state.
+    await waitFor(() => expect(gets).toBeGreaterThan(before))
+  })
+
   it('sends start with the chosen mode and speed and shows server errors', async () => {
     let body: unknown = null
     server.use(

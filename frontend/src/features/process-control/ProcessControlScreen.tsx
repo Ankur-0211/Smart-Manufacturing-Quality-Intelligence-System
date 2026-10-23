@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
+import { useEffect, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 
 import { ApiClientError } from '@/api/client'
@@ -123,6 +124,16 @@ export function ProcessControlScreen() {
   const mode: RunMode = modeChoice ?? (run?.mode as RunMode | undefined) ?? 'auto'
   const speed: SpeedFactor = speedChoice ?? (run?.speed_factor as SpeedFactor | undefined) ?? '1x'
   const terminal = TERMINAL_STATUSES.has(state.status)
+  const queryClient = useQueryClient()
+  // A run that finishes live (SSE or polling) changes server data other screens have cached:
+  // its own state (Explainability, What-If read it), the history list, lineage and analytics.
+  // A finished run is immutable, so refreshing once when it ends is enough.
+  useEffect(() => {
+    if (!runId || !terminal) return
+    for (const key of [['run', runId], ['runs'], ['lineage'], ['analytics']]) {
+      void queryClient.invalidateQueries({ queryKey: key })
+    }
+  }, [queryClient, runId, terminal])
   const send = (cmd: RunCommand) => command.mutate(cmd)
   const ctx = (run?.context ?? {}) as {
     machine?: { machine_id?: string }
@@ -271,7 +282,11 @@ export function ProcessControlScreen() {
           <div className="rounded border border-border bg-panel p-4">
             <ActiveStagePanel stage={focus} view={focusView} />
           </div>
-          <ResultCard prediction={state.prediction} runId={state.status === 'FINAL_RESULT' ? runId : null} />
+          <ResultCard
+            prediction={state.prediction}
+            runId={state.status === 'FINAL_RESULT' ? runId : null}
+            status={state.status}
+          />
         </div>
         <div className="flex flex-col gap-4">
           <div className="rounded border border-border bg-panel p-4">
