@@ -17,6 +17,28 @@ The shared contract harness (`backend/tests/contract/test_interface_contract.py`
 - The real facade passes the equivalence, determinism and per-fixture rule tests.
 - It fails the invariant checks listed below. Those tests are marked strict `xfail` with this CCR's numbers, so they start failing as soon as the gaps are fixed. Then the marker must be removed.
 
+## A0. Placeholder outputs presented as computed (found 2026-10-23; highest priority)
+
+Role 1's notes (`aboutrole1.md`) describe a "machine-learning fusion engine", "TreeSHAP feature attributions" and a "6-check feasibility guard". In `app/intelligence/facade.py` (`fusion-1.0.0`), several outputs are fixed values or rules of thumb, but the payloads label them as the computed artefacts the roadmap specifies. The UI and the demo show them as delivered.
+
+| # | Output | What the payload says | What the code does |
+|---|---|---|---|
+| 18 | `predict()` | `p_fail` is "calibrated"; the docstring says "Isotonic calibration mapping" | A hand-weighted logistic formula over stage health scores (base log-odds −1.2, fixed weights). The "calibration" is `p_raw * 1.02`, clamped. No trained model, no calibrator |
+| 19 | `explain()` | `method: "tree_shap"`, `output_space: "log_odds"`, `background_version: "bg-1.0.0"` | Seven threshold rules over recipe values, each returning a fixed or linear number (e.g. cooling time ≥ 9 s always gives −0.41). The values are not computed from the prediction and don't sum to its margin. Melt temperature more than 15 °C below 230 gets a negative value labelled `toward_fail` |
+| 20 | `global_explanation()` | `computed_on: 2026-10-15`, `n_rows: 2500` | A constant list. No computation over any rows took place |
+| 21 | `recommend()` | `search_method: "coordinate"`; six guard checks `passed: true`; `stability: 20 trials, 0 flips`; `in_distribution: true` | Three fixed recipe edits (cooling +3 s; hold pressure +120 bar with cooling +2.5 s; melt 225 °C with hold pressure +150 bar and cooling +4 s). Box, couplings and hard constraints are really checked. `distribution`, `step_size` and `stability` are hard-coded passes with fixed text, and nothing is run. This explains #7a and #7b |
+
+**Why it matters:**
+- Roadmap §1.7 and §15.4 require that genuine inference is never confused with placeholders.
+- `is_mock: false` together with these labels lets the UI present heuristics as SHAP, calibration and a verified guard.
+- Role 2 shows payloads as received (B6). For example, Model Info says "Mean |SHAP| over 2500 rows" because the payload says so.
+
+**Asked of Role 1, either:**
+- deliver the trained bundle and real computations (R1-P5…P10); or
+- relabel these outputs truthfully until then: a `method` such as `heuristic_rules`, no `n_rows`/`computed_on`, guard checks that are not run reported as not evaluated, and `stability`/`in_distribution` left null. Role 2's UI then shows the true labels with no other change.
+
+Role 2 has not changed any of these values. How to present them in the demo is open; see `docs/final_integration_report.md`.
+
 ## A. Defects (please fix)
 
 1. **The 4-cavity product can never pass.**

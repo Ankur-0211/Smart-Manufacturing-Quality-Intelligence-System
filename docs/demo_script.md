@@ -5,6 +5,8 @@ Every number below comes from the deterministic demo history (`scripts/seed_demo
 script's steps and fails if any of these numbers changes. Re-run it after every Role 1 update, and
 edit this script if it fails.
 
+> **Open decision (CCR-004 A0):** Role 1's `fusion-1.0.0` returns rule-based placeholder values labelled as SHAP, calibrated probability, "2500 rows", and guard and stability checks. Segments **3:00** and **3:45** must not present these as model explanations or verified recommendations until an option in `final_integration_report.md` §5 is chosen. Until then, say what they are: rule-based values from the current intelligence layer.
+
 ## Before the audience arrives (T − 15 min)
 
 1. Build once: `cd frontend && npm run build`.
@@ -29,8 +31,8 @@ edit this script if it fails.
 | 0:45 | Context and validation | R2 | Process Control → Machine **MC-02**, Product **PP-JBOX-42**, Lot **A-771** → *Load nominal recipe*. Type **400** into Melt Temperature | Sliders, windows and units come from the constraint registry; 400 °C shows "Allowed 180–295 °C" and RUN is disabled. Set it back to **230** |
 | 1:30 | Live run with an anomaly | R2 | Set Injection Pressure to **1800**, Mode auto, speed **1x**, RUN | Stages turn on one by one over SSE (`live (SSE)`). **Injection / Fill** shows the anomaly marker. Timeline on the right |
 | 2:30 | Result and risk separation | R2 | Point at the result card | Three separate blocks: model-predicted P(fail) **0.59 (calibrated)**, Prediction **FAIL** at threshold 0.35; operational risk **HIGH**; anomaly status. Risk origin: **Injection 86 %** |
-| 3:00 | Why | R1 | *Why this prediction?* | SHAP bars: **Injection Pressure +0.80 toward FAIL** at the top; stage risk mass donut dominated by Injection; the association-not-causation disclaimer |
-| 3:45 | What should I change | R1 | *What should I change?* → *Find options* | Option cards with the guard stamp, stability 0/20 flips, cycle-time cost and the permanent disclaimer. **Be honest:** today's options predict no gain (0.59 → 0.59) and the step-limit warning is visible. Both are open with Role 1 (CCR-004 #7a, #7b) |
+| 3:00 | Why | R1 | *Why this prediction?* | **(see the A0 note above)** Attribution bars: **Injection Pressure +0.80 toward FAIL** at the top; stage risk mass donut dominated by Injection; the association-not-causation disclaimer |
+| 3:45 | What should I change | R1 | *What should I change?* → *Find options* | **(see the A0 note above)** Option cards with the guard stamp, stability 0/20 flips, cycle-time cost and the permanent disclaimer. **Be honest:** today's options predict no gain (0.59 → 0.59) and the step-limit warning is visible. Both are open with Role 1 (CCR-004 #7a, #7b) |
 | 4:45 | What-if flip | R2 | *Try a what-if* → Injection Pressure **1100** → *Evaluate* | P(fail) **0.59 → 0.24, FLIPPED** to PASS; operational risk **HIGH → LOW**. Stages: **Material and Thermal reused**, Injection, Packing and Cooling recomputed. Then set Injection Pressure back and change only Cooling Time to **12**: only **Cooling** is recomputed. Save as scenario "demo: what-if 1100 bar" |
 | 5:45 | BLOCKED | R2 | History → open **demo: melt above ceiling** → *Open in Process Control* | Thermal is **BLOCKED** by HC-001 (290 °C above the PP-H ceiling). Type an acknowledgement → *Override and continue*, then press **STEP** for each remaining stage (the seeded run is stepwise, so each stage is shown). Result: **NOT RELEASABLE**, risk CRITICAL, caveat `CRITICAL_CONSTRAINT_OVERRIDDEN` |
 | 6:30 | History, analytics, Model Info | R2 / R1 | History → the high-injection run → lineage tree shows the saved what-if. Analytics. Model Info | Analytics excludes what-if scenarios by default and says so. By parameter shows where the predicted FAILs sit. Model Info shows the synthetic-data statement; metrics are "not reported" by the current model (CCR-004 #7d) |

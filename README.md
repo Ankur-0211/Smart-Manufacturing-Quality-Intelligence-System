@@ -118,7 +118,7 @@ For the demo machine, build the frontend once (`cd frontend && npm run build`). 
 it at <http://localhost:8000/> together with `/api/v1`, on one origin. The steps are in
 [`docs/deployment.md`](docs/deployment.md), common problems in
 [`docs/troubleshooting.md`](docs/troubleshooting.md), and the performance check is
-`uv run python scripts/benchmark.py`. Test results are in [`docs/system_test_report.md`](docs/system_test_report.md).
+`uv run python scripts/benchmark.py`. Test results are in [`docs/system_test_report.md`](docs/system_test_report.md), and the integration state in [`docs/final_integration_report.md`](docs/final_integration_report.md).
 
 ## Branches (roadmap §14)
 

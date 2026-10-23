@@ -3,24 +3,23 @@
 Both roles update this file (roadmap §10.1). A capability counts as **REAL** only when
 `QualityIntelligence.capabilities()` reports it **and** this table says so.
 
-_Last updated: 2026-10-23 by Role 2 (R2-P10: fault injection, journey integrity, benchmarks, system test report)._
+_Last updated: 2026-10-23 by Role 2 (final integration report; CCR-004 A0 raised)._
 
 ## Capability matrix
 
 | Capability | Status | Since | Notes |
 |---|---|---|---|
-| `run_stage` (S1–S5) | REAL | 2026-10-21 | Role 1's `RealQualityIntelligence` (heuristic stage modules, `fusion-1.0.0`). Selected with `SMQI_INTELLIGENCE_BACKEND=real`; dev/test default stays `mock` |
-| `predict` | REAL | 2026-10-21 | Threshold 0.35 (in code). Open defects: label forced to FAIL on critical breaches, risk-mass sum ([CCR-004](contract_changes/CCR-004-role1-integration-findings.md) #2-#3) |
-| `explain` / `global_explanation` | REAL | 2026-10-21 | Signature `explain(inp, stage_results, prediction)` (CCR-004 #8) |
+| `run_stage` (S1–S5) | REAL | 2026-10-21 | Role 1's `RealQualityIntelligence` (heuristic stage modules, `fusion-1.0.0`). Selected with `SMQI_INTELLIGENCE_BACKEND=real`, the dev and demo default since R2-P5; tests choose per case |
+| `predict` | REAL, **placeholder model** | 2026-10-21 | Hand-weighted formula; "calibration" is `p_raw * 1.02` (CCR-004 A0 #18). Threshold 0.35 (in code). Open defects: label forced to FAIL on critical breaches, risk-mass sum ([CCR-004](contract_changes/CCR-004-role1-integration-findings.md) #2-#3) |
+| `explain` / `global_explanation` | REAL, **placeholder values** | 2026-10-21 | Fixed rules labelled `tree_shap`; constant global list with "2500 rows" (CCR-004 A0 #19–#20). Signature `explain(inp, stage_results, prediction)` (CCR-004 #8) |
 | `anomaly_global` | NOT AVAILABLE | — | Not in Role 1's Protocol (CCR-004 #8) |
-| `recommend` | REAL | 2026-10-21 | `POST /recommend` live 2026-10-22. Candidates show no predicted improvement (CCR-004 #7a). UI gated on the "guard tested" statement |
+| `recommend` | REAL, **placeholder search and guard** | 2026-10-21 | Three fixed edits; `distribution`, `step_size` and `stability` are hard-coded passes (CCR-004 A0 #21). `POST /recommend` live 2026-10-22. Candidates show no predicted improvement (CCR-004 #7a). UI gated on the "guard tested" statement |
 | `sensitivity` | REAL | 2026-10-21 | `POST /whatif/sensitivity` live 2026-10-22 |
 | `spc` | NOT AVAILABLE | — | Reported as `spc_check: true` but not implemented (CCR-004 #10) |
 
-The mock (`app/intelligence_mock`) remains available for every capability above except SPC and is the
-default backend in `dev`/`test`.
+The mock (`app/intelligence_mock`) remains available for every capability above except SPC (`SMQI_INTELLIGENCE_BACKEND=mock`).
 
-Status values: `NOT AVAILABLE` → `MOCK` → `HYBRID` → `REAL`.
+Status values: `NOT AVAILABLE` → `MOCK` → `HYBRID` → `REAL`. "Placeholder" marks real-backend outputs that are not what their labels say (CCR-004 A0).
 
 ## Shared artifacts
 
@@ -48,7 +47,7 @@ Status values: `NOT AVAILABLE` → `MOCK` → `HYBRID` → `REAL`.
 | R2-P7 | Done. What-If workbench (fork a finished run, edit, Evaluate / Save as scenario, Reset to parent, §7.16 diff view) and Recommendations (locked params, max changes, option cards with guard stamp, stability, EXTRAPOLATED, cycle time, `empty_reason`, permanent disclaimer, registry step-limit cross-check, Send to What-If). Explainability panel: signed SHAP bars + table, Features/Groups toggle, stage risk mass donut + share list, caveat banner, method note, permanent DISCLAIMER_SHAP; falls back to `GET /predict/{id}/explain`. P1 done: live slider (150 ms debounce, `persist=false`, superseded requests aborted), A/B compare page (`/what-if/compare`), sensitivity strip (curve with current / flip / threshold markers, parameter ranking by `range_swing`, sensitivity ≠ SHAP note), Model Info (version, provenance, metrics, calibration, threshold policy, global importance, STATEMENT_SYNTHETIC_DATA; missing fields shown as "not reported", CCR-004 #7d). Not built: dependence plot (P1, needs a per-feature SHAP-vs-value endpoint), 2-D response surface (P2) |
 | R2-P8 | Done (P0 + P1). History list, filters, run detail, scenario label; lineage tree on run detail (climbs to the root, links each scenario and "Compare with parent"); `/analytics/summary`, `/by-machine`, `/by-material`, `/by-parameter` (registry-window buckets), `/spc` (stored series; alerts wait on Role 1's `spc_check`, CCR-004 #10); Analytics screen with stated exclusions, toggles, date range, empty and few-runs states. Definitions in `docs/api.md`. Model metrics are on Model Info (R2-P7). Not built: batch CSV scoring (P2) |
 | R2-P9 | Role 2's P0 work done; **2 items wait on others**. Done: the API serves `frontend/dist` at `/` (SPA fallback, `/api` keeps its envelope, no path traversal); production build calls same-origin `/api/v1`; startup log lists contracts, capabilities, constraints, DB revision and frontend; charts code-split (main chunk 943 → 545 kB); configuration audit (`SMQI_FRONTEND_DIST` added to `.env.example`); clean-clone run-through (below); `scripts/benchmark.py`, all §24.4 budgets met; `docs/deployment.md`, `docs/troubleshooting.md`; README check list fixed (`ruff format`, not `black`). Waiting: (1) the clean-machine run on **Role 1's machine** (task 3), (2) Role 1's model archive: their `fusion-1.0.0` loads no bundle, so MANIFEST verification and the missing-bundle failure test can't be done yet (task 1). Not built: Docker Compose and CI (P2) |
-| R2-P10 | In progress. Done: Playwright suite (9 tests, real intelligence) for the §15.4 journey, special paths, demo replay and an animation guard; `docs/demo_script.md`; fault injection (`backend/tests/e2e/test_fault_injection.py`, 28 tests); journey immutability by row hashes and analytics exclusions (`test_journey_integrity.py`); `scripts/benchmark.py` covers every §24.4 row incl. SSE jitter and 10 concurrent runs; **`docs/system_test_report.md`**. Defects fixed: degraded `/health` when the model fails, typed error codes kept on aborted runs, stale run state after live runs, aborted-run result card. **Missed or unmeasured:** instant-run p95 is borderline (219–340 ms vs 300); 60 fps not met headless (48–54) and still to be measured with DevTools on the demo machine. Open: final integration report (task 9), backup video and rehearsal (task 8), joint sign-off |
+| R2-P10 | In progress. Done: Playwright suite (9 tests, real intelligence) for the §15.4 journey, special paths, demo replay and an animation guard; `docs/demo_script.md`; fault injection (`backend/tests/e2e/test_fault_injection.py`, 28 tests); journey immutability by row hashes and analytics exclusions (`test_journey_integrity.py`); `scripts/benchmark.py` covers every §24.4 row incl. SSE jitter and 10 concurrent runs; **`docs/system_test_report.md`**. Defects fixed: degraded `/health` when the model fails, typed error codes kept on aborted runs, stale run state after live runs, aborted-run result card. **Missed or unmeasured:** instant-run p95 is borderline (219–340 ms vs 300); 60 fps not met headless (48–54) and still to be measured with DevTools on the demo machine. `docs/final_integration_report.md` (task 9) written: capability matrix, versions, results, limitations. It raises **CCR-004 A0**: Role 1's prediction, attributions, global importance and three guard checks are placeholders labelled as computed, and a decision is needed before the demo. Open: that decision, backup video and rehearsal (task 8), joint sign-off |
 
 ## Milestones
 

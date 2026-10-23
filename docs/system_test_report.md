@@ -1,7 +1,7 @@
 # System test report — roadmap R2-P10
 
 **Date:** 2026-10-23
-**Branch:** `role-2-application` (commit after `f85dde6`)
+**Branch:** `role-2-application` (commit after `f85dde6`). Read with [`final_integration_report.md`](final_integration_report.md): CCR-004 A0 affects the meaning of several results below
 **Intelligence:** Role 1's `fusion-1.0.0` (pure-Python facade, no model bundle), `constraints-1.0.0`, contracts 0.1.0
 **Machine:** Windows 11, 12 CPUs, Python 3.12.10, Node 24.14.1, Chromium (Playwright 1.64.1)
 
@@ -29,12 +29,12 @@ The report states results as measured, including the targets that were missed or
 | Requirement | Status | Evidence |
 |---|---|---|
 | Critical breaches cannot silently produce an ordinary confident PASS | ✓ | `special-paths.spec.ts`: melt 290 °C gives BLOCKED at Thermal, then override, then **NOT RELEASABLE**, risk CRITICAL, caveat `CRITICAL_CONSTRAINT_OVERRIDDEN` (UI and API); `demo.spec.ts` covers the same flow from History |
-| Invalid recommendation candidates are rejected | **Partial** | Every returned option is shown with Role 1's guard list, and the UI cross-checks `max_step_change`. But Role 1's `step_size` guard passes oversized steps (CCR-004 #7b), and `rejected_counts` was 0 in every response we saw, so "rejected > 0 on the stress fixture" is not demonstrated |
+| Invalid recommendation candidates are rejected | **Not met** | Box, couplings and hard constraints are really checked. But `distribution`, `step_size` and `stability` are hard-coded passes in Role 1's facade (CCR-004 #21, #7b), and the options are three fixed edits, so no rejection by those checks can occur. The UI cross-checks `max_step_change` |
 | What-if runs do not overwrite original runs | ✓ | `test_journey_integrity.py` hashes every row of the original runs (run, parameters, stage results, prediction, events); the hashes are identical after what-ifs, saved scenarios two levels deep, compare, sensitivity, recommend, lineage and analytics. Finished runs refuse reset, start and abort (409). Children carry `parent_run_id`. `journey.spec.ts` also checks the base run's API state byte for byte |
 | Prediction and operational risk are different concepts | ✓ | Separate result-card blocks asserted in `journey.spec.ts` and the ResultCard tests; analytics labels shares as "model-predicted FAIL" |
 | The frontend uses actual backend outputs | ✓ | `journey.spec.ts` compares the result card and quality-stage label with `GET /simulation/runs/{id}` for the same run; `demo.spec.ts` checks the demo numbers end to end |
 | Model artifacts and versions are traceable | **Partial** | Each prediction references a `model_versions` row, and Model Info shows the version. Bundle SHA-256, git SHA, dataset hash and metrics are **not reported** by Role 1's facade (CCR-004 #7d); Model Info shows "not reported" |
-| Mock is never mistaken for inference | ✓ | `SMQI_ENV=demo` refuses mock (`test_fault_injection.py`, config tests). The MOCK banner and `is_mock` are tested in Vitest. Analytics excludes MOCK-scored runs by default (`test_journey_integrity.py`) |
+| Mock is never mistaken for inference | ✓ for the mock; **✗ for `fusion-1.0.0`** | The real facade returns placeholder attributions, calibration and guard results labelled as computed (CCR-004 A0, #18–#21); the UI shows them as received. For the mock itself: | `SMQI_ENV=demo` refuses mock (`test_fault_injection.py`, config tests). The MOCK banner and `is_mock` are tested in Vitest. Analytics excludes MOCK-scored runs by default (`test_journey_integrity.py`) |
 | Not described as a physically validated digital twin | ✓ | The software-simulation disclaimer is on every screen (App test). A text audit of `frontend/src` for "digital twin", "physically validated", "guarantee", "root cause", "proven" or "validated process" found only the mandatory recommendation disclaimer, which uses the phrase in the negative |
 
 ## 3. Special paths (task 2)
