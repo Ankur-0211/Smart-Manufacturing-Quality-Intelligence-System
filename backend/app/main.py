@@ -46,6 +46,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     # An invalid registry or an unavailable `real` backend raises here, so the app never starts.
     registry = load_registry(settings)
     intelligence = build_intelligence(settings, registry)
+    startup_version_info = (
+        intelligence.version_info()
+    )  # a backend that cannot report this never starts
     executor = IntelligenceStageExecutor(intelligence, registry)
     database = Database(settings.database_url)
     serve_frontend = frontend_available(settings.frontend_dist)
@@ -60,7 +63,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     @asynccontextmanager
     async def lifespan(_: FastAPI) -> AsyncIterator[None]:
         db_status = database.status()
-        info = intelligence.version_info()
+        info = startup_version_info
         log.info(
             "startup",
             env=settings.env.value,
@@ -109,6 +112,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.state.db = database
     app.state.registry = registry
     app.state.intelligence = intelligence
+    app.state.startup_version_info = startup_version_info
     app.state.simulation = simulation
     app.state.sse_keepalive_s = 15.0
     app.state.rate_limiter = TokenBucketLimiter(settings.rate_limit_per_min)

@@ -11,6 +11,7 @@ from pydantic import BaseModel, ConfigDict
 
 from app.api.deps import DatabaseDep, IntelligenceDep, RegistryDep, SettingsDep
 from app.api.errors import build_meta
+from app.contracts.errors import IntelligenceError
 from app.contracts.interface import IntelligenceVersionInfo
 from app.schemas.envelope import Envelope
 
@@ -47,15 +48,25 @@ def health(
 ) -> Envelope[HealthData]:
     # Components are reported honestly: anything not built yet is "available": false.
     db_status = database.status()
-    info = intelligence.version_info()
+    # A model that stops loading (missing or invalid artifacts) makes health "degraded", never a
+    # 500: the component reports the stable error code, and the version info is the one resolved
+    # at startup (roadmap R2-P10 task 3).
+    intelligence_error: IntelligenceError | None = None
+    try:
+        info = intelligence.version_info()
+    except IntelligenceError as exc:
+        intelligence_error = exc
+        info = request.app.state.startup_version_info
     components = [
         ComponentStatus(name="api", available=True, detail="FastAPI application running"),
         ComponentStatus(name="database", available=db_status.migrated, detail=db_status.detail),
         ComponentStatus(
             name="intelligence",
-            available=True,
+            available=intelligence_error is None,
             detail=(
-                "MOCK intelligence: outputs are placeholders, not model predictions"
+                f"{intelligence_error.code}: {intelligence_error.message}"
+                if intelligence_error is not None
+                else "MOCK intelligence: outputs are placeholders, not model predictions"
                 if info.is_mock
                 else f"Real intelligence ({info.model_version})"
             ),
@@ -72,7 +83,7 @@ def health(
         env=settings.env.value,
         intelligence_backend=settings.intelligence_backend.value,
         db=db_status.migrated,
-        model_loaded=not info.is_mock,
+        model_loaded=intelligence_error is None and not info.is_mock,
         intelligence=info,
         components=components,
     )

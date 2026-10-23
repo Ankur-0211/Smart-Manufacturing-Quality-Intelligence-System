@@ -16,20 +16,25 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import itertools
 import json
 import os
 import statistics
 import sys
 import tempfile
+import threading
 import time
 from collections.abc import Callable
 from dataclasses import dataclass
+from datetime import datetime
 from pathlib import Path
 from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "backend"))
 
+import httpx  # noqa: E402
+import uvicorn  # noqa: E402
 from fastapi.testclient import TestClient  # noqa: E402
 
 from app.contracts.context import ProcessInput  # noqa: E402
@@ -191,9 +196,9 @@ def main() -> int:
 
         rows.append(
             Row(
-                "API full run, 6 stepwise calls (create → FINAL_RESULT)",
+                "API full run over HTTP: create, start, 6 advances",
                 timed(instant_run, max(10, n // 3)),
-                Budget("p95 < 300 ms compute", 300, "p95"),
+                None,
             )
         )
         base = instant_run()
@@ -213,7 +218,7 @@ def main() -> int:
                     ),
                     n,
                 ),
-                None,
+                Budget("< 100 ms", 100, "max"),
             )
         )
         rows.append(
@@ -249,12 +254,117 @@ def main() -> int:
             )
         )
 
+    rows.extend(live_server_rows(settings, body))
+
     print(f"Python {sys.version.split()[0]} · {os.cpu_count()} CPUs · n={n} · times in ms\n")
     print("| Operation | n | p50 | p95 | max | Budget (Plan §24.4) |")
     print("|---|---|---|---|---|---|")
     for row in rows:
         print(row.line())
     return 0
+
+
+PRESENTATION_MS = 1500  # SMQI_STAGE_PRESENTATION_MS default: one stage per 1.5 s at 1x
+
+
+def live_server_rows(settings: Settings, body: dict[str, Any]) -> list[Row]:
+    """Measurements that need a real socket: SSE pacing at 1x, and 10 concurrent auto runs."""
+    app = create_app(settings)
+    app.state.simulation.stage_presentation_ms = PRESENTATION_MS
+    port = 8765
+    server = uvicorn.Server(uvicorn.Config(app, host="127.0.0.1", port=port, log_level="warning"))
+    thread = threading.Thread(target=server.run, daemon=True)
+    thread.start()
+    while not server.started:
+        time.sleep(0.05)
+    rows: list[Row] = []
+    try:
+        with httpx.Client(base_url=f"http://127.0.0.1:{port}", timeout=60) as http:
+            # SSE jitter: each interval between stage starts, against the 1.5 s presentation pace.
+            deviations: list[float] = []
+            for _ in range(3):
+                created = http.post(f"{API}/simulation/runs", json={**body, "speed_factor": "1x"})
+                run_id = ok(created)["run_id"]
+                starts: list[float] = []
+                with http.stream("GET", f"{API}/simulation/runs/{run_id}/events") as stream:
+                    start = {"mode": "auto", "speed_factor": "1x"}
+                    ok(http.post(f"{API}/simulation/runs/{run_id}/start", json=start))
+                    for line in stream.iter_lines():
+                        if line.startswith("event: stage.started"):
+                            starts.append(time.perf_counter() * 1000)
+                        if line.startswith("event: run.completed"):
+                            break
+                pairs = itertools.pairwise(starts)
+                deviations += [abs((b - a) - PRESENTATION_MS) for a, b in pairs]
+            rows.append(
+                Row(
+                    "SSE jitter at 1x: |stage-start interval - 1500 ms| (3 runs)",
+                    deviations,
+                    Budget("< 100 ms", 100, "max"),
+                )
+            )
+
+            # 10 concurrent auto runs: all finish, each with a contiguous, ordered event log.
+            def concurrent_batch() -> None:
+                instant = {**body, "speed_factor": "instant"}
+                ids = [
+                    ok(http.post(f"{API}/simulation/runs", json=instant))["run_id"]
+                    for _ in range(10)
+                ]
+                for run_id in ids:
+                    start = {"mode": "auto", "speed_factor": "instant"}
+                    ok(http.post(f"{API}/simulation/runs/{run_id}/start", json=start))
+                deadline = time.perf_counter() + 30
+                pending = set(ids)
+                while pending and time.perf_counter() < deadline:
+                    for run_id in list(pending):
+                        state = ok(http.get(f"{API}/simulation/runs/{run_id}"))
+                        if state["status"] not in {"FINAL_RESULT", "ABORTED", "ERROR"}:
+                            continue
+                        assert state["status"] == "FINAL_RESULT", (run_id, state["status"])
+                        seqs = [e["seq"] for e in state["timeline"]]
+                        assert seqs == list(range(1, len(seqs) + 1)), (run_id, seqs)
+                        done = [
+                            e["stage"] for e in state["timeline"] if e["type"] == "stage.completed"
+                        ]
+                        assert done == [r["stage_name"] for r in state["stage_results"]], run_id
+                        pending.discard(run_id)
+                    time.sleep(0.02)
+                assert not pending, f"runs not finished: {pending}"
+
+            # Instant auto run, server-side: started_at -> completed_at (no HTTP round trips).
+            def server_side_ms() -> float:
+                instant = {**body, "speed_factor": "instant"}
+                run_id = ok(http.post(f"{API}/simulation/runs", json=instant))["run_id"]
+                start = {"mode": "auto", "speed_factor": "instant"}
+                ok(http.post(f"{API}/simulation/runs/{run_id}/start", json=start))
+                while (state := ok(http.get(f"{API}/simulation/runs/{run_id}")))["status"] != (
+                    "FINAL_RESULT"
+                ):
+                    time.sleep(0.01)
+                began = datetime.fromisoformat(state["started_at"])
+                ended = datetime.fromisoformat(state["completed_at"])
+                return (ended - began).total_seconds() * 1000
+
+            rows.append(
+                Row(
+                    "Instant auto run, server-side started → completed",
+                    [server_side_ms() for _ in range(20)],
+                    Budget("p95 < 300 ms", 300, "p95"),
+                )
+            )
+
+            rows.append(
+                Row(
+                    "10 concurrent auto runs (instant): wall time to all FINAL_RESULT",
+                    timed(concurrent_batch, 3, warmup=0),
+                    None,
+                )
+            )
+    finally:
+        server.should_exit = True
+        thread.join(timeout=10)
+    return rows
 
 
 if __name__ == "__main__":

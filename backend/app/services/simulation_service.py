@@ -25,6 +25,7 @@ from typing import Any
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.contracts.errors import IntelligenceError
 from app.core.logging import get_logger
 from app.db.base import utcnow
 from app.db.errors import NotFoundError
@@ -398,13 +399,18 @@ class SimulationService:
 
     async def _fail(self, run_id: str, exc: Exception) -> None:
         log.exception("simulation_step_failed", run_id=run_id, exc_type=type(exc).__name__)
-        payload = {"code": "INTERNAL_ERROR", "message": f"{type(exc).__name__}: {exc}"[:500]}
+        # A typed intelligence failure keeps its stable code (roadmap 9.1 error table).
+        if isinstance(exc, IntelligenceError):
+            code, message = exc.code, exc.message
+        else:
+            code, message = "INTERNAL_ERROR", f"{type(exc).__name__}: {exc}"
+        payload = {"code": code, "message": message[:500]}
         try:
             await self._apply(
                 run_id,
                 Command.ERROR,
-                payloads={"run.error": payload, "run.aborted": {"reason": "ERROR:INTERNAL_ERROR"}},
-                run_updates={"abort_reason": "ERROR:INTERNAL_ERROR"},
+                payloads={"run.error": payload, "run.aborted": {"reason": f"ERROR:{code}"}},
+                run_updates={"abort_reason": f"ERROR:{code}"},
             )
         except Exception:  # the run may already be terminal
             log.exception("simulation_fail_record_failed", run_id=run_id)
